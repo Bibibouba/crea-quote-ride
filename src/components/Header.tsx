@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { MenuIcon, X } from 'lucide-react';
@@ -7,13 +7,30 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetClose,
 } from "@/components/ui/sheet";
 
 const Header = () => {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleMobileNavClick = (id?: string) => {
+    // Close the sheet
+    if (closeButtonRef.current) {
+      closeButtonRef.current.click();
+    }
+    
+    // Scroll to section if id is provided
+    if (id) {
+      setTimeout(() => {
+        scrollToSection(id);
+      }, 100); // Small delay to ensure sheet is closed first
     }
   };
 
@@ -77,46 +94,34 @@ const Header = () => {
               <div className="flex items-center gap-2">
                 <img src="/lovable-uploads/a48d188b-0d09-4530-87d1-6efc0fd30019.png" alt="VTCZen Logo" className="h-6 w-auto" />
               </div>
-              <SheetTrigger asChild>
+              <SheetClose ref={closeButtonRef}>
                 <Button variant="ghost" size="icon">
                   <X className="h-5 w-5" />
                   <span className="sr-only">Fermer</span>
                 </Button>
-              </SheetTrigger>
+              </SheetClose>
             </div>
             <div className="flex flex-col gap-4 mt-6">
               <button 
-                onClick={() => {
-                  scrollToSection('hero');
-                  document.querySelector('[data-radix-collection-item]')?.click(); // Close sheet
-                }} 
+                onClick={() => handleMobileNavClick('hero')} 
                 className="text-base font-medium py-2 hover:text-primary transition-colors text-left"
               >
                 Accueil
               </button>
               <button 
-                onClick={() => {
-                  scrollToSection('features');
-                  document.querySelector('[data-radix-collection-item]')?.click(); // Close sheet
-                }} 
+                onClick={() => handleMobileNavClick('features')} 
                 className="text-base font-medium py-2 hover:text-primary transition-colors text-left"
               >
                 Fonctionnalités
               </button>
               <button 
-                onClick={() => {
-                  scrollToSection('pricing');
-                  document.querySelector('[data-radix-collection-item]')?.click(); // Close sheet
-                }} 
+                onClick={() => handleMobileNavClick('pricing')} 
                 className="text-base font-medium py-2 hover:text-primary transition-colors text-left"
               >
                 Tarifs
               </button>
               <button 
-                onClick={() => {
-                  scrollToSection('how-it-works');
-                  document.querySelector('[data-radix-collection-item]')?.click(); // Close sheet
-                }} 
+                onClick={() => handleMobileNavClick('how-it-works')} 
                 className="text-base font-medium py-2 hover:text-primary transition-colors text-left"
               >
                 Comment ça marche
@@ -124,27 +129,25 @@ const Header = () => {
               <Link 
                 to="/contact" 
                 className="text-base font-medium py-2 hover:text-primary transition-colors"
-                onClick={() => document.querySelector('[data-radix-collection-item]')?.click()} // Close sheet
+                onClick={() => handleMobileNavClick()}
               >
                 Contact
               </Link>
               <div className="flex flex-col gap-2 mt-4">
-                <Button variant="outline" asChild className="w-full">
-                  <Link 
-                    to="/connexion"
-                    onClick={() => document.querySelector('[data-radix-collection-item]')?.click()} // Close sheet
-                  >
-                    Connexion
-                  </Link>
-                </Button>
-                <Button asChild className="w-full">
-                  <Link 
-                    to="/inscription"
-                    onClick={() => document.querySelector('[data-radix-collection-item]')?.click()} // Close sheet
-                  >
-                    Essai gratuit
-                  </Link>
-                </Button>
+                <SheetClose asChild>
+                  <Button variant="outline" asChild className="w-full">
+                    <Link to="/connexion">
+                      Connexion
+                    </Link>
+                  </Button>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Button asChild className="w-full">
+                    <Link to="/inscription">
+                      Essai gratuit
+                    </Link>
+                  </Button>
+                </SheetClose>
               </div>
             </div>
           </SheetContent>
