@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle, Edit, Trash2, Car, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, VehicleType } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import {
@@ -13,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -28,6 +28,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Define the vehicle type
 interface Vehicle {
@@ -39,6 +46,7 @@ interface Vehicle {
   is_luxury: boolean;
   is_active: boolean;
   vehicle_type_name?: string;
+  vehicle_type_id?: string;
 }
 
 const vehicleSchema = z.object({
@@ -48,7 +56,8 @@ const vehicleSchema = z.object({
   image_url: z.string().optional(),
   is_luxury: z.boolean().default(false),
   is_active: z.boolean().default(true),
-  vehicle_type_name: z.string().default("Berline"),
+  vehicle_type_id: z.string().min(1, "Le type de véhicule est requis"),
+  vehicle_type_name: z.string().optional(),
 });
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -56,7 +65,9 @@ type VehicleFormValues = z.infer<typeof vehicleSchema>;
 const Vehicles = () => {
   const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [typesLoading, setTypesLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -70,9 +81,34 @@ const Vehicles = () => {
       image_url: "",
       is_luxury: false,
       is_active: true,
-      vehicle_type_name: "Berline",
+      vehicle_type_id: "",
+      vehicle_type_name: "",
     },
   });
+
+  // Load vehicle types
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchVehicleTypes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('vehicle_types')
+          .select('*')
+          .order('name', { ascending: true });
+          
+        if (error) throw error;
+        setVehicleTypes(data || []);
+      } catch (error) {
+        console.error('Error fetching vehicle types:', error);
+        toast.error('Erreur lors du chargement des types de véhicules');
+      } finally {
+        setTypesLoading(false);
+      }
+    };
+    
+    fetchVehicleTypes();
+  }, [user]);
 
   // Load vehicles
   useEffect(() => {
@@ -98,10 +134,20 @@ const Vehicles = () => {
     fetchVehicles();
   }, [user]);
 
+  const getVehicleTypeName = (typeId: string | undefined) => {
+    if (!typeId) return "";
+    const type = vehicleTypes.find(t => t.id === typeId);
+    return type ? type.name : "";
+  };
+
   const onSubmit = async (values: VehicleFormValues) => {
     if (!user) return;
     
     setSubmitting(true);
+    
+    // Get vehicle type name from selected ID
+    const vehicleTypeName = getVehicleTypeName(values.vehicle_type_id);
+    
     try {
       if (editingVehicle) {
         // Update existing vehicle
@@ -114,7 +160,8 @@ const Vehicles = () => {
             image_url: values.image_url,
             is_luxury: values.is_luxury,
             is_active: values.is_active,
-            vehicle_type_name: values.vehicle_type_name || "Berline",
+            vehicle_type_id: values.vehicle_type_id,
+            vehicle_type_name: vehicleTypeName,
           })
           .eq('id', editingVehicle.id);
           
@@ -122,7 +169,11 @@ const Vehicles = () => {
         
         // Update local state
         setVehicles(vehicles.map(v => 
-          v.id === editingVehicle.id ? { ...v, ...values } : v
+          v.id === editingVehicle.id ? { 
+            ...v, 
+            ...values,
+            vehicle_type_name: vehicleTypeName
+          } : v
         ));
         toast.success('Véhicule mis à jour avec succès');
       } else {
@@ -136,7 +187,8 @@ const Vehicles = () => {
             image_url: values.image_url,
             is_luxury: values.is_luxury,
             is_active: values.is_active,
-            vehicle_type_name: values.vehicle_type_name || "Berline",
+            vehicle_type_id: values.vehicle_type_id,
+            vehicle_type_name: vehicleTypeName,
             driver_id: user.id
           })
           .select();
@@ -169,7 +221,8 @@ const Vehicles = () => {
       image_url: vehicle.image_url || "",
       is_luxury: vehicle.is_luxury,
       is_active: vehicle.is_active,
-      vehicle_type_name: vehicle.vehicle_type_name || "Berline",
+      vehicle_type_id: vehicle.vehicle_type_id || "",
+      vehicle_type_name: vehicle.vehicle_type_name || "",
     });
     setOpen(true);
   };
@@ -203,7 +256,8 @@ const Vehicles = () => {
       image_url: "",
       is_luxury: false,
       is_active: true,
-      vehicle_type_name: "Berline",
+      vehicle_type_id: vehicleTypes.length > 0 ? vehicleTypes[0].id : "",
+      vehicle_type_name: "",
     });
     setOpen(true);
   };
@@ -259,6 +313,11 @@ const Vehicles = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
+                    {vehicle.vehicle_type_name && (
+                      <div className="flex items-center rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs">
+                        <span>{vehicle.vehicle_type_name}</span>
+                      </div>
+                    )}
                     <div className="flex items-center rounded-full bg-muted px-3 py-1 text-xs">
                       <span>{vehicle.capacity} passagers</span>
                     </div>
@@ -350,13 +409,34 @@ const Vehicles = () => {
                 />
                 <FormField
                   control={form.control}
-                  name="vehicle_type_name"
+                  name="vehicle_type_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Type de véhicule</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Berline" {...field} />
-                      </FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez un type de véhicule" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {typesLoading ? (
+                            <div className="flex justify-center py-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            </div>
+                          ) : (
+                            vehicleTypes.map((type) => (
+                              <SelectItem key={type.id} value={type.id}>
+                                {type.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
