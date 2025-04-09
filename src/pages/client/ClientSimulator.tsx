@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +19,6 @@ import { toast } from 'sonner';
 import QuoteForm from '@/components/quote/QuoteForm';
 import { supabase } from '@/integrations/supabase/client';
 
-// Cette interface simulera une connexion API réelle pour les adresses
 interface Address {
   id: string;
   name: string;
@@ -39,9 +37,9 @@ const ClientSimulator = () => {
   const { user } = useAuth();
   const { vehicles, loading: vehiclesLoading } = useVehicles();
   const { 
-    pricing, 
+    pricingSettings, 
     loading: pricingLoading,
-    distancePricingTiers
+    distanceTiers
   } = usePricing();
   
   const [activeTab, setActiveTab] = useState('step1');
@@ -61,7 +59,6 @@ const ClientSimulator = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
   
-  // Au chargement, remplir les informations du chauffeur
   useEffect(() => {
     if (user) {
       const fetchUserInfo = async () => {
@@ -88,27 +85,21 @@ const ClientSimulator = () => {
     }
   }, [user]);
   
-  // Calculer le prix lorsque les données changent
   useEffect(() => {
-    if (!selectedVehicle || !pricing || !distancePricingTiers) return;
+    if (!selectedVehicle || !pricingSettings || !distanceTiers) return;
     
-    // Trouve le véhicule sélectionné
     const vehicle = vehicles.find(v => v.id === selectedVehicle);
     if (!vehicle) return;
     
-    // Cherche les tarifs pour ce type de véhicule
     const vehicleTypeId = vehicle.vehicle_type_id;
     
-    // Trouve le tarif au km applicable selon la distance
-    let pricePerKm = pricing.price_per_km;
+    let pricePerKm = pricingSettings.price_per_km;
     
-    if (distancePricingTiers && distancePricingTiers.length > 0) {
-      // Filtre les tarifs pour le type de véhicule sélectionné ou sans type spécifique
-      const applicableTiers = distancePricingTiers.filter(tier => 
-        !tier.vehicle_type_id || tier.vehicle_type_id === vehicleTypeId
+    if (distanceTiers && distanceTiers.length > 0) {
+      const applicableTiers = distanceTiers.filter(tier => 
+        !tier.vehicle_id || tier.vehicle_id === vehicleTypeId
       );
       
-      // Trouve le tier applicable selon la distance
       const applicableTier = applicableTiers.find(tier => 
         estimatedDistance >= tier.min_km && 
         (!tier.max_km || estimatedDistance <= tier.max_km)
@@ -119,45 +110,39 @@ const ClientSimulator = () => {
       }
     }
     
-    // Calcul du prix de base
-    let totalPrice = pricing.base_fare + (estimatedDistance * pricePerKm);
+    let totalPrice = pricingSettings.base_fare + (estimatedDistance * pricePerKm);
     
-    // Vérifie si c'est la nuit
-    if (pricing.night_rate_enabled && time) {
+    if (pricingSettings.night_rate_enabled && time) {
       const [hours, minutes] = time.split(':').map(Number);
       const tripTime = new Date();
       tripTime.setHours(hours);
       tripTime.setMinutes(minutes);
       
       const startTime = new Date();
-      const [startHours, startMinutes] = pricing.night_rate_start.split(':').map(Number);
+      const [startHours, startMinutes] = pricingSettings.night_rate_start?.split(':').map(Number) || [0, 0];
       startTime.setHours(startHours);
       startTime.setMinutes(startMinutes);
       
       const endTime = new Date();
-      const [endHours, endMinutes] = pricing.night_rate_end.split(':').map(Number);
+      const [endHours, endMinutes] = pricingSettings.night_rate_end?.split(':').map(Number) || [0, 0];
       endTime.setHours(endHours);
       endTime.setMinutes(endMinutes);
       
-      // Si l'heure de départ est pendant la nuit
       if (
         (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
         (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
       ) {
-        // Applique la majoration de nuit
-        totalPrice += totalPrice * (pricing.night_rate_percentage / 100);
+        const nightPercentage = pricingSettings.night_rate_percentage || 0;
+        totalPrice += totalPrice * (nightPercentage / 100);
       }
     }
     
-    // Applique le tarif minimum si nécessaire
-    if (totalPrice < pricing.min_fare) {
-      totalPrice = pricing.min_fare;
+    if (totalPrice < pricingSettings.min_fare) {
+      totalPrice = pricingSettings.min_fare;
     }
     
-    // Arrondi à l'entier
     setPrice(Math.round(totalPrice));
     
-    // Prépare les détails du devis
     setQuoteDetails({
       departureAddress,
       destinationAddress,
@@ -167,12 +152,11 @@ const ClientSimulator = () => {
       vehicleModel: vehicle.model,
       distance: estimatedDistance,
       duration: estimatedDuration,
-      baseFare: pricing.base_fare,
+      baseFare: pricingSettings.base_fare,
       pricePerKm,
       totalPrice: Math.round(totalPrice)
     });
-    
-  }, [selectedVehicle, departureAddress, destinationAddress, date, time, estimatedDistance, vehicles, pricing, distancePricingTiers]);
+  }, [selectedVehicle, departureAddress, destinationAddress, date, time, estimatedDistance, vehicles, pricingSettings, distanceTiers]);
   
   const handleNextStep = () => {
     if (activeTab === 'step1') {
@@ -204,7 +188,6 @@ const ClientSimulator = () => {
     
     setIsSubmitting(true);
     
-    // Simuler l'envoi d'email (dans un vrai cas, appeler une API)
     setTimeout(() => {
       toast.success('Votre devis a été envoyé à votre adresse e-mail');
       setIsSubmitting(false);
@@ -489,7 +472,7 @@ const ClientSimulator = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <p className="text-sm">Forfait de base</p>
-                          <p className="text-sm">{pricing?.base_fare.toFixed(2)}€</p>
+                          <p className="text-sm">{pricingSettings?.base_fare.toFixed(2)}€</p>
                         </div>
                         <div className="flex justify-between">
                           <p className="text-sm">Tarif kilométrique</p>
@@ -500,7 +483,7 @@ const ClientSimulator = () => {
                           <p className="text-sm">{estimatedDistance} km</p>
                         </div>
                         
-                        {pricing?.night_rate_enabled && time && (
+                        {pricingSettings?.night_rate_enabled && time && (
                           (() => {
                             const [hours, minutes] = time.split(':').map(Number);
                             const tripTime = new Date();
@@ -508,12 +491,12 @@ const ClientSimulator = () => {
                             tripTime.setMinutes(minutes);
                             
                             const startTime = new Date();
-                            const [startHours, startMinutes] = pricing.night_rate_start.split(':').map(Number);
+                            const [startHours, startMinutes] = pricingSettings.night_rate_start?.split(':').map(Number) || [0, 0];
                             startTime.setHours(startHours);
                             startTime.setMinutes(startMinutes);
                             
                             const endTime = new Date();
-                            const [endHours, endMinutes] = pricing.night_rate_end.split(':').map(Number);
+                            const [endHours, endMinutes] = pricingSettings.night_rate_end?.split(':').map(Number) || [0, 0];
                             endTime.setHours(endHours);
                             endTime.setMinutes(endMinutes);
                             
@@ -525,8 +508,8 @@ const ClientSimulator = () => {
                             
                             return isNight && (
                               <div className="flex justify-between">
-                                <p className="text-sm">Majoration de nuit ({pricing.night_rate_percentage}%)</p>
-                                <p className="text-sm">+{((price * pricing.night_rate_percentage / 100)).toFixed(2)}€</p>
+                                <p className="text-sm">Majoration de nuit ({pricingSettings.night_rate_percentage}%)</p>
+                                <p className="text-sm">+{((price * (pricingSettings.night_rate_percentage || 0) / 100)).toFixed(2)}€</p>
                               </div>
                             );
                           })()
