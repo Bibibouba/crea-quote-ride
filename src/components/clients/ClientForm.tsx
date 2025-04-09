@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -95,7 +96,13 @@ const ClientForm: React.FC<ClientFormProps> = ({
 
   const onSubmit = async (data: ClientFormValues) => {
     try {
-      await addClient.mutateAsync(data);
+      // Make sure we have all required fields - force as needed since we've validated with zod
+      const clientData = {
+        ...data,
+        client_type: data.client_type as ClientType // This is already validated by zod
+      };
+      
+      await addClient.mutateAsync(clientData);
       if (onSuccess) onSuccess();
     } catch (error) {
       toast({
