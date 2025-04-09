@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,16 @@ import { Link } from 'react-router-dom';
 
 const NotFound = () => {
   const location = useLocation();
+
+  // Définir la page courante pour le header
+  useEffect(() => {
+    // Permettre au Header de savoir que nous sommes sur la page 404
+    window.sessionStorage.setItem('currentPage', 'notfound');
+    
+    return () => {
+      window.sessionStorage.removeItem('currentPage');
+    };
+  }, []);
 
   return (
     <Layout>

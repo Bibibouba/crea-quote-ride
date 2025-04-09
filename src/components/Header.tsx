@@ -1,7 +1,7 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MenuIcon, X } from 'lucide-react';
 import {
   Sheet,
@@ -13,16 +13,29 @@ import {
 const Header = () => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [currentPage, setCurrentPage] = useState<string | null>(null);
+  
+  // Détecter la page courante au chargement et lors des changements de route
+  useEffect(() => {
+    // Vérifier si nous sommes sur la page d'accueil
+    const isHomePage = location.pathname === '/';
+    // Stocker l'état dans le sessionStorage pour la persistance
+    if (!isHomePage) {
+      window.sessionStorage.setItem('currentPage', location.pathname);
+      setCurrentPage(location.pathname);
+    } else {
+      window.sessionStorage.removeItem('currentPage');
+      setCurrentPage(null);
+    }
+  }, [location]);
   
   const scrollToSection = (id: string) => {
-    // Check if we are on the home page or need to navigate there first
-    const isOnContactPage = window.sessionStorage.getItem('currentPage') === 'contact';
-    
-    if (isOnContactPage) {
-      // If on contact page, navigate to home page with hash
+    // Si nous ne sommes pas sur la page d'accueil, naviguer vers la page d'accueil avec l'ancre
+    if (currentPage) {
       navigate(`/#${id}`);
     } else {
-      // If already on home page, just scroll
+      // Si nous sommes déjà sur la page d'accueil, simplement défiler
       const element = document.getElementById(id);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
@@ -31,16 +44,16 @@ const Header = () => {
   };
 
   const handleMobileNavClick = (id?: string) => {
-    // Close the sheet
+    // Fermer le menu mobile
     if (closeButtonRef.current) {
       closeButtonRef.current.click();
     }
     
-    // Scroll to section if id is provided
+    // Défiler vers la section si id est fourni
     if (id) {
       setTimeout(() => {
         scrollToSection(id);
-      }, 100); // Small delay to ensure sheet is closed first
+      }, 100); // Petit délai pour s'assurer que le menu est fermé
     }
   };
 
