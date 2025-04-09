@@ -30,6 +30,7 @@ const CompanySettingsManager = () => {
         const { data, error } = await supabase
           .from('company_settings')
           .select('*')
+          .eq('driver_id', user.id)
           .limit(1);
 
         if (error) throw error;
@@ -72,6 +73,7 @@ const CompanySettingsManager = () => {
         .from('company_settings')
         .update({
           logo_url: values.logo_url,
+          banner_url: values.banner_url,
           primary_color: values.primary_color,
           secondary_color: values.secondary_color,
           font_family: values.font_family,
@@ -86,6 +88,7 @@ const CompanySettingsManager = () => {
       setCompanySettings({
         ...companySettings,
         logo_url: values.logo_url,
+        banner_url: values.banner_url,
         primary_color: values.primary_color,
         secondary_color: values.secondary_color,
         font_family: values.font_family,

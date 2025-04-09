@@ -13,7 +13,7 @@ interface VehicleCardProps {
 
 const VehicleCard = ({ vehicle, onEdit, onDelete }: VehicleCardProps) => {
   return (
-    <Card key={vehicle.id} className={!vehicle.is_active ? "opacity-60" : ""}>
+    <Card key={vehicle.id} className={`h-full flex flex-col ${!vehicle.is_active ? "opacity-60" : ""}`}>
       <CardHeader className="pb-2">
         <div className="flex justify-between">
           <CardTitle>{vehicle.name}</CardTitle>
@@ -25,7 +25,7 @@ const VehicleCard = ({ vehicle, onEdit, onDelete }: VehicleCardProps) => {
         </div>
         <CardDescription>{vehicle.model}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow">
         <div className="flex flex-wrap gap-2">
           {vehicle.vehicle_type_name && (
             <div className="flex items-center rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs">
@@ -42,15 +42,17 @@ const VehicleCard = ({ vehicle, onEdit, onDelete }: VehicleCardProps) => {
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" size="sm" onClick={() => onEdit(vehicle)}>
-          <Edit className="mr-2 h-4 w-4" />
-          Modifier
-        </Button>
-        <Button variant="ghost" size="sm" onClick={() => onDelete(vehicle.id)}>
-          <Trash2 className="mr-2 h-4 w-4" />
-          Supprimer
-        </Button>
+      <CardFooter className="border-t pt-4 mt-auto">
+        <div className="flex justify-between w-full">
+          <Button variant="outline" size="sm" onClick={() => onEdit(vehicle)}>
+            <Edit className="mr-2 h-4 w-4" />
+            Modifier
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onDelete(vehicle.id)}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Supprimer
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
