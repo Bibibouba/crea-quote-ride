@@ -6,11 +6,14 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="bg-secondary py-12 border-t">
+    <footer className="bg-secondary/10 py-12 border-t">
       <div className="container">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <h3 className="font-bold text-xl gradient-text">CREACODEAL</h3>
+            <div className="flex items-center gap-2">
+              <img src="/logo.png" alt="VTCZen Logo" className="h-8 w-auto" />
+              <h3 className="font-bold text-xl gradient-text">VTCZen</h3>
+            </div>
             <p className="text-sm text-muted-foreground">
               Solution de devis en ligne pour chauffeurs VTC
             </p>

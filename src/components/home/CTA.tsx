@@ -13,7 +13,7 @@ const CTA = () => {
             Prêt à transformer votre façon de gérer vos devis VTC?
           </h2>
           <p className="max-w-[700px] text-lg text-muted-foreground">
-            Commencez votre essai gratuit dès aujourd'hui et découvrez tous les avantages de CREACODEAL
+            Commencez votre essai gratuit dès aujourd'hui et découvrez tous les avantages de VTCZen
           </p>
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <Button size="lg" asChild>

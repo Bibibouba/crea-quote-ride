@@ -15,7 +15,8 @@ const Header = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <span className="font-bold text-2xl gradient-text">CREACODEAL</span>
+            <img src="/logo.png" alt="VTCZen Logo" className="h-8 w-auto" />
+            <span className="font-bold text-2xl gradient-text">VTCZen</span>
           </Link>
         </div>
         
@@ -57,7 +58,10 @@ const Header = () => {
           </SheetTrigger>
           <SheetContent side="right" className="flex flex-col">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-xl gradient-text">CREACODEAL</span>
+              <div className="flex items-center gap-2">
+                <img src="/logo.png" alt="VTCZen Logo" className="h-6 w-auto" />
+                <span className="font-bold text-xl gradient-text">VTCZen</span>
+              </div>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <X className="h-5 w-5" />
