@@ -1,7 +1,7 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MenuIcon, X } from 'lucide-react';
 import {
   Sheet,
@@ -12,11 +12,21 @@ import {
 
 const Header = () => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const navigate = useNavigate();
   
   const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+    // Check if we are on the home page or need to navigate there first
+    const isOnContactPage = window.sessionStorage.getItem('currentPage') === 'contact';
+    
+    if (isOnContactPage) {
+      // If on contact page, navigate to home page with hash
+      navigate(`/#${id}`);
+    } else {
+      // If already on home page, just scroll
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 

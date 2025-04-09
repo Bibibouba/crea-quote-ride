@@ -11,8 +11,8 @@ interface MapProps {
 const Map = ({ address, zoom = 13 }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
-  const [showTokenInput, setShowTokenInput] = useState(true);
+  const [mapboxToken, setMapboxToken] = useState<string>('pk.eyJ1IjoidnRjemVuIiwiYSI6ImNtOTl1OXNqZzA4bGIyaXM2aWo2N2l6MDQifQ.daEqarjKUihmXDqV8hGswg');
+  const [showTokenInput, setShowTokenInput] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Function to geocode the address and center the map
@@ -43,6 +43,7 @@ const Map = ({ address, zoom = 13 }: MapProps) => {
         }
       } else {
         setError("Aucun résultat trouvé pour cette adresse");
+        console.error("Aucun résultat trouvé pour cette adresse");
       }
     } catch (error) {
       console.error('Error geocoding address:', error);
@@ -50,13 +51,15 @@ const Map = ({ address, zoom = 13 }: MapProps) => {
     }
   };
 
-  // Initialize map when token is provided
+  // Initialize map with token
   useEffect(() => {
     if (!mapboxToken || !mapContainer.current) return;
     
     try {
       // Clear any previous errors
       setError(null);
+      
+      console.log("Initializing map with token:", mapboxToken);
       
       // Set Mapbox token
       mapboxgl.accessToken = mapboxToken;
@@ -77,6 +80,7 @@ const Map = ({ address, zoom = 13 }: MapProps) => {
       
       // Geocode the address when the map loads
       map.current.on('load', () => {
+        console.log("Map loaded, geocoding address:", address);
         geocodeAddress(address, mapboxToken);
       });
 

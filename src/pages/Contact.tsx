@@ -1,10 +1,21 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import Map from '@/components/Map';
 import { Mail, MapPin } from 'lucide-react';
 
 const Contact = () => {
+  // Ajout d'un useEffect pour gérer la navigation via les ancres sur la page d'accueil
+  useEffect(() => {
+    // Cette fonction permettra au Header de savoir que nous sommes sur une autre page
+    // et qu'il doit rediriger vers la page d'accueil pour les sections internes
+    window.sessionStorage.setItem('currentPage', 'contact');
+    
+    return () => {
+      window.sessionStorage.removeItem('currentPage');
+    };
+  }, []);
+  
   return (
     <Layout>
       <section className="py-20 bg-background">
