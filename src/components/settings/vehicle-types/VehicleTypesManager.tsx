@@ -25,6 +25,30 @@ const VehicleTypesManager = () => {
   const [saving, setSaving] = useState(false);
   const { user } = useAuth();
 
+  // Fonction pour ajouter un tarif au kilomètre par défaut pour un type de véhicule
+  const createDefaultPricingTier = async (vehicleTypeId: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('distance_pricing_tiers')
+        .insert({
+          driver_id: user.id,
+          vehicle_type_id: vehicleTypeId,
+          min_km: 0, // Commence à 0 km
+          max_km: null, // Pas de limite maximale
+          price_per_km: 1.75, // Tarif par défaut
+        });
+
+      if (error) throw error;
+      
+      console.log('Tarif par défaut créé pour le nouveau type de véhicule');
+    } catch (error: any) {
+      console.error('Erreur lors de la création du tarif par défaut:', error);
+      // Ne pas afficher de toast ici pour ne pas perturber l'UX
+    }
+  };
+
   const handleVehicleTypeSubmit = async (values: VehicleTypeFormValues) => {
     if (!user) {
       toast.error('Vous devez être connecté pour effectuer cette action');
@@ -64,10 +88,15 @@ const VehicleTypesManager = () => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          setVehicleTypes(prev => [...prev, data[0] as VehicleType]);
+          const newVehicleType = data[0] as VehicleType;
+          setVehicleTypes(prev => [...prev, newVehicleType]);
+          
+          // Créer automatiquement un tarif par défaut pour ce type de véhicule
+          await createDefaultPricingTier(newVehicleType.id);
         }
         
         toast.success('Type de véhicule ajouté');
+        toast.info('Un tarif par défaut a été créé pour ce type de véhicule. Vous pouvez le personnaliser dans les paramètres de tarification.');
       }
       
       setIsTypeDialogOpen(false);
