@@ -60,14 +60,25 @@ const FileUploadField = ({
     try {
       setIsUploading(true);
       
-      const { data: buckets } = await supabase.storage.listBuckets();
-      if (!buckets?.find(bucket => bucket.name === 'company-assets')) {
-        await supabase.storage.createBucket('company-assets', {
-          public: true,
-          fileSizeLimit: 2097152, // 2MB
-        });
+      // Vérification que le bucket existe et création s'il n'existe pas
+      const { data: bucketsData, error: bucketError } = await supabase.storage.listBuckets();
+      
+      if (bucketError) {
+        console.error('Erreur lors de la vérification des buckets:', bucketError);
+        throw bucketError;
       }
       
+      // Vérification si le bucket existe dans la liste
+      const bucketExists = bucketsData?.some(bucket => bucket.name === 'company-assets');
+      console.log('Buckets disponibles:', bucketsData?.map(b => b.name));
+      console.log('Le bucket company-assets existe:', bucketExists);
+      
+      if (!bucketExists) {
+        toast.error('Le bucket de stockage "company-assets" n\'existe pas. Contactez l\'administrateur.');
+        return null;
+      }
+      
+      // Upload du fichier
       const { error: uploadError } = await supabase.storage
         .from('company-assets')
         .upload(filePath, file, {
@@ -77,6 +88,7 @@ const FileUploadField = ({
 
       if (uploadError) throw uploadError;
       
+      // Récupération de l'URL publique
       const { data } = supabase.storage
         .from('company-assets')
         .getPublicUrl(filePath);
