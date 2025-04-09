@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -11,7 +10,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="VTCZen Logo" className="h-8 w-auto" />
+              <img src="/lovable-uploads/5034bec5-4aa2-4893-a6bf-ae8655d7e130.png" alt="VTCZen Logo" className="h-8 w-auto" />
               <h3 className="font-bold text-xl gradient-text">VTCZen</h3>
             </div>
             <p className="text-sm text-muted-foreground">
