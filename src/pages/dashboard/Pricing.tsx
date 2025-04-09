@@ -338,7 +338,10 @@ const Pricing = () => {
           )
         );
         
-        toast.success('Palier de tarification mis à jour.');
+        toast({
+          title: "Succès",
+          description: "Palier de tarification mis à jour."
+        });
       } else {
         // Add new tier
         const { data, error } = await supabase
@@ -358,14 +361,21 @@ const Pricing = () => {
           setDistanceTiers(prevTiers => [...prevTiers, data[0] as DistanceTier]);
         }
         
-        toast.success('Nouveau palier de tarification ajouté.');
+        toast({
+          title: "Succès",
+          description: "Nouveau palier de tarification ajouté."
+        });
       }
       
       setTierDialogOpen(false);
       
     } catch (error: any) {
       console.error('Error saving distance tier:', error);
-      toast.error(`Erreur: ${error.message}`);
+      toast({
+        title: "Erreur",
+        description: `Erreur: ${error.message}`,
+        variant: "destructive"
+      });
     } finally {
       setSavingSettings(false);
     }
@@ -383,11 +393,18 @@ const Pricing = () => {
       if (error) throw error;
       
       setDistanceTiers(prevTiers => prevTiers.filter(t => t.id !== id));
-      toast.success('Palier de tarification supprimé.');
+      toast({
+        title: "Succès",
+        description: "Palier de tarification supprimé."
+      });
       
     } catch (error: any) {
       console.error('Error deleting distance tier:', error);
-      toast.error(`Erreur: ${error.message}`);
+      toast({
+        title: "Erreur",
+        description: `Erreur: ${error.message}`,
+        variant: "destructive"
+      });
     }
   };
   
@@ -869,125 +886,4 @@ const Pricing = () => {
               </CardHeader>
               <CardContent>
                 <Form {...pricingForm}>
-                  <form onSubmit={pricingForm.handleSubmit(saveSettings)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={pricingForm.control}
-                        name="minimum_trip_fare"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tarif minimum par course (€)</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.01" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Prix minimum facturé pour une course, quelle que soit la distance
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={pricingForm.control}
-                        name="holiday_sunday_percentage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Majoration jours fériés et dimanche (%)</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Input type="number" step="0.01" {...field} />
-                                <PercentIcon className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                              </div>
-                            </FormControl>
-                            <FormDescription>
-                              Pourcentage de majoration appliqué les dimanches et jours fériés
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={pricingForm.control}
-                        name="minimum_trip_minutes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Temps de trajet minimum facturé (minutes)</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Durée minimum facturée, même si le trajet est plus court
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={pricingForm.control}
-                        name="base_fare"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Frais de prise en charge (€)</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.01" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Frais fixes ajoutés au début de chaque course
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <FormField
-                      control={pricingForm.control}
-                      name="service_area"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Zone de service</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Ex: Paris et région parisienne, Lyon et agglomération..."
-                              {...field}
-                              value={field.value || ''}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Précisez les zones où vous proposez vos services (facultatif)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <Button type="submit" disabled={savingSettings}>
-                      {savingSettings ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Enregistrement...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="mr-2 h-4 w-4" />
-                          Enregistrer
-                        </>
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </DashboardLayout>
-  );
-};
-
-export default Pricing;
+                  <form onSubmit={pricingForm.handleSubmit(save
