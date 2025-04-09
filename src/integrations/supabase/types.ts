@@ -9,7 +9,178 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      company_settings: {
+        Row: {
+          created_at: string
+          driver_id: string
+          font_family: string | null
+          id: string
+          is_trial: boolean | null
+          logo_url: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          font_family?: string | null
+          id?: string
+          is_trial?: boolean | null
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          font_family?: string | null
+          id?: string
+          is_trial?: boolean | null
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_settings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pricing: {
+        Row: {
+          base_fare: number
+          created_at: string
+          driver_id: string
+          id: string
+          min_fare: number
+          price_per_km: number
+          updated_at: string
+          vehicle_id: string | null
+          waiting_fee_per_minute: number
+        }
+        Insert: {
+          base_fare: number
+          created_at?: string
+          driver_id: string
+          id?: string
+          min_fare: number
+          price_per_km: number
+          updated_at?: string
+          vehicle_id?: string | null
+          waiting_fee_per_minute: number
+        }
+        Update: {
+          base_fare?: number
+          created_at?: string
+          driver_id?: string
+          id?: string
+          min_fare?: number
+          price_per_km?: number
+          updated_at?: string
+          vehicle_id?: string | null
+          waiting_fee_per_minute?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          capacity: number
+          created_at: string
+          driver_id: string
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_luxury: boolean | null
+          model: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          capacity: number
+          created_at?: string
+          driver_id: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_luxury?: boolean | null
+          model: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          driver_id?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_luxury?: boolean | null
+          model?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
