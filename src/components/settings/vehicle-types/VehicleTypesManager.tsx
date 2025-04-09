@@ -16,14 +16,21 @@ import VehicleTypesList from './VehicleTypesList';
 import VehicleTypeDialog from './VehicleTypeDialog';
 import { VehicleTypeFormValues } from './VehicleTypeForm';
 import { VehicleType } from '@/types/vehicle';
+import { useAuth } from '@/contexts/AuthContext';
 
 const VehicleTypesManager = () => {
   const { vehicleTypes, setVehicleTypes, loading } = useVehicleTypes();
   const [editingType, setEditingType] = useState<VehicleType | null>(null);
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { user } = useAuth();
 
   const handleVehicleTypeSubmit = async (values: VehicleTypeFormValues) => {
+    if (!user) {
+      toast.error('Vous devez être connecté pour effectuer cette action');
+      return;
+    }
+    
     setSaving(true);
     try {
       if (editingType) {
@@ -50,6 +57,7 @@ const VehicleTypesManager = () => {
             name: values.name,
             icon: values.icon || null,
             is_default: false,
+            driver_id: user.id,
           })
           .select();
 
