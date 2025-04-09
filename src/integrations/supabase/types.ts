@@ -63,6 +63,7 @@ export type Database = {
           price_per_km: number
           updated_at: string
           vehicle_id: string | null
+          vehicle_type_id: string | null
         }
         Insert: {
           created_at?: string
@@ -73,6 +74,7 @@ export type Database = {
           price_per_km: number
           updated_at?: string
           vehicle_id?: string | null
+          vehicle_type_id?: string | null
         }
         Update: {
           created_at?: string
@@ -83,6 +85,7 @@ export type Database = {
           price_per_km?: number
           updated_at?: string
           vehicle_id?: string | null
+          vehicle_type_id?: string | null
         }
         Relationships: [
           {
@@ -97,6 +100,13 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distance_pricing_tiers_vehicle_type_id_fkey"
+            columns: ["vehicle_type_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_types"
             referencedColumns: ["id"]
           },
         ]
@@ -221,6 +231,44 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_types: {
+        Row: {
+          created_at: string
+          driver_id: string
+          icon: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_types_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           capacity: number
@@ -233,6 +281,7 @@ export type Database = {
           model: string
           name: string
           updated_at: string
+          vehicle_type_id: string | null
           vehicle_type_name: string | null
         }
         Insert: {
@@ -246,6 +295,7 @@ export type Database = {
           model: string
           name: string
           updated_at?: string
+          vehicle_type_id?: string | null
           vehicle_type_name?: string | null
         }
         Update: {
@@ -259,6 +309,7 @@ export type Database = {
           model?: string
           name?: string
           updated_at?: string
+          vehicle_type_id?: string | null
           vehicle_type_name?: string | null
         }
         Relationships: [
@@ -267,6 +318,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_vehicle_type_id_fkey"
+            columns: ["vehicle_type_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_types"
             referencedColumns: ["id"]
           },
         ]
