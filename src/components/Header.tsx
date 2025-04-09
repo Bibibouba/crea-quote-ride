@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -15,12 +14,10 @@ const Header = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/lovable-uploads/41fb52ad-c563-49a0-8a51-e8362b4669a7.png" alt="VTCZen Logo" className="h-8 w-auto" />
-            {/* Logo contient déjà le texte, donc on retire le span */}
+            <img src="/lovable-uploads/a48d188b-0d09-4530-87d1-6efc0fd30019.png" alt="VTCZen Logo" className="h-8 w-auto" />
           </Link>
         </div>
         
-        {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6">
           <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
             Accueil
@@ -48,7 +45,6 @@ const Header = () => {
           </Button>
         </div>
         
-        {/* Mobile menu */}
         <Sheet>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="ghost" size="icon">
@@ -59,7 +55,7 @@ const Header = () => {
           <SheetContent side="right" className="flex flex-col">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <img src="/lovable-uploads/41fb52ad-c563-49a0-8a51-e8362b4669a7.png" alt="VTCZen Logo" className="h-6 w-auto" />
+                <img src="/lovable-uploads/a48d188b-0d09-4530-87d1-6efc0fd30019.png" alt="VTCZen Logo" className="h-6 w-auto" />
               </div>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
