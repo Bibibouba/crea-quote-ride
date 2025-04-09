@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -15,7 +14,7 @@ const Header = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/lovable-uploads/5034bec5-4aa2-4893-a6bf-ae8655d7e130.png" alt="VTCZen Logo" className="h-8 w-auto" />
+            <img src="/logo.png" alt="VTCZen Logo" className="h-8 w-auto" />
             <span className="font-bold text-2xl gradient-text">VTCZen</span>
           </Link>
         </div>
