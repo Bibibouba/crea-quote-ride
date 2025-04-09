@@ -39,35 +39,55 @@ export const usePricing = () => {
   const [savingSettings, setSavingSettings] = useState(false);
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
   const [distanceTiers, setDistanceTiers] = useState<DistanceTier[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
       
       try {
+        console.log("Fetching pricing data for user:", user.id);
+        
         const { data: pricingData, error: pricingError } = await supabase
           .from('pricing')
           .select('*')
+          .eq('driver_id', user.id)
           .limit(1);
           
         if (pricingError) throw pricingError;
         
+        console.log("Pricing data received:", pricingData);
+        
         if (pricingData && pricingData.length > 0) {
           setPricingSettings(pricingData[0] as PricingSettings);
+          console.log("Pricing settings updated:", pricingData[0]);
+        } else {
+          console.warn("No pricing data found for user:", user.id);
+          setError("Aucune donnée de tarification trouvée. Veuillez actualiser la page.");
+          toast({
+            title: "Données manquantes",
+            description: "Aucune donnée de tarification trouvée. Veuillez actualiser la page.",
+            variant: "destructive",
+          });
         }
         
         const { data: tiersData, error: tiersError } = await supabase
           .from('distance_pricing_tiers')
           .select('*')
+          .eq('driver_id', user.id)
           .order('min_km', { ascending: true });
           
         if (tiersError) throw tiersError;
+        
+        console.log("Distance tiers data received:", tiersData);
         setDistanceTiers(tiersData as DistanceTier[] || []);
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching pricing data:', error);
+        setError(error.message || "Erreur de chargement des données");
         toast({
           title: "Erreur",
           description: "Erreur lors du chargement des données de tarification.",
@@ -82,10 +102,19 @@ export const usePricing = () => {
   }, [user]);
   
   const saveSettings = async (formValues: Partial<PricingSettings>): Promise<void> => {
-    if (!user || !pricingSettings) return;
+    if (!user || !pricingSettings) {
+      toast({
+        title: "Erreur",
+        description: "Aucune donnée de tarification à mettre à jour.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setSavingSettings(true);
     try {
+      console.log("Saving pricing settings:", formValues);
+      
       const { error } = await supabase
         .from('pricing')
         .update(formValues)
@@ -94,6 +123,7 @@ export const usePricing = () => {
       if (error) throw error;
       
       setPricingSettings({ ...pricingSettings, ...formValues });
+      console.log("Settings updated successfully");
       
       toast({
         title: "Succès",
@@ -112,10 +142,19 @@ export const usePricing = () => {
   };
   
   const saveTier = async (tier: DistanceTier, isNew: boolean = false): Promise<void> => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour effectuer cette action.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setSavingSettings(true);
     try {
+      console.log("Saving distance tier:", tier, "isNew:", isNew);
+      
       if (!isNew && tier.id) {
         const { error } = await supabase
           .from('distance_pricing_tiers')
@@ -173,9 +212,18 @@ export const usePricing = () => {
   };
   
   const deleteTier = async (id: string): Promise<void> => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour effectuer cette action.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
+      console.log("Deleting tier with id:", id);
+      
       const { error } = await supabase
         .from('distance_pricing_tiers')
         .delete()
@@ -199,14 +247,49 @@ export const usePricing = () => {
     }
   };
 
+  const refreshData = async (): Promise<void> => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data: pricingData, error: pricingError } = await supabase
+        .from('pricing')
+        .select('*')
+        .eq('driver_id', user.id)
+        .limit(1);
+        
+      if (pricingError) throw pricingError;
+      
+      if (pricingData && pricingData.length > 0) {
+        setPricingSettings(pricingData[0] as PricingSettings);
+      }
+      
+      toast({
+        title: "Succès",
+        description: "Données actualisées avec succès.",
+      });
+    } catch (error: any) {
+      console.error('Error refreshing data:', error);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de l'actualisation: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     savingSettings,
     pricingSettings,
     distanceTiers,
+    error,
     saveSettings,
     saveTier,
     deleteTier,
+    refreshData,
     setSavingSettings
   };
 };

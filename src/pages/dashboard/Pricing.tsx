@@ -11,9 +11,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { usePricing, DistanceTier } from '@/hooks/use-pricing';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Import pricing component fragments
 import DistanceTiersList from '@/components/pricing/DistanceTiersList';
@@ -38,15 +41,18 @@ const Pricing = () => {
     savingSettings,
     pricingSettings,
     distanceTiers,
+    error,
     saveSettings,
     saveTier,
     deleteTier,
+    refreshData,
     setSavingSettings
   } = usePricing();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [editingTier, setEditingTier] = useState<DistanceTier | null>(null);
   const [tierDialogOpen, setTierDialogOpen] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Load vehicles data
   useEffect(() => {
@@ -54,13 +60,16 @@ const Pricing = () => {
     
     const fetchVehicles = async () => {
       try {
+        console.log("Fetching vehicles for user:", user.id);
         // Fetch vehicles
         const { data: vehiclesData, error: vehiclesError } = await supabase
           .from('vehicles')
           .select('*')
+          .eq('driver_id', user.id)
           .order('name', { ascending: true });
           
         if (vehiclesError) throw vehiclesError;
+        console.log("Vehicles data received:", vehiclesData);
         setVehicles(vehiclesData as Vehicle[] || []);
         
         if (vehiclesData && vehiclesData.length > 0 && !selectedVehicleId) {
@@ -105,6 +114,17 @@ const Pricing = () => {
     await deleteTier(id);
   };
   
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshData();
+    setRefreshing(false);
+  };
+  
+  // Debugging
+  console.log("pricingSettings:", pricingSettings);
+  console.log("Loading:", loading);
+  console.log("Error:", error);
+  
   if (loading) {
     return (
       <DashboardLayout>
@@ -115,18 +135,66 @@ const Pricing = () => {
     );
   }
 
-  // Debugging
-  console.log("pricingSettings:", pricingSettings);
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestion des tarifs</h1>
-          <p className="text-muted-foreground">
-            Définissez vos tarifs pour chaque véhicule et type de service
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Gestion des tarifs</h1>
+            <p className="text-muted-foreground">
+              Définissez vos tarifs pour chaque véhicule et type de service
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh} 
+            disabled={refreshing}
+            className="flex items-center gap-2"
+          >
+            {refreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            Actualiser
+          </Button>
         </div>
+        
+        {error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Erreur</AlertTitle>
+            <AlertDescription>
+              {error}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefresh} 
+                className="ml-2"
+              >
+                Actualiser les données
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {!pricingSettings && !loading && !error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Données manquantes</AlertTitle>
+            <AlertDescription>
+              Aucune donnée de tarification trouvée. Veuillez actualiser la page.
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefresh} 
+                className="ml-2"
+              >
+                Actualiser les données
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Tabs defaultValue="distance">
           <TabsList className="grid w-full md:w-auto grid-cols-4 md:flex">
@@ -179,12 +247,16 @@ const Pricing = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {pricingSettings && (
+                {pricingSettings ? (
                   <NightRatesForm
                     settings={pricingSettings}
                     onSave={saveSettings}
                     saving={savingSettings}
                   />
+                ) : (
+                  <div className="py-8 text-center text-muted-foreground">
+                    <p>Aucune donnée disponible. Veuillez actualiser la page.</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -200,12 +272,16 @@ const Pricing = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {pricingSettings && (
+                {pricingSettings ? (
                   <WaitingRatesForm
                     settings={pricingSettings}
                     onSave={saveSettings}
                     saving={savingSettings}
                   />
+                ) : (
+                  <div className="py-8 text-center text-muted-foreground">
+                    <p>Aucune donnée disponible. Veuillez actualiser la page.</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -221,12 +297,16 @@ const Pricing = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {pricingSettings && (
+                {pricingSettings ? (
                   <AdditionalOptionsForm
                     settings={pricingSettings}
                     onSave={saveSettings}
                     saving={savingSettings}
                   />
+                ) : (
+                  <div className="py-8 text-center text-muted-foreground">
+                    <p>Aucune donnée disponible. Veuillez actualiser la page.</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
