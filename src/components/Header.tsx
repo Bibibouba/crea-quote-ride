@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -9,6 +10,13 @@ import {
 } from "@/components/ui/sheet";
 
 const Header = () => {
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container flex h-16 items-center justify-between">
@@ -19,18 +27,30 @@ const Header = () => {
         </div>
         
         <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
+          <button 
+            onClick={() => scrollToSection('hero')} 
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
             Accueil
-          </Link>
-          <Link to="/fonctionnalites" className="text-sm font-medium hover:text-primary transition-colors">
+          </button>
+          <button 
+            onClick={() => scrollToSection('features')} 
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
             Fonctionnalités
-          </Link>
-          <Link to="/tarifs" className="text-sm font-medium hover:text-primary transition-colors">
+          </button>
+          <button 
+            onClick={() => scrollToSection('pricing')} 
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
             Tarifs
-          </Link>
-          <Link to="/demo" className="text-sm font-medium hover:text-primary transition-colors">
-            Démo
-          </Link>
+          </button>
+          <button 
+            onClick={() => scrollToSection('how-it-works')} 
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            Comment ça marche
+          </button>
           <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
             Contact
           </Link>
@@ -65,27 +85,65 @@ const Header = () => {
               </SheetTrigger>
             </div>
             <div className="flex flex-col gap-4 mt-6">
-              <Link to="/" className="text-base font-medium py-2 hover:text-primary transition-colors">
+              <button 
+                onClick={() => {
+                  scrollToSection('hero');
+                  document.querySelector('[data-radix-collection-item]')?.click(); // Close sheet
+                }} 
+                className="text-base font-medium py-2 hover:text-primary transition-colors text-left"
+              >
                 Accueil
-              </Link>
-              <Link to="/fonctionnalites" className="text-base font-medium py-2 hover:text-primary transition-colors">
+              </button>
+              <button 
+                onClick={() => {
+                  scrollToSection('features');
+                  document.querySelector('[data-radix-collection-item]')?.click(); // Close sheet
+                }} 
+                className="text-base font-medium py-2 hover:text-primary transition-colors text-left"
+              >
                 Fonctionnalités
-              </Link>
-              <Link to="/tarifs" className="text-base font-medium py-2 hover:text-primary transition-colors">
+              </button>
+              <button 
+                onClick={() => {
+                  scrollToSection('pricing');
+                  document.querySelector('[data-radix-collection-item]')?.click(); // Close sheet
+                }} 
+                className="text-base font-medium py-2 hover:text-primary transition-colors text-left"
+              >
                 Tarifs
-              </Link>
-              <Link to="/demo" className="text-base font-medium py-2 hover:text-primary transition-colors">
-                Démo
-              </Link>
-              <Link to="/contact" className="text-base font-medium py-2 hover:text-primary transition-colors">
+              </button>
+              <button 
+                onClick={() => {
+                  scrollToSection('how-it-works');
+                  document.querySelector('[data-radix-collection-item]')?.click(); // Close sheet
+                }} 
+                className="text-base font-medium py-2 hover:text-primary transition-colors text-left"
+              >
+                Comment ça marche
+              </button>
+              <Link 
+                to="/contact" 
+                className="text-base font-medium py-2 hover:text-primary transition-colors"
+                onClick={() => document.querySelector('[data-radix-collection-item]')?.click()} // Close sheet
+              >
                 Contact
               </Link>
               <div className="flex flex-col gap-2 mt-4">
                 <Button variant="outline" asChild className="w-full">
-                  <Link to="/connexion">Connexion</Link>
+                  <Link 
+                    to="/connexion"
+                    onClick={() => document.querySelector('[data-radix-collection-item]')?.click()} // Close sheet
+                  >
+                    Connexion
+                  </Link>
                 </Button>
                 <Button asChild className="w-full">
-                  <Link to="/inscription">Essai gratuit</Link>
+                  <Link 
+                    to="/inscription"
+                    onClick={() => document.querySelector('[data-radix-collection-item]')?.click()} // Close sheet
+                  >
+                    Essai gratuit
+                  </Link>
                 </Button>
               </div>
             </div>

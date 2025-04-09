@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 const Pricing = () => {
   return (
-    <section className="py-20 bg-secondary/10">
+    <section id="pricing" className="py-20 bg-secondary/10">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center gap-4 text-center">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
