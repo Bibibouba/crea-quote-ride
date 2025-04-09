@@ -10,7 +10,8 @@ import {
   Home, 
   LogOut,
   Menu,
-  X
+  X,
+  Eye
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
@@ -117,6 +118,16 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
             <div className="mt-4 flex flex-col gap-2">
               <NavLinks />
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 mt-4"
+                asChild
+              >
+                <Link to="/client-simulator">
+                  <Eye className="mr-2 h-5 w-5" />
+                  Voir l'interface client
+                </Link>
+              </Button>
               <Button variant="ghost" className="w-full justify-start" onClick={() => signOut()}>
                 <LogOut className="mr-2 h-5 w-5" />
                 Déconnexion
@@ -138,7 +149,17 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="flex flex-1 flex-col gap-2 p-4">
             <NavLinks />
           </div>
-          <div className="border-t p-4">
+          <div className="border-t p-4 flex flex-col gap-2">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
+              asChild
+            >
+              <Link to="/client-simulator">
+                <Eye className="mr-2 h-5 w-5" />
+                Voir l'interface client
+              </Link>
+            </Button>
             <Button variant="ghost" className="w-full justify-start" onClick={() => signOut()}>
               <LogOut className="mr-2 h-5 w-5" />
               Déconnexion
