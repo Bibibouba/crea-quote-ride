@@ -1,13 +1,30 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from 'react';
+import Layout from '@/components/Layout';
+import Hero from '@/components/home/Hero';
+import Features from '@/components/home/Features';
+import HowItWorks from '@/components/home/HowItWorks';
+import Pricing from '@/components/home/Pricing';
+import Testimonials from '@/components/home/Testimonials';
+import CTA from '@/components/home/CTA';
+import QuoteForm from '@/components/quote/QuoteForm';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <Layout>
+      <Hero />
+      <div className="py-12 bg-muted">
+        <div className="container">
+          <h2 className="text-3xl font-bold text-center mb-10">Simulez un devis</h2>
+          <QuoteForm />
+        </div>
       </div>
-    </div>
+      <Features />
+      <HowItWorks />
+      <Testimonials />
+      <Pricing />
+      <CTA />
+    </Layout>
   );
 };
 
