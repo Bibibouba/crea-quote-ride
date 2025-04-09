@@ -1,48 +1,197 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon, MapIcon, CarFrontIcon, NavigationIcon, DollarSignIcon } from 'lucide-react';
+import { CalendarIcon, MapIcon, CarFrontIcon, NavigationIcon, DollarSignIcon, CheckIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuotes } from '@/hooks/useQuotes';
+import { useClients } from '@/hooks/useClients';
+import { supabase } from '@/integrations/supabase/client';
 
-const QuoteForm = () => {
+interface QuoteFormProps {
+  clientId?: string;
+  onSuccess?: () => void;
+}
+
+const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
+  const { user } = useAuth();
+  const { addQuote } = useQuotes();
+  const { clients } = useClients();
+  const { toast } = useToast();
+  
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
-  const [date, setDate] = useState<Date>();
-  const [time, setTime] = useState('');
+  const [date, setDate] = useState<Date>(new Date());
+  const [time, setTime] = useState('12:00');
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [passengers, setPassengers] = useState('1');
   const [showQuote, setShowQuote] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isQuoteSent, setIsQuoteSent] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(clientId || '');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setShowQuote(true);
-      setIsLoading(false);
-    }, 1500);
-  };
+  // Valeurs estimées pour le devis
+  const estimatedDistance = 40; // km
+  const estimatedDuration = 45; // minutes
   
+  // Véhicules disponibles (normalement ces données viendraient d'une API)
   const vehicles = [
     { id: "sedan", name: "Berline", basePrice: 1.8, description: "Mercedes Classe E ou équivalent" },
     { id: "van", name: "Van", basePrice: 2.2, description: "Mercedes Classe V ou équivalent" },
     { id: "luxury", name: "Luxe", basePrice: 2.5, description: "Mercedes Classe S ou équivalent" }
   ];
   
-  const estimatedDistance = 40; // km
-  const estimatedDuration = 45; // minutes
+  // Calcul du prix
   const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
   const estimatedPrice = Math.round(estimatedDistance * basePrice);
+  
+  // Si un client est déjà sélectionné, charger ses informations
+  useEffect(() => {
+    if (clientId && clients.length > 0) {
+      const client = clients.find(c => c.id === clientId);
+      if (client) {
+        setSelectedClient(client.id);
+        setFirstName(client.first_name);
+        setLastName(client.last_name);
+        setEmail(client.email);
+      }
+    }
+  }, [clientId, clients]);
+  
+  // Pré-remplir les champs de l'utilisateur connecté si disponible
+  useEffect(() => {
+    if (user && !clientId) {
+      const fetchUserInfo = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, email')
+            .eq('id', user.id)
+            .single();
+          
+          if (error) throw error;
+          
+          if (data) {
+            setFirstName(data.first_name || '');
+            setLastName(data.last_name || '');
+            setEmail(data.email || user.email || '');
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des informations utilisateur:', error);
+        }
+      };
+      
+      fetchUserInfo();
+    }
+  }, [user]);
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Simuler un délai d'API
+    setTimeout(() => {
+      setShowQuote(true);
+      setIsLoading(false);
+    }, 1000);
+  };
+  
+  const handleSaveQuote = async () => {
+    if (!date) {
+      toast({
+        title: 'Date manquante',
+        description: 'Veuillez sélectionner une date pour le trajet',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Formatter la date et heure
+      const dateTime = new Date(date);
+      const [hours, minutes] = time.split(':');
+      dateTime.setHours(parseInt(hours), parseInt(minutes));
+      
+      // Vérifier si un client existe déjà ou en créer un nouveau
+      let finalClientId = selectedClient;
+      
+      if (!selectedClient && firstName && lastName && email) {
+        // Si on n'a pas de client sélectionné mais qu'on a les informations, créer un nouveau client
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        if (!userId) {
+          throw new Error("Utilisateur non authentifié");
+        }
+        
+        const { data, error } = await supabase
+          .from('clients')
+          .insert({
+            driver_id: userId,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            client_type: 'personal'
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        finalClientId = data.id;
+      }
+      
+      if (!finalClientId) {
+        throw new Error("Aucun client spécifié pour ce devis");
+      }
+      
+      // Enregistrer le devis dans la base de données
+      await addQuote.mutateAsync({
+        client_id: finalClientId,
+        vehicle_id: null, // Dans un cas réel, ce serait l'ID du véhicule sélectionné
+        departure_location: departureAddress,
+        arrival_location: destinationAddress,
+        ride_date: dateTime.toISOString(),
+        amount: estimatedPrice,
+        status: 'pending',
+        driver_id: '' // Ce champ sera automatiquement rempli dans la fonction addQuote
+      });
+      
+      toast({
+        title: 'Devis enregistré',
+        description: 'Votre devis a été enregistré avec succès',
+      });
+      
+      setIsQuoteSent(true);
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement du devis:', error);
+      toast({
+        title: 'Erreur',
+        description: `Erreur lors de l'enregistrement: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -180,9 +329,34 @@ const QuoteForm = () => {
               </div>
               
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Calcul en cours..." : "Obtenir un devis"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Calcul en cours...
+                  </>
+                ) : "Obtenir un devis"}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+      ) : isQuoteSent ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="bg-green-100 p-3 rounded-full mb-4">
+                <CheckIcon className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="text-2xl font-semibold mb-2">Devis enregistré avec succès</h3>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                Votre devis a bien été enregistré dans notre système et sera accessible depuis votre dashboard.
+              </p>
+              <Button onClick={() => {
+                setShowQuote(false);
+                setIsQuoteSent(false);
+              }}>
+                Créer un nouveau devis
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -237,10 +411,59 @@ const QuoteForm = () => {
                 </div>
               </div>
               
+              {!clientId && (
+                <div className="border rounded-md p-4 space-y-4">
+                  <h3 className="font-medium">Vos coordonnées</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">Prénom</Label>
+                      <Input
+                        id="firstName"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Nom</Label>
+                      <Input
+                        id="lastName"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button className="w-full">
-                  <DollarSignIcon className="mr-2 h-4 w-4" />
-                  Confirmer et payer
+                <Button 
+                  className="w-full"
+                  onClick={handleSaveQuote}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enregistrement en cours...
+                    </>
+                  ) : (
+                    <>
+                      <DollarSignIcon className="mr-2 h-4 w-4" />
+                      Enregistrer ce devis
+                    </>
+                  )}
                 </Button>
                 <Button variant="outline" onClick={() => setShowQuote(false)}>
                   Modifier le devis

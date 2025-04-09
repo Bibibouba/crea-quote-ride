@@ -81,11 +81,61 @@ export const useQuotes = (clientId?: string) => {
     },
   });
 
+  // Ajouter un nouveau devis
+  const addQuote = useMutation({
+    mutationFn: async (newQuote: Omit<Quote, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'>) => {
+      // Get the current user's ID from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+      
+      // Add the driver_id to the quote data
+      const quoteWithDriverId = {
+        ...newQuote,
+        driver_id: userId
+      };
+
+      const { data, error } = await supabase
+        .from('quotes')
+        .insert(quoteWithDriverId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding quote', error);
+        throw error;
+      }
+
+      return data as Quote;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      if (clientId) {
+        queryClient.invalidateQueries({ queryKey: ['quotes', clientId] });
+      }
+      toast({
+        title: 'Devis créé',
+        description: 'Le devis a été créé avec succès',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erreur',
+        description: `Erreur lors de la création du devis: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     quotes: quotes || [],
     isLoading,
     error: error ? (error as Error).message : null,
     updateQuoteStatus,
+    addQuote,
     refetch,
   };
 };
