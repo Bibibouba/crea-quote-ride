@@ -10,3 +10,13 @@ export interface Vehicle {
   vehicle_type_name?: string;
   vehicle_type_id?: string;
 }
+
+export interface VehicleType {
+  id: string;
+  name: string;
+  driver_id: string;
+  is_default?: boolean;
+  icon?: string | null;
+  created_at: string;
+  updated_at: string;
+}

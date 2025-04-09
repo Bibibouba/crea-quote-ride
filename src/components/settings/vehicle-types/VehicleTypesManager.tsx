@@ -1,0 +1,126 @@
+
+import React, { useState } from 'react';
+import { PlusCircle, Loader2 } from 'lucide-react';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
+import { useVehicleTypes } from '@/hooks/useVehicleTypes';
+import VehicleTypesList from './VehicleTypesList';
+import VehicleTypeDialog from './VehicleTypeDialog';
+import { VehicleTypeFormValues } from './VehicleTypeForm';
+import { VehicleType } from '@/types/vehicle';
+
+const VehicleTypesManager = () => {
+  const { vehicleTypes, setVehicleTypes, loading } = useVehicleTypes();
+  const [editingType, setEditingType] = useState<VehicleType | null>(null);
+  const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const handleVehicleTypeSubmit = async (values: VehicleTypeFormValues) => {
+    setSaving(true);
+    try {
+      if (editingType) {
+        const { error } = await supabase
+          .from('vehicle_types')
+          .update({
+            name: values.name,
+            icon: values.icon || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingType.id);
+
+        if (error) throw error;
+        
+        setVehicleTypes(types => 
+          types.map(t => t.id === editingType.id ? { ...t, name: values.name, icon: values.icon || null } : t)
+        );
+        
+        toast.success('Type de véhicule mis à jour');
+      } else {
+        const { data, error } = await supabase
+          .from('vehicle_types')
+          .insert({
+            name: values.name,
+            icon: values.icon || null,
+            is_default: false,
+          })
+          .select();
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setVehicleTypes(prev => [...prev, data[0] as VehicleType]);
+        }
+        
+        toast.success('Type de véhicule ajouté');
+      }
+      
+      setIsTypeDialogOpen(false);
+      setEditingType(null);
+    } catch (error: any) {
+      console.error('Erreur lors de l\'enregistrement du type de véhicule:', error);
+      toast.error(`Erreur: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openAddDialog = () => {
+    setEditingType(null);
+    setIsTypeDialogOpen(true);
+  };
+
+  const openEditDialog = (type: VehicleType) => {
+    setEditingType(type);
+    setIsTypeDialogOpen(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-40 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Types de véhicules</CardTitle>
+          <CardDescription>
+            Gérez les différents types de véhicules que vous proposez
+          </CardDescription>
+        </div>
+        <Button onClick={openAddDialog}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Ajouter un type
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <VehicleTypesList 
+          vehicleTypes={vehicleTypes} 
+          setVehicleTypes={setVehicleTypes} 
+          onEditType={openEditDialog} 
+        />
+      </CardContent>
+
+      <VehicleTypeDialog 
+        isOpen={isTypeDialogOpen}
+        onOpenChange={setIsTypeDialogOpen}
+        editingType={editingType}
+        onSubmit={handleVehicleTypeSubmit}
+        saving={saving}
+      />
+    </Card>
+  );
+};
+
+export default VehicleTypesManager;
