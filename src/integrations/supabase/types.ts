@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      clients: {
+        Row: {
+          created_at: string
+          driver_id: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           banner_url: string | null
@@ -233,6 +271,73 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      quotes: {
+        Row: {
+          amount: number
+          arrival_location: string
+          client_id: string
+          created_at: string
+          departure_location: string
+          driver_id: string
+          id: string
+          quote_pdf: string | null
+          ride_date: string
+          status: string
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          amount: number
+          arrival_location: string
+          client_id: string
+          created_at?: string
+          departure_location: string
+          driver_id: string
+          id?: string
+          quote_pdf?: string | null
+          ride_date: string
+          status?: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          amount?: number
+          arrival_location?: string
+          client_id?: string
+          created_at?: string
+          departure_location?: string
+          driver_id?: string
+          id?: string
+          quote_pdf?: string | null
+          ride_date?: string
+          status?: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicle_types: {
         Row: {

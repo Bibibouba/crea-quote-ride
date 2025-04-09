@@ -13,6 +13,8 @@ import Dashboard from "./pages/dashboard/Dashboard";
 import Vehicles from "./pages/dashboard/Vehicles";
 import Pricing from "./pages/dashboard/Pricing";
 import Settings from "./pages/dashboard/Settings";
+import Quotes from "./pages/dashboard/Quotes";
+import Clients from "./pages/dashboard/Clients";
 import ClientSimulator from "./pages/client/ClientSimulator";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -37,6 +39,8 @@ const App = () => (
             <Route path="/dashboard/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
             <Route path="/dashboard/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
             <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/dashboard/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
+            <Route path="/dashboard/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
             <Route path="/client-simulator" element={<ProtectedRoute><ClientSimulator /></ProtectedRoute>} />
             
             {/* Catch-all */}
