@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -97,10 +96,6 @@ const ClientForm: React.FC<ClientFormProps> = ({
   const onSubmit = async (data: ClientFormValues) => {
     try {
       await addClient.mutateAsync(data);
-      toast({
-        title: 'Client ajouté',
-        description: 'Le client a été ajouté avec succès',
-      });
       if (onSuccess) onSuccess();
     } catch (error) {
       toast({

@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Client } from '@/types/client';
+import { Client, ClientCreate } from '@/types/client';
 import { useToast } from '@/hooks/use-toast';
 
 export const useClients = () => {
@@ -31,10 +31,24 @@ export const useClients = () => {
   });
 
   const addClient = useMutation({
-    mutationFn: async (newClient: Omit<Client, 'id' | 'created_at' | 'updated_at' | 'driver_id'>) => {
+    mutationFn: async (newClient: Omit<ClientCreate, "driver_id">) => {
+      // Get the current user's ID from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+      
+      // Add the driver_id to the client data
+      const clientWithDriverId = {
+        ...newClient,
+        driver_id: userId
+      };
+
       const { data, error } = await supabase
         .from('clients')
-        .insert(newClient)
+        .insert(clientWithDriverId)
         .select()
         .single();
 

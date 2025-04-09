@@ -27,3 +27,11 @@ export type Client = {
   created_at: string;
   updated_at: string;
 };
+
+// Type for client creation that makes required fields explicit
+export type ClientCreate = Omit<Client, "id" | "created_at" | "updated_at"> & {
+  first_name: string;
+  last_name: string;
+  email: string;
+  client_type: ClientType;
+};
