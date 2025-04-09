@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -21,7 +20,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "sonner";
 
-type CompanySettings = Database['public']['Tables']['company_settings']['Row'];
+type CompanySettings = Database['public']['Tables']['company_settings']['Row'] & {
+  banner_url?: string | null;
+};
 
 const companySettingsSchema = z.object({
   logo_url: z.string().optional().nullable(),
@@ -66,13 +67,11 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
       return null;
     }
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Seules les images sont acceptées');
       return null;
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast.error('La taille du fichier doit être inférieure à 2 Mo');
       return null;
@@ -85,7 +84,6 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
     try {
       type === 'logo' ? setLogoUploading(true) : setBannerUploading(true);
       
-      // Check if storage bucket exists and create it if needed
       const { data: buckets } = await supabase.storage.listBuckets();
       if (!buckets?.find(bucket => bucket.name === 'company-assets')) {
         await supabase.storage.createBucket('company-assets', {
@@ -94,7 +92,6 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
         });
       }
       
-      // Upload file
       const { error: uploadError } = await supabase.storage
         .from('company-assets')
         .upload(filePath, file, {
@@ -104,7 +101,6 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
 
       if (uploadError) throw uploadError;
       
-      // Get public URL
       const { data } = supabase.storage
         .from('company-assets')
         .getPublicUrl(filePath);

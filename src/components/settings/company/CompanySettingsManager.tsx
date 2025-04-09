@@ -14,7 +14,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import CompanySettingsForm, { CompanySettingsFormValues } from './CompanySettingsForm';
 
-type CompanySettings = Database['public']['Tables']['company_settings']['Row'];
+// Create a custom type that extends the company_settings table Row type
+// and explicitly adds the banner_url field
+type CompanySettings = Database['public']['Tables']['company_settings']['Row'] & {
+  banner_url?: string | null;
+};
 
 const CompanySettingsManager = () => {
   const { user } = useAuth();
