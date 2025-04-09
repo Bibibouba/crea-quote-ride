@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,27 +53,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Database } from '@/integrations/supabase/types';
 
-interface VehicleType {
-  id: string;
-  name: string;
-  driver_id: string;
-  is_default: boolean;
-  icon: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface CompanySettings {
-  id: string;
-  driver_id: string;
-  logo_url: string | null;
-  primary_color: string | null;
-  secondary_color: string | null;
-  font_family: string | null;
-  created_at: string;
-  updated_at: string;
-}
+type VehicleType = Database['public']['Tables']['vehicle_types']['Row'];
+type CompanySettings = Database['public']['Tables']['company_settings']['Row'];
 
 const vehicleTypeSchema = z.object({
   name: z.string().min(3, "Le nom doit contenir au moins 3 caractères"),
@@ -117,14 +99,12 @@ const Settings = () => {
     },
   });
 
-  // Charger les types de véhicules et les paramètres de l'entreprise
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Récupérer les types de véhicules
         const { data: typesData, error: typesError } = await supabase
           .from('vehicle_types')
           .select('*')
@@ -133,7 +113,6 @@ const Settings = () => {
         if (typesError) throw typesError;
         setVehicleTypes(typesData || []);
 
-        // Récupérer les paramètres de l'entreprise
         const { data: settingsData, error: settingsError } = await supabase
           .from('company_settings')
           .select('*')
@@ -150,7 +129,6 @@ const Settings = () => {
             font_family: settingsData[0].font_family || "Inter",
           });
         } else {
-          // Créer des paramètres par défaut si aucun n'existe
           const { data: newSettings, error: createError } = await supabase
             .from('company_settings')
             .insert({
@@ -177,14 +155,12 @@ const Settings = () => {
     fetchData();
   }, [user, companySettingsForm]);
 
-  // Gérer le formulaire de type de véhicule
   const handleVehicleTypeSubmit = async (values: z.infer<typeof vehicleTypeSchema>) => {
     if (!user) return;
     
     setSaving(true);
     try {
       if (editingType) {
-        // Mettre à jour un type existant
         const { error } = await supabase
           .from('vehicle_types')
           .update({
@@ -202,7 +178,6 @@ const Settings = () => {
         
         toast.success('Type de véhicule mis à jour');
       } else {
-        // Créer un nouveau type
         const { data, error } = await supabase
           .from('vehicle_types')
           .insert({
@@ -233,7 +208,6 @@ const Settings = () => {
     }
   };
 
-  // Gérer la suppression d'un type de véhicule
   const handleDeleteType = async (id: string) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce type de véhicule ?')) {
       return;
@@ -255,7 +229,6 @@ const Settings = () => {
     }
   };
 
-  // Gérer l'édition en place
   const startEditing = (id: string, name: string) => {
     setEditingInPlace(id);
     setNewTypeName(name);
@@ -292,7 +265,6 @@ const Settings = () => {
     setNewTypeName("");
   };
 
-  // Gérer les paramètres de l'entreprise
   const handleCompanySettingsSubmit = async (values: z.infer<typeof companySettingsSchema>) => {
     if (!user || !companySettings) return;
     
@@ -313,7 +285,6 @@ const Settings = () => {
       
       toast.success('Paramètres d\'entreprise enregistrés');
       
-      // Mettre à jour l'état local
       setCompanySettings({
         ...companySettings,
         logo_url: values.logo_url,
@@ -330,7 +301,6 @@ const Settings = () => {
     }
   };
 
-  // Gérer le dialogue d'ajout/édition
   const openAddDialog = () => {
     setEditingType(null);
     vehicleTypeForm.reset({ name: "", icon: "" });
@@ -372,7 +342,6 @@ const Settings = () => {
             <TabsTrigger value="company">Configuration de l'entreprise</TabsTrigger>
           </TabsList>
           
-          {/* Types de véhicules */}
           <TabsContent value="vehicle-types" className="space-y-4 mt-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -470,7 +439,6 @@ const Settings = () => {
               </CardContent>
             </Card>
             
-            {/* Modal pour ajouter/éditer un type de véhicule */}
             <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
               <DialogContent>
                 <DialogHeader>
@@ -535,7 +503,6 @@ const Settings = () => {
             </Dialog>
           </TabsContent>
           
-          {/* Configuration de l'entreprise */}
           <TabsContent value="company" className="space-y-4 mt-4">
             <Card>
               <CardHeader>
