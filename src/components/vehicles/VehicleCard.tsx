@@ -15,21 +15,21 @@ const VehicleCard = ({ vehicle, onEdit, onDelete }: VehicleCardProps) => {
   return (
     <Card key={vehicle.id} className={`h-full flex flex-col ${!vehicle.is_active ? "opacity-60" : ""}`}>
       <CardHeader className="pb-2">
-        <div className="flex justify-between">
-          <CardTitle>{vehicle.name}</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="truncate">{vehicle.name}</CardTitle>
           {!vehicle.is_active && (
             <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium">
               Inactif
             </span>
           )}
         </div>
-        <CardDescription>{vehicle.model}</CardDescription>
+        <CardDescription className="truncate">{vehicle.model}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mt-1">
           {vehicle.vehicle_type_name && (
             <div className="flex items-center rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs">
-              <span>{vehicle.vehicle_type_name}</span>
+              <span className="truncate">{vehicle.vehicle_type_name}</span>
             </div>
           )}
           <div className="flex items-center rounded-full bg-muted px-3 py-1 text-xs">

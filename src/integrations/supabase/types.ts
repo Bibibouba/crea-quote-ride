@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       company_settings: {
         Row: {
+          banner_url: string | null
           created_at: string
           driver_id: string
           font_family: string | null
@@ -22,6 +23,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          banner_url?: string | null
           created_at?: string
           driver_id: string
           font_family?: string | null
@@ -33,6 +35,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          banner_url?: string | null
           created_at?: string
           driver_id?: string
           font_family?: string | null

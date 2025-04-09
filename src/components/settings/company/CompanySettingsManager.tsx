@@ -85,6 +85,7 @@ const CompanySettingsManager = () => {
       
       toast.success('Paramètres d\'entreprise enregistrés');
       
+      // Update local state with the new values
       setCompanySettings({
         ...companySettings,
         logo_url: values.logo_url,

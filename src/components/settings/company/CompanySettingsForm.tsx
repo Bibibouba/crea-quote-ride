@@ -20,7 +20,6 @@ import { Database } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "sonner";
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type CompanySettings = Database['public']['Tables']['company_settings']['Row'];
 
