@@ -48,6 +48,9 @@ const NightRatesForm = ({ settings, onSave, saving }: NightRatesFormProps) => {
     },
   });
 
+  // Debug
+  console.log("NightRatesForm settings:", settings);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">

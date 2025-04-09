@@ -55,6 +55,9 @@ const WaitingRatesForm = ({ settings, onSave, saving }: WaitingRatesFormProps) =
     },
   });
 
+  // Debug
+  console.log("WaitingRatesForm settings:", settings);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">

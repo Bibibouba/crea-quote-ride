@@ -48,6 +48,9 @@ const AdditionalOptionsForm = ({ settings, onSave, saving }: AdditionalOptionsFo
     },
   });
 
+  // Debug
+  console.log("AdditionalOptionsForm settings:", settings);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">

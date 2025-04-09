@@ -115,6 +115,9 @@ const Pricing = () => {
     );
   }
 
+  // Debugging
+  console.log("pricingSettings:", pricingSettings);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
