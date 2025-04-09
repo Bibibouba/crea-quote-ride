@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -886,4 +887,107 @@ const Pricing = () => {
               </CardHeader>
               <CardContent>
                 <Form {...pricingForm}>
-                  <form onSubmit={pricingForm.handleSubmit(save
+                  <form onSubmit={pricingForm.handleSubmit(saveSettings)} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={pricingForm.control}
+                        name="minimum_trip_fare"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tarif minimum de course (€)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Montant minimum facturé pour une course
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={pricingForm.control}
+                        name="minimum_trip_minutes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Durée minimum de course (minutes)</FormLabel>
+                            <FormControl>
+                              <Input type="number" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Durée minimum facturée pour une course
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={pricingForm.control}
+                      name="holiday_sunday_percentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Majoration jours fériés et dimanches (%)</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input type="number" step="0.01" {...field} />
+                              <PercentIcon className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                            </div>
+                          </FormControl>
+                          <FormDescription>
+                            Pourcentage de majoration appliqué les dimanches et jours fériés
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={pricingForm.control}
+                      name="service_area"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Zone de service</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Décrivez votre zone de service (villes, régions, etc.)"
+                              className="resize-none"
+                              {...field}
+                              value={field.value || ''}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Cette information sera affichée sur votre site web
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button type="submit" disabled={savingSettings}>
+                      {savingSettings ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Enregistrement...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Enregistrer
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default Pricing;
