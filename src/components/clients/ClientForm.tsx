@@ -12,7 +12,7 @@ import ClientTypeSelector from './client-form/ClientTypeSelector';
 import PersonalClientForm from './client-form/PersonalClientForm';
 import CompanyClientForm from './client-form/CompanyClientForm';
 import ClientFormFooter from './client-form/ClientFormFooter';
-import { clientSchema, ClientFormValues } from './client-form/ClientFormSchema';
+import { clientSchema, ClientFormValues, personalClientSchema, companyClientSchema } from './client-form/ClientFormSchema';
 
 interface ClientFormProps {
   onSuccess?: () => void;

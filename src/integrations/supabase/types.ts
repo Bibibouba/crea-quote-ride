@@ -11,31 +11,67 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          address: string | null
+          birth_date: string | null
+          business_type: string | null
+          client_code: string | null
+          client_type: string
+          comments: string | null
+          company_name: string | null
           created_at: string
           driver_id: string
           email: string
           first_name: string
+          gender: string | null
           id: string
           last_name: string
+          phone: string | null
+          siret: string | null
           updated_at: string
+          vat_number: string | null
+          website: string | null
         }
         Insert: {
+          address?: string | null
+          birth_date?: string | null
+          business_type?: string | null
+          client_code?: string | null
+          client_type?: string
+          comments?: string | null
+          company_name?: string | null
           created_at?: string
           driver_id: string
           email: string
           first_name: string
+          gender?: string | null
           id?: string
           last_name: string
+          phone?: string | null
+          siret?: string | null
           updated_at?: string
+          vat_number?: string | null
+          website?: string | null
         }
         Update: {
+          address?: string | null
+          birth_date?: string | null
+          business_type?: string | null
+          client_code?: string | null
+          client_type?: string
+          comments?: string | null
+          company_name?: string | null
           created_at?: string
           driver_id?: string
           email?: string
           first_name?: string
+          gender?: string | null
           id?: string
           last_name?: string
+          phone?: string | null
+          siret?: string | null
           updated_at?: string
+          vat_number?: string | null
+          website?: string | null
         }
         Relationships: [
           {
