@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -229,7 +228,11 @@ const Pricing = () => {
         
       } catch (error) {
         console.error('Error fetching pricing data:', error);
-        toast.error('Erreur lors du chargement des données de tarification.');
+        toast({
+          title: "Erreur",
+          description: "Erreur lors du chargement des données de tarification.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
@@ -269,11 +272,18 @@ const Pricing = () => {
         
       if (error) throw error;
       
-      toast.success('Paramètres de tarification enregistrés avec succès.');
+      toast({
+        title: "Succès",
+        description: "Paramètres de tarification enregistrés avec succès.",
+      });
       
     } catch (error: any) {
       console.error('Error saving pricing settings:', error);
-      toast.error(`Erreur: ${error.message}`);
+      toast({
+        title: "Erreur",
+        description: `Erreur: ${error.message}`,
+        variant: "destructive",
+      });
     } finally {
       setSavingSettings(false);
     }

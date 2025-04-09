@@ -8,6 +8,7 @@ import Pricing from '@/components/home/Pricing';
 import Testimonials from '@/components/home/Testimonials';
 import CTA from '@/components/home/CTA';
 import QuoteForm from '@/components/quote/QuoteForm';
+import { Toaster } from "@/components/ui/toaster";
 
 const Index = () => {
   return (
@@ -24,6 +25,7 @@ const Index = () => {
       <Testimonials />
       <Pricing />
       <CTA />
+      <Toaster />
     </Layout>
   );
 };
