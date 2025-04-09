@@ -31,7 +31,7 @@ export const useClients = () => {
   });
 
   const addClient = useMutation({
-    mutationFn: async (newClient: Omit<Client, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (newClient: Omit<Client, 'id' | 'created_at' | 'updated_at' | 'driver_id'>) => {
       const { data, error } = await supabase
         .from('clients')
         .insert(newClient)
