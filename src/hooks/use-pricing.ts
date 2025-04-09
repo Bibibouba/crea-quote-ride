@@ -84,8 +84,8 @@ export const usePricing = () => {
     fetchData();
   }, [user]);
   
-  // Save pricing settings
-  const saveSettings = async (formValues: Partial<PricingSettings>) => {
+  // Save pricing settings - changing return type from Promise<boolean> to Promise<void>
+  const saveSettings = async (formValues: Partial<PricingSettings>): Promise<void> => {
     if (!user || !pricingSettings) return;
     
     setSavingSettings(true);
@@ -104,8 +104,6 @@ export const usePricing = () => {
         title: "Succès",
         description: "Paramètres de tarification enregistrés avec succès.",
       });
-      
-      return true;
     } catch (error: any) {
       console.error('Error saving pricing settings:', error);
       toast({
@@ -113,14 +111,13 @@ export const usePricing = () => {
         description: `Erreur: ${error.message}`,
         variant: "destructive",
       });
-      return false;
     } finally {
       setSavingSettings(false);
     }
   };
   
-  // Save distance tier
-  const saveTier = async (tier: DistanceTier, isNew: boolean = false) => {
+  // Save distance tier - changing return type from Promise<boolean> to Promise<void>
+  const saveTier = async (tier: DistanceTier, isNew: boolean = false): Promise<void> => {
     if (!user) return;
     
     setSavingSettings(true);
@@ -173,8 +170,6 @@ export const usePricing = () => {
           description: "Nouveau palier de tarification ajouté."
         });
       }
-      
-      return true;
     } catch (error: any) {
       console.error('Error saving distance tier:', error);
       toast({
@@ -182,14 +177,13 @@ export const usePricing = () => {
         description: `Erreur: ${error.message}`,
         variant: "destructive"
       });
-      return false;
     } finally {
       setSavingSettings(false);
     }
   };
   
-  // Delete tier
-  const deleteTier = async (id: string) => {
+  // Delete tier - changing return type from Promise<boolean> to Promise<void>
+  const deleteTier = async (id: string): Promise<void> => {
     if (!user) return;
     
     try {
@@ -207,8 +201,6 @@ export const usePricing = () => {
         title: "Succès",
         description: "Palier de tarification supprimé."
       });
-      
-      return true;
     } catch (error: any) {
       console.error('Error deleting distance tier:', error);
       toast({
@@ -216,7 +208,6 @@ export const usePricing = () => {
         description: `Erreur: ${error.message}`,
         variant: "destructive"
       });
-      return false;
     }
   };
 
