@@ -32,6 +32,13 @@ const FileUploadField = ({
 }: FileUploadFieldProps) => {
   const [isUploading, setIsUploading] = useState(false);
 
+  // Détermine quel bucket utiliser en fonction du fileNamePrefix
+  const getBucketName = (prefix: string) => {
+    if (prefix === 'logo') return 'logo';
+    if (prefix === 'banner') return 'imageheader';
+    return 'logo'; // Bucket par défaut si le préfixe ne correspond à aucun cas
+  };
+
   const uploadFile = async (file: File) => {
     if (!user) {
       toast.error('Vous devez être connecté pour télécharger des fichiers');
@@ -56,11 +63,14 @@ const FileUploadField = ({
     const fileExt = file.name.split('.').pop();
     const fileName = `${fileNamePrefix}-${user.id}-${Date.now()}.${fileExt}`;
     const filePath = `${user.id}/${fileName}`;
+    
+    // Détermine le bucket à utiliser
+    const bucketName = getBucketName(fileNamePrefix);
 
     try {
       setIsUploading(true);
       
-      // Vérification que le bucket existe et création s'il n'existe pas
+      // Vérification que le bucket existe
       const { data: bucketsData, error: bucketError } = await supabase.storage.listBuckets();
       
       if (bucketError) {
@@ -69,18 +79,18 @@ const FileUploadField = ({
       }
       
       // Vérification si le bucket existe dans la liste
-      const bucketExists = bucketsData?.some(bucket => bucket.name === 'company-assets');
+      const bucketExists = bucketsData?.some(bucket => bucket.name === bucketName);
       console.log('Buckets disponibles:', bucketsData?.map(b => b.name));
-      console.log('Le bucket company-assets existe:', bucketExists);
+      console.log(`Le bucket ${bucketName} existe:`, bucketExists);
       
       if (!bucketExists) {
-        toast.error('Le bucket de stockage "company-assets" n\'existe pas. Contactez l\'administrateur.');
+        toast.error(`Le bucket de stockage "${bucketName}" n'existe pas. Contactez l'administrateur.`);
         return null;
       }
       
       // Upload du fichier
       const { error: uploadError } = await supabase.storage
-        .from('company-assets')
+        .from(bucketName)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true
@@ -90,7 +100,7 @@ const FileUploadField = ({
       
       // Récupération de l'URL publique
       const { data } = supabase.storage
-        .from('company-assets')
+        .from(bucketName)
         .getPublicUrl(filePath);
       
       toast.success('Fichier téléchargé avec succès');
