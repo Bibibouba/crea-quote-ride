@@ -53,38 +53,125 @@ export type Database = {
           },
         ]
       }
+      distance_pricing_tiers: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          max_km: number | null
+          min_km: number
+          price_per_km: number
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          max_km?: number | null
+          min_km: number
+          price_per_km: number
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          max_km?: number | null
+          min_km?: number
+          price_per_km?: number
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distance_pricing_tiers_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distance_pricing_tiers_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing: {
         Row: {
           base_fare: number
           created_at: string
           driver_id: string
+          holiday_sunday_percentage: number | null
           id: string
           min_fare: number
+          minimum_trip_fare: number | null
+          minimum_trip_minutes: number | null
+          night_rate_enabled: boolean | null
+          night_rate_end: string | null
+          night_rate_percentage: number | null
+          night_rate_start: string | null
           price_per_km: number
+          service_area: string | null
           updated_at: string
           vehicle_id: string | null
+          wait_night_enabled: boolean | null
+          wait_night_end: string | null
+          wait_night_percentage: number | null
+          wait_night_start: string | null
+          wait_price_per_15min: number | null
           waiting_fee_per_minute: number
         }
         Insert: {
           base_fare: number
           created_at?: string
           driver_id: string
+          holiday_sunday_percentage?: number | null
           id?: string
           min_fare: number
+          minimum_trip_fare?: number | null
+          minimum_trip_minutes?: number | null
+          night_rate_enabled?: boolean | null
+          night_rate_end?: string | null
+          night_rate_percentage?: number | null
+          night_rate_start?: string | null
           price_per_km: number
+          service_area?: string | null
           updated_at?: string
           vehicle_id?: string | null
+          wait_night_enabled?: boolean | null
+          wait_night_end?: string | null
+          wait_night_percentage?: number | null
+          wait_night_start?: string | null
+          wait_price_per_15min?: number | null
           waiting_fee_per_minute: number
         }
         Update: {
           base_fare?: number
           created_at?: string
           driver_id?: string
+          holiday_sunday_percentage?: number | null
           id?: string
           min_fare?: number
+          minimum_trip_fare?: number | null
+          minimum_trip_minutes?: number | null
+          night_rate_enabled?: boolean | null
+          night_rate_end?: string | null
+          night_rate_percentage?: number | null
+          night_rate_start?: string | null
           price_per_km?: number
+          service_area?: string | null
           updated_at?: string
           vehicle_id?: string | null
+          wait_night_enabled?: boolean | null
+          wait_night_end?: string | null
+          wait_night_percentage?: number | null
+          wait_night_start?: string | null
+          wait_price_per_15min?: number | null
           waiting_fee_per_minute?: number
         }
         Relationships: [
@@ -146,6 +233,7 @@ export type Database = {
           model: string
           name: string
           updated_at: string
+          vehicle_type_name: string | null
         }
         Insert: {
           capacity: number
@@ -158,6 +246,7 @@ export type Database = {
           model: string
           name: string
           updated_at?: string
+          vehicle_type_name?: string | null
         }
         Update: {
           capacity?: number
@@ -170,6 +259,7 @@ export type Database = {
           model?: string
           name?: string
           updated_at?: string
+          vehicle_type_name?: string | null
         }
         Relationships: [
           {
