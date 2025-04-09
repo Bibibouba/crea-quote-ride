@@ -70,18 +70,18 @@ interface PricingSettings {
   price_per_km: number;
   waiting_fee_per_minute: number;
   min_fare: number;
-  night_rate_enabled: boolean;
+  night_rate_enabled: boolean | null;
   night_rate_start: string | null;
   night_rate_end: string | null;
-  night_rate_percentage: number;
-  wait_price_per_15min: number;
-  wait_night_enabled: boolean;
+  night_rate_percentage: number | null;
+  wait_price_per_15min: number | null;
+  wait_night_enabled: boolean | null;
   wait_night_start: string | null;
   wait_night_end: string | null;
-  wait_night_percentage: number;
-  minimum_trip_fare: number;
-  holiday_sunday_percentage: number;
-  minimum_trip_minutes: number;
+  wait_night_percentage: number | null;
+  minimum_trip_fare: number | null;
+  holiday_sunday_percentage: number | null;
+  minimum_trip_minutes: number | null;
   service_area: string | null;
 }
 
@@ -183,7 +183,7 @@ const Pricing = () => {
         if (pricingError) throw pricingError;
         
         if (pricingData && pricingData.length > 0) {
-          setPricingSettings(pricingData[0]);
+          setPricingSettings(pricingData[0] as PricingSettings);
           pricingForm.reset({
             base_fare: pricingData[0].base_fare,
             min_fare: pricingData[0].min_fare,
@@ -212,7 +212,7 @@ const Pricing = () => {
           .order('name', { ascending: true });
           
         if (vehiclesError) throw vehiclesError;
-        setVehicles(vehiclesData || []);
+        setVehicles(vehiclesData as Vehicle[] || []);
         
         if (vehiclesData && vehiclesData.length > 0 && !selectedVehicleId) {
           setSelectedVehicleId(vehiclesData[0].id);
@@ -225,7 +225,7 @@ const Pricing = () => {
           .order('min_km', { ascending: true });
           
         if (tiersError) throw tiersError;
-        setDistanceTiers(tiersData || []);
+        setDistanceTiers(tiersData as DistanceTier[] || []);
         
       } catch (error) {
         console.error('Error fetching pricing data:', error);
@@ -345,7 +345,7 @@ const Pricing = () => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          setDistanceTiers(prevTiers => [...prevTiers, data[0]]);
+          setDistanceTiers(prevTiers => [...prevTiers, data[0] as DistanceTier]);
         }
         
         toast.success('Nouveau palier de tarification ajouté.');

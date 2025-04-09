@@ -1,6 +1,14 @@
 
 import React from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Settings2 } from 'lucide-react';
 
 const Settings = () => {
   return (
@@ -13,12 +21,24 @@ const Settings = () => {
           </p>
         </div>
         
-        <div className="rounded-lg border bg-card p-6 text-center">
-          <h3 className="text-lg font-medium">Cette fonctionnalité sera bientôt disponible</h3>
-          <p className="mt-2 text-muted-foreground">
-            Vous pourrez bientôt personnaliser l'apparence de vos devis, ajouter votre logo et configurer vos informations de contact.
-          </p>
-        </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>Configuration de l'entreprise</CardTitle>
+            <CardDescription>
+              Personnalisez votre profil d'entreprise et les informations affichées sur vos devis
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center py-10">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+              <Settings2 className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium mb-2">Cette fonctionnalité sera bientôt disponible</h3>
+            <p className="mx-auto max-w-md text-muted-foreground">
+              Vous pourrez bientôt personnaliser l'apparence de vos devis, ajouter votre logo, 
+              configurer vos informations de contact et plus encore.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );

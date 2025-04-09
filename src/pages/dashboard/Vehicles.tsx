@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -39,6 +38,7 @@ interface Vehicle {
   image_url?: string;
   is_luxury: boolean;
   is_active: boolean;
+  vehicle_type_name?: string;
 }
 
 const vehicleSchema = z.object({
@@ -48,6 +48,7 @@ const vehicleSchema = z.object({
   image_url: z.string().optional(),
   is_luxury: z.boolean().default(false),
   is_active: z.boolean().default(true),
+  vehicle_type_name: z.string().default("Berline"),
 });
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -69,6 +70,7 @@ const Vehicles = () => {
       image_url: "",
       is_luxury: false,
       is_active: true,
+      vehicle_type_name: "Berline",
     },
   });
 
@@ -105,7 +107,15 @@ const Vehicles = () => {
         // Update existing vehicle
         const { error } = await supabase
           .from('vehicles')
-          .update(values)
+          .update({
+            name: values.name,
+            model: values.model,
+            capacity: values.capacity,
+            image_url: values.image_url,
+            is_luxury: values.is_luxury,
+            is_active: values.is_active,
+            vehicle_type_name: values.vehicle_type_name || "Berline",
+          })
           .eq('id', editingVehicle.id);
           
         if (error) throw error;
@@ -120,7 +130,13 @@ const Vehicles = () => {
         const { data, error } = await supabase
           .from('vehicles')
           .insert({
-            ...values,
+            name: values.name,
+            model: values.model, 
+            capacity: values.capacity,
+            image_url: values.image_url,
+            is_luxury: values.is_luxury,
+            is_active: values.is_active,
+            vehicle_type_name: values.vehicle_type_name || "Berline",
             driver_id: user.id
           })
           .select();
@@ -153,6 +169,7 @@ const Vehicles = () => {
       image_url: vehicle.image_url || "",
       is_luxury: vehicle.is_luxury,
       is_active: vehicle.is_active,
+      vehicle_type_name: vehicle.vehicle_type_name || "Berline",
     });
     setOpen(true);
   };
@@ -186,6 +203,7 @@ const Vehicles = () => {
       image_url: "",
       is_luxury: false,
       is_active: true,
+      vehicle_type_name: "Berline",
     });
     setOpen(true);
   };
@@ -325,6 +343,19 @@ const Vehicles = () => {
                       <FormLabel>URL de l'image (optionnel)</FormLabel>
                       <FormControl>
                         <Input placeholder="https://example.com/image.jpg" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="vehicle_type_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type de véhicule</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Berline" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
