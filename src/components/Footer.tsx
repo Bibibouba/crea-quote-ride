@@ -11,8 +11,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="VTCZen Logo" className="h-8 w-auto" />
-              <h3 className="font-bold text-xl gradient-text">VTCZen</h3>
+              <img src="/lovable-uploads/41fb52ad-c563-49a0-8a51-e8362b4669a7.png" alt="VTCZen Logo" className="h-8 w-auto" />
             </div>
             <p className="text-sm text-muted-foreground">
               Solution de devis en ligne pour chauffeurs VTC

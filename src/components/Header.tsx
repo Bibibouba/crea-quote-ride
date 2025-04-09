@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -14,8 +15,8 @@ const Header = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="VTCZen Logo" className="h-8 w-auto" />
-            <span className="font-bold text-2xl gradient-text">VTCZen</span>
+            <img src="/lovable-uploads/41fb52ad-c563-49a0-8a51-e8362b4669a7.png" alt="VTCZen Logo" className="h-8 w-auto" />
+            {/* Logo contient déjà le texte, donc on retire le span */}
           </Link>
         </div>
         
@@ -58,8 +59,7 @@ const Header = () => {
           <SheetContent side="right" className="flex flex-col">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <img src="/logo.png" alt="VTCZen Logo" className="h-6 w-auto" />
-                <span className="font-bold text-xl gradient-text">VTCZen</span>
+                <img src="/lovable-uploads/41fb52ad-c563-49a0-8a51-e8362b4669a7.png" alt="VTCZen Logo" className="h-6 w-auto" />
               </div>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
