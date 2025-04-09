@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,7 +39,6 @@ export const usePricing = () => {
   const [pricingSettings, setPricingSettings] = useState<PricingSettings | null>(null);
   const [distanceTiers, setDistanceTiers] = useState<DistanceTier[]>([]);
 
-  // Load data
   useEffect(() => {
     if (!user) return;
     
@@ -48,7 +46,6 @@ export const usePricing = () => {
       setLoading(true);
       
       try {
-        // Fetch pricing settings
         const { data: pricingData, error: pricingError } = await supabase
           .from('pricing')
           .select('*')
@@ -60,7 +57,6 @@ export const usePricing = () => {
           setPricingSettings(pricingData[0] as PricingSettings);
         }
         
-        // Fetch distance tiers
         const { data: tiersData, error: tiersError } = await supabase
           .from('distance_pricing_tiers')
           .select('*')
@@ -84,7 +80,6 @@ export const usePricing = () => {
     fetchData();
   }, [user]);
   
-  // Save pricing settings - changing return type from Promise<boolean> to Promise<void>
   const saveSettings = async (formValues: Partial<PricingSettings>): Promise<void> => {
     if (!user || !pricingSettings) return;
     
@@ -97,7 +92,6 @@ export const usePricing = () => {
         
       if (error) throw error;
       
-      // Update local state
       setPricingSettings({ ...pricingSettings, ...formValues });
       
       toast({
@@ -116,14 +110,12 @@ export const usePricing = () => {
     }
   };
   
-  // Save distance tier - changing return type from Promise<boolean> to Promise<void>
   const saveTier = async (tier: DistanceTier, isNew: boolean = false): Promise<void> => {
     if (!user) return;
     
     setSavingSettings(true);
     try {
       if (!isNew && tier.id) {
-        // Update existing tier
         const { error } = await supabase
           .from('distance_pricing_tiers')
           .update({
@@ -136,7 +128,6 @@ export const usePricing = () => {
           
         if (error) throw error;
         
-        // Update local state
         setDistanceTiers(prevTiers => 
           prevTiers.map(t => t.id === tier.id ? tier : t)
         );
@@ -146,7 +137,6 @@ export const usePricing = () => {
           description: "Palier de tarification mis à jour."
         });
       } else {
-        // Add new tier
         const { data, error } = await supabase
           .from('distance_pricing_tiers')
           .insert({
@@ -161,7 +151,6 @@ export const usePricing = () => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          // Update local state
           setDistanceTiers(prevTiers => [...prevTiers, data[0] as DistanceTier]);
         }
         
@@ -182,7 +171,6 @@ export const usePricing = () => {
     }
   };
   
-  // Delete tier - changing return type from Promise<boolean> to Promise<void>
   const deleteTier = async (id: string): Promise<void> => {
     if (!user) return;
     
@@ -194,7 +182,6 @@ export const usePricing = () => {
         
       if (error) throw error;
       
-      // Update local state
       setDistanceTiers(prevTiers => prevTiers.filter(t => t.id !== id));
       
       toast({
