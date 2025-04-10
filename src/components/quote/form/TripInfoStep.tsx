@@ -1,13 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import AddressAutocomplete from '@/components/address/AddressAutocomplete';
-import { Address } from '@/hooks/useMapbox';
-import { WaitingTimeOption } from '@/hooks/useQuoteForm';
 import AddressFormSection from '@/components/address/AddressFormSection';
+import { Address } from '@/hooks/useMapbox';
+import ReturnTripOptions from './ReturnTripOptions';
+import { useFormValidation } from './useFormValidation';
+import { WaitingTimeOption } from '@/hooks/useQuoteForm';
 
 interface TripInfoStepProps {
   departureAddress: string;
@@ -82,38 +80,13 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
   handleRouteCalculated,
   handleNextStep
 }) => {
-  const [errors, setErrors] = useState({
-    departureAddress: false,
-    destinationAddress: false,
-    date: false,
-    time: false,
-    vehicle: false,
-  });
-  
-  const validateForm = (): boolean => {
-    const newErrors = {
-      departureAddress: !departureAddress || !departureAddress.trim(),
-      destinationAddress: !destinationAddress || !destinationAddress.trim(),
-      date: !date,
-      time: !time || !time.trim(),
-      vehicle: !selectedVehicle,
-    };
-    
-    setErrors(newErrors);
-    return !Object.values(newErrors).some(Boolean);
-  };
+  const { errors, validateTripForm, focusFirstError } = useFormValidation();
   
   const onNext = () => {
-    if (validateForm()) {
+    if (validateTripForm(departureAddress, destinationAddress, date, time, selectedVehicle)) {
       handleNextStep();
     } else {
-      const firstError = Object.entries(errors).find(([_, value]) => value)?.[0];
-      if (firstError) {
-        const element = document.getElementById(firstError);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }
+      focusFirstError();
     }
   };
   
@@ -147,75 +120,21 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
         />
         
         {/* Options supplémentaires */}
-        <div className="space-y-4 bg-white p-4 rounded-md shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="return-trip" className="cursor-pointer">Voyage retour</Label>
-              <Switch
-                id="return-trip"
-                checked={hasReturnTrip}
-                onCheckedChange={setHasReturnTrip}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="waiting-time" className="cursor-pointer">Temps d'attente</Label>
-              <Switch
-                id="waiting-time"
-                checked={hasWaitingTime}
-                onCheckedChange={setHasWaitingTime}
-              />
-            </div>
-          </div>
-          
-          {/* Sélecteur de temps d'attente */}
-          {hasWaitingTime && (
-            <div className="p-3 bg-muted/20 rounded-md">
-              <Label htmlFor="waiting-time-minutes">Temps d'attente</Label>
-              <Select 
-                value={waitingTimeMinutes.toString()} 
-                onValueChange={(value) => setWaitingTimeMinutes(parseInt(value))}
-              >
-                <SelectTrigger id="waiting-time-minutes" className="mt-1.5">
-                  <SelectValue placeholder="Sélectionnez le temps d'attente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {waitingTimeOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label} (+{(option.value / 15) * 7.5} €)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
-          {/* Adresse de retour */}
-          {hasReturnTrip && (
-            <div className="space-y-3 p-3 bg-muted/20 rounded-md">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="return-to-same" className="cursor-pointer">
-                  Retour à l'adresse de départ
-                </Label>
-                <Switch
-                  id="return-to-same"
-                  checked={returnToSameAddress}
-                  onCheckedChange={setReturnToSameAddress}
-                />
-              </div>
-              
-              {!returnToSameAddress && (
-                <AddressAutocomplete
-                  label="Adresse de retour personnalisée"
-                  placeholder="Saisissez l'adresse de retour"
-                  value={customReturnAddress}
-                  onChange={setCustomReturnAddress}
-                  onSelect={handleReturnAddressSelect}
-                />
-              )}
-            </div>
-          )}
-        </div>
+        <ReturnTripOptions
+          hasReturnTrip={hasReturnTrip}
+          setHasReturnTrip={setHasReturnTrip}
+          hasWaitingTime={hasWaitingTime}
+          setHasWaitingTime={setHasWaitingTime}
+          waitingTimeMinutes={waitingTimeMinutes}
+          setWaitingTimeMinutes={setWaitingTimeMinutes}
+          waitingTimePrice={waitingTimePrice}
+          returnToSameAddress={returnToSameAddress}
+          setReturnToSameAddress={setReturnToSameAddress}
+          customReturnAddress={customReturnAddress}
+          setCustomReturnAddress={setCustomReturnAddress}
+          waitingTimeOptions={waitingTimeOptions}
+          handleReturnAddressSelect={handleReturnAddressSelect}
+        />
       </div>
       
       <div className="flex justify-end">
