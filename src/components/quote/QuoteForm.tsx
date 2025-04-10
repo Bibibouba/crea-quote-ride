@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,8 @@ import AddressFormSection from './form/AddressFormSection';
 import ClientInfoSection from './form/ClientInfoSection';
 import QuoteSummary from './form/QuoteSummary';
 import SuccessMessage from './form/SuccessMessage';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface QuoteFormProps {
   clientId?: string;
@@ -24,46 +25,38 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
   const { clients } = useClients();
   const { toast } = useToast();
   
-  // État pour les adresses et les coordonnées
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
   const [departureCoordinates, setDepartureCoordinates] = useState<[number, number] | undefined>(undefined);
   const [destinationCoordinates, setDestinationCoordinates] = useState<[number, number] | undefined>(undefined);
   
-  // État pour les détails du devis
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('12:00');
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [passengers, setPassengers] = useState('1');
   
-  // État pour le statut du formulaire
   const [showQuote, setShowQuote] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
   
-  // État pour les informations client
   const [selectedClient, setSelectedClient] = useState(clientId || '');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   
-  // Valeurs calculées pour le devis
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
   
-  // Véhicules disponibles (normalement ces données viendraient d'une API)
   const vehicles = [
     { id: "sedan", name: "Berline", basePrice: 1.8, description: "Mercedes Classe E ou équivalent" },
     { id: "van", name: "Van", basePrice: 2.2, description: "Mercedes Classe V ou équivalent" },
     { id: "luxury", name: "Luxe", basePrice: 2.5, description: "Mercedes Classe S ou équivalent" }
   ];
   
-  // Calcul du prix
   const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
   const estimatedPrice = Math.round(estimatedDistance * basePrice);
   
-  // Si un client est déjà sélectionné, charger ses informations
   useEffect(() => {
     if (clientId && clients.length > 0) {
       const client = clients.find(c => c.id === clientId);
@@ -76,7 +69,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
     }
   }, [clientId, clients]);
   
-  // Pré-remplir les champs de l'utilisateur connecté si disponible
   useEffect(() => {
     if (user && !clientId) {
       const fetchUserInfo = async () => {
@@ -103,12 +95,10 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
     }
   }, [user]);
   
-  // Gérer la soumission du formulaire initial
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Si les deux adresses ont des coordonnées, on peut déjà calculer l'itinéraire
     if (departureCoordinates && destinationCoordinates) {
       setTimeout(() => {
         setShowQuote(true);
@@ -124,7 +114,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
     }
   };
   
-  // Enregistrer le devis
   const handleSaveQuote = async () => {
     if (!date) {
       toast({
@@ -147,16 +136,13 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
     setIsSubmitting(true);
     
     try {
-      // Formatter la date et heure
       const dateTime = new Date(date);
       const [hours, minutes] = time.split(':');
       dateTime.setHours(parseInt(hours), parseInt(minutes));
       
-      // Vérifier si un client existe déjà ou en créer un nouveau
       let finalClientId = selectedClient;
       
       if (!selectedClient && firstName && lastName && email) {
-        // Si on n'a pas de client sélectionné mais qu'on a les informations, créer un nouveau client
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user?.id;
         
@@ -184,10 +170,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
-      // Créer un objet quote avec les coordonnées
       const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
         client_id: finalClientId,
-        vehicle_id: null, // Dans un cas réel, ce serait l'ID du véhicule sélectionné
+        vehicle_id: null,
         departure_location: departureAddress,
         arrival_location: destinationAddress,
         departure_coordinates: departureCoordinates,
@@ -197,10 +182,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
         ride_date: dateTime.toISOString(),
         amount: estimatedPrice,
         status: 'pending',
-        driver_id: '' // Ce champ sera automatiquement rempli dans la fonction addQuote
+        driver_id: ''
       };
       
-      // Enregistrer le devis dans la base de données
       await addQuote.mutateAsync(quoteData);
       
       toast({
@@ -225,13 +209,11 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
     }
   };
 
-  // Gérer le calcul d'itinéraire
   const handleRouteCalculated = (distance: number, duration: number) => {
     setEstimatedDistance(Math.round(distance));
     setEstimatedDuration(Math.round(duration));
   };
 
-  // Réinitialiser le formulaire
   const handleReset = () => {
     setShowQuote(false);
     setIsQuoteSent(false);
