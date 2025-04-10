@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +12,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, CheckIcon, Send, ArrowLeftRight, Clock } from 'lucide-react';
+import { 
+  CalendarIcon, 
+  CheckIcon, 
+  Send, 
+  ArrowLeftRight, 
+  Clock,
+  ArrowRight,
+  ArrowLeft
+} from 'lucide-react';
 import { useVehicles } from '@/hooks/useVehicles';
 import { usePricing } from '@/hooks/use-pricing';
 import { toast } from 'sonner';
@@ -828,165 +835,4 @@ const ClientSimulator = () => {
                             <ArrowRight className="h-4 w-4 mr-2" />
                             <p className="text-sm">Trajet aller</p>
                           </div>
-                          <p className="text-sm font-medium">{quoteDetails?.oneWayPrice}€</p>
-                        </div>
-                        
-                        {hasWaitingTime && (
-                          <div className="flex justify-between">
-                            <div className="flex items-center">
-                              <Clock className="h-4 w-4 mr-2" />
-                              <p className="text-sm">Temps d'attente</p>
-                            </div>
-                            <p className="text-sm font-medium">{waitingTimePrice}€</p>
-                          </div>
-                        )}
-                        
-                        {hasReturnTrip && (
-                          <div className="flex justify-between">
-                            <div className="flex items-center">
-                              <ArrowLeft className="h-4 w-4 mr-2" />
-                              <p className="text-sm">Trajet retour</p>
-                            </div>
-                            <p className="text-sm font-medium">{quoteDetails?.returnPrice}€</p>
-                          </div>
-                        )}
-                        
-                        <Separator className="my-2" />
-                        
-                        <div className="flex justify-between font-medium">
-                          <p>Prix total</p>
-                          <p className="text-lg">{price.toFixed(2)}€</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between">
-                  <Button variant="outline" onClick={handlePreviousStep}>
-                    Retour
-                  </Button>
-                  <Button onClick={handleNextStep}>
-                    Continuer
-                  </Button>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="step3" className="space-y-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="rounded-lg border bg-muted p-4 mb-4">
-                    <h3 className="font-medium mb-3">Résumé du devis</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Départ</p>
-                        <p className="text-sm">{departureAddress}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Destination</p>
-                        <p className="text-sm">{destinationAddress}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Date et heure</p>
-                        <p className="text-sm">{date ? format(date, 'dd/MM/yyyy') : ""} à {time}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Véhicule</p>
-                        <p className="text-sm">
-                          {vehicles.find(v => v.id === selectedVehicle)?.name} - 
-                          {vehicles.find(v => v.id === selectedVehicle)?.model}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {hasReturnTrip && (
-                      <div className="mt-3 border-t pt-3">
-                        <p className="text-sm font-medium mb-2">Options sélectionnées :</p>
-                        <ul className="text-sm space-y-1">
-                          <li className="flex items-center">
-                            <ArrowLeftRight className="h-3.5 w-3.5 mr-2" />
-                            Aller-retour
-                          </li>
-                          {hasWaitingTime && (
-                            <li className="flex items-center">
-                              <Clock className="h-3.5 w-3.5 mr-2" />
-                              Temps d'attente : {waitingTimeOptions.find(o => o.value === waitingTimeMinutes)?.label}
-                            </li>
-                          )}
-                          {!returnToSameAddress && customReturnAddress && (
-                            <li>Adresse de retour personnalisée : {customReturnAddress}</li>
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    <Separator className="my-3" />
-                    
-                    <div className="flex justify-between font-medium">
-                      <p>Prix total</p>
-                      <p className="text-xl">{price.toFixed(2)}€</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h3 className="font-medium">Vos informations</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">Prénom</Label>
-                        <Input
-                          id="firstName"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Nom</Label>
-                        <Input
-                          id="lastName"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <Button variant="outline" onClick={handlePreviousStep} type="button">
-                      Retour
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? (
-                        "Envoi en cours..."
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Recevoir le devis par email
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </TabsContent>
-            </Tabs>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-export default ClientSimulator;
+                          <p className="text-sm font
