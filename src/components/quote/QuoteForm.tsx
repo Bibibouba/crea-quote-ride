@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuotes, QuoteWithCoordinates } from '@/hooks/useQuotes';
 import { useClients } from '@/hooks/useClients';
 import { supabase } from '@/integrations/supabase/client';
-import AddressFormSection from './form/AddressFormSection';
+import AddressFormSection from '@/components/quote/form/AddressFormSection';
 import ClientInfoSection from './form/ClientInfoSection';
 import QuoteSummary from './form/QuoteSummary';
 import SuccessMessage from './form/SuccessMessage';
