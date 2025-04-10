@@ -6,10 +6,12 @@ import { useVehicles } from '@/hooks/useVehicles';
 export function useQuotePricing(
   selectedVehicle: string,
   estimatedDistance: number,
+  estimatedDuration: number, // Added missing parameter
   time: string,
   hasReturnTrip: boolean,
   returnToSameAddress: boolean,
   returnDistance: number,
+  returnDuration: number, // Added missing parameter
   hasWaitingTime: boolean,
   waitingTimeMinutes: number
 ) {

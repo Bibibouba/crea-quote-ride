@@ -2,8 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-
-export type QuoteFormStep = 'step1' | 'step2' | 'step3';
+import { QuoteFormStep } from './useTripDetails'; // Import from useTripDetails instead of defining it here
 
 export function useFormNavigation() {
   const [activeTab, setActiveTab] = useState<QuoteFormStep>('step1');

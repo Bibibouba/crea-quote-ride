@@ -3,11 +3,11 @@ import { useEffect } from 'react';
 import { useMapbox } from '@/hooks/useMapbox';
 import { toast } from 'sonner';
 
-import { useTripDetails } from './quote/useTripDetails';
+import { useTripDetails, QuoteFormStep } from './quote/useTripDetails';
 import { useClientInfo } from './quote/useClientInfo';
 import { useQuotePricing } from './quote/useQuotePricing';
 import { useQuoteSubmission } from './quote/useQuoteSubmission';
-import { useFormNavigation, QuoteFormStep } from './quote/useFormNavigation';
+import { useFormNavigation } from './quote/useFormNavigation';
 
 export type { QuoteFormStep, WaitingTimeOption } from './quote/useTripDetails';
 
@@ -19,10 +19,12 @@ export function useQuoteForm() {
   const quotePricing = useQuotePricing(
     tripDetails.selectedVehicle,
     tripDetails.estimatedDistance,
+    tripDetails.estimatedDuration,  // Add the missing estimatedDuration parameter
     tripDetails.time,
     tripDetails.hasReturnTrip,
     tripDetails.returnToSameAddress,
     tripDetails.returnDistance,
+    tripDetails.returnDuration,     // Add the missing returnDuration parameter
     tripDetails.hasWaitingTime,
     tripDetails.waitingTimeMinutes
   );
@@ -49,7 +51,7 @@ export function useQuoteForm() {
         
         if (route) {
           tripDetails.setReturnDistance(Math.round(route.distance));
-          tripDetails.setEstimatedDuration(Math.round(route.duration));
+          tripDetails.setReturnDuration(Math.round(route.duration));
         }
       } catch (error) {
         console.error("Erreur lors du calcul de l'itinéraire de retour:", error);

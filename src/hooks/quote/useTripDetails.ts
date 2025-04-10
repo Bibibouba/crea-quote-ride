@@ -8,6 +8,8 @@ export interface WaitingTimeOption {
   label: string;
 }
 
+export type QuoteFormStep = 'step1' | 'step2' | 'step3'; // Added QuoteFormStep type here
+
 export function useTripDetails() {
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
@@ -25,8 +27,8 @@ export function useTripDetails() {
   const [returnToSameAddress, setReturnToSameAddress] = useState(true);
   const [customReturnAddress, setCustomReturnAddress] = useState('');
   const [customReturnCoordinates, setCustomReturnCoordinates] = useState<[number, number] | undefined>(undefined);
-  const [returnDistance, setReturnDistance] = useState(0);
-  const [returnDuration, setReturnDuration] = useState(0);
+  const [returnDistance, setReturnDistance] = useState(0); // This state exists
+  const [returnDuration, setReturnDuration] = useState(0); // This state exists
   
   // Waiting time related states
   const [hasWaitingTime, setHasWaitingTime] = useState(false);
@@ -122,7 +124,9 @@ export function useTripDetails() {
     setCustomReturnAddress,
     customReturnCoordinates,
     returnDistance,
+    setReturnDistance, // This property exists now
     returnDuration,
+    setReturnDuration, // Ensure this is exported
     
     // Waiting time details
     hasWaitingTime,
