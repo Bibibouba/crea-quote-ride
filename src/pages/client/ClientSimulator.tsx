@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, CheckIcon } from 'lucide-react';
+import { CalendarIcon, CheckIcon, Send } from 'lucide-react';
 import { useVehicles } from '@/hooks/useVehicles';
 import { usePricing } from '@/hooks/use-pricing';
 import { toast } from 'sonner';
@@ -699,7 +699,7 @@ const ClientSimulator = () => {
                         "Envoi en cours..."
                       ) : (
                         <>
-                          <SendIcon className="h-4 w-4 mr-2" />
+                          <Send className="h-4 w-4 mr-2" />
                           Recevoir le devis par email
                         </>
                       )}
