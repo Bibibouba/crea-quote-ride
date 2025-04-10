@@ -253,8 +253,11 @@ export function useQuoteForm() {
         toast.error('Veuillez remplir tous les champs requis et sélectionner des adresses valides');
         return;
       }
+      
+      console.log("Moving to step 2 with valid data");
       setActiveTab('step2');
     } else if (activeTab === 'step2') {
+      console.log("Moving to step 3");
       setActiveTab('step3');
     }
   };
@@ -340,7 +343,7 @@ export function useQuoteForm() {
         ride_date: dateTime.toISOString(),
         amount: price,
         status: 'pending',
-        driver_id: '',
+        driver_id: userId,
         has_return_trip: hasReturnTrip,
         has_waiting_time: hasWaitingTime,
         waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
@@ -352,6 +355,7 @@ export function useQuoteForm() {
         return_duration_minutes: returnDuration
       };
       
+      console.log("Submitting quote data:", quoteData);
       await addQuote.mutateAsync(quoteData);
       
       toast.success('Votre devis a été enregistré avec succès');

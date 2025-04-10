@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -75,9 +76,12 @@ const ClientSimulator = () => {
       destinationAddress,
       departureCoordinates,
       destinationCoordinates,
-      activeTab
+      activeTab,
+      selectedVehicle,
+      time,
+      date
     });
-  }, [departureAddress, destinationAddress, departureCoordinates, destinationCoordinates, activeTab]);
+  }, [departureAddress, destinationAddress, departureCoordinates, destinationCoordinates, activeTab, selectedVehicle, time, date]);
   
   if (vehiclesLoading || pricingLoading) {
     return (

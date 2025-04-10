@@ -93,13 +93,16 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
       destinationCoordinates
     });
     
-    // Vérifiez que les coordonnées sont définies
-    if (!departureCoordinates || !destinationCoordinates) {
-      console.error("Missing coordinates, cannot continue");
-      return;
-    }
-    
-    if (validateTripForm(departureAddress, destinationAddress, date, time, selectedVehicle)) {
+    if (validateTripForm(
+      departureAddress,
+      destinationAddress,
+      date,
+      time,
+      selectedVehicle,
+      departureCoordinates,
+      destinationCoordinates
+    )) {
+      console.log("Form validation successful, proceeding to next step");
       handleNextStep();
     } else {
       focusFirstError();
