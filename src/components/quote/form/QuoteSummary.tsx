@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { DollarSignIcon, Loader2, ArrowRight, ArrowLeft, Clock } from 'lucide-react';
+import { DollarSignIcon, Loader2, Clock } from 'lucide-react';
+import { ArrowRight, ArrowLeft } from 'lucide-react'; // Added missing imports
 import RouteMap from '@/components/map/RouteMap';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
