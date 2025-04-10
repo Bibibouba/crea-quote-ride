@@ -63,11 +63,13 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
 
   // Handler for selecting departure address
   const handleDepartureSelect = (address: Address) => {
+    setDepartureAddress(address.fullAddress);
     setDepartureCoordinates(address.coordinates);
   };
 
   // Handler for selecting destination address
   const handleDestinationSelect = (address: Address) => {
+    setDestinationAddress(address.fullAddress);
     setDestinationCoordinates(address.coordinates);
   };
 

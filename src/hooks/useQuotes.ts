@@ -99,10 +99,10 @@ export const useQuotes = (clientId?: string) => {
       const quoteWithDriverId = {
         ...newQuote,
         driver_id: userId,
-        // Convertir les coordonnées en format JSON pour Supabase si elles existent
-        departure_coordinates: newQuote.departure_coordinates ? newQuote.departure_coordinates : null,
-        arrival_coordinates: newQuote.arrival_coordinates ? newQuote.arrival_coordinates : null,
-        return_coordinates: newQuote.return_coordinates ? newQuote.return_coordinates : null
+        // Store coordinates as arrays for Supabase
+        departure_coordinates: newQuote.departure_coordinates || null,
+        arrival_coordinates: newQuote.arrival_coordinates || null,
+        return_coordinates: newQuote.return_coordinates || null
       };
 
       console.log('Saving quote data:', JSON.stringify(quoteWithDriverId, null, 2));

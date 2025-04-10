@@ -311,9 +311,12 @@ export type Database = {
       quotes: {
         Row: {
           amount: number
+          arrival_coordinates: number[] | null
           arrival_location: string
           client_id: string
           created_at: string
+          custom_return_address: string | null
+          departure_coordinates: number[] | null
           departure_location: string
           distance_km: number | null
           driver_id: string
@@ -322,6 +325,8 @@ export type Database = {
           has_waiting_time: boolean | null
           id: string
           quote_pdf: string | null
+          return_coordinates: number[] | null
+          return_to_same_address: boolean | null
           ride_date: string
           status: string
           updated_at: string
@@ -331,9 +336,12 @@ export type Database = {
         }
         Insert: {
           amount: number
+          arrival_coordinates?: number[] | null
           arrival_location: string
           client_id: string
           created_at?: string
+          custom_return_address?: string | null
+          departure_coordinates?: number[] | null
           departure_location: string
           distance_km?: number | null
           driver_id: string
@@ -342,6 +350,8 @@ export type Database = {
           has_waiting_time?: boolean | null
           id?: string
           quote_pdf?: string | null
+          return_coordinates?: number[] | null
+          return_to_same_address?: boolean | null
           ride_date: string
           status?: string
           updated_at?: string
@@ -351,9 +361,12 @@ export type Database = {
         }
         Update: {
           amount?: number
+          arrival_coordinates?: number[] | null
           arrival_location?: string
           client_id?: string
           created_at?: string
+          custom_return_address?: string | null
+          departure_coordinates?: number[] | null
           departure_location?: string
           distance_km?: number | null
           driver_id?: string
@@ -362,6 +375,8 @@ export type Database = {
           has_waiting_time?: boolean | null
           id?: string
           quote_pdf?: string | null
+          return_coordinates?: number[] | null
+          return_to_same_address?: boolean | null
           ride_date?: string
           status?: string
           updated_at?: string
