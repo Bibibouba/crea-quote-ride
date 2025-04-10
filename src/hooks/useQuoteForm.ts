@@ -14,6 +14,10 @@ export type QuoteFormStep = 'step1' | 'step2' | 'step3';
 export interface WaitingTimeOption {
   value: number;
   label: string;
+  // These are no longer used, but kept for backward compatibility
+  // until all references are updated
+  minutes?: number; 
+  price?: number;
 }
 
 export function useQuoteForm() {

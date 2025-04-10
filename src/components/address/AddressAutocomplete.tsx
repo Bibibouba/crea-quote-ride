@@ -15,6 +15,7 @@ interface AddressAutocompleteProps {
   onSelect?: (address: Address) => void;
   className?: string;
   required?: boolean;
+  error?: boolean;  // Added the error prop
 }
 
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
@@ -24,7 +25,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   onChange,
   onSelect,
   className,
-  required = false
+  required = false,
+  error = false  // Added default value
 }) => {
   const { searchAddresses, isLoading } = useMapbox();
   const [query, setQuery] = useState(value);
@@ -140,7 +142,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   return (
     <div className={cn("space-y-2 relative", className)}>
-      <Label>{label}{required && <span className="text-destructive"> *</span>}</Label>
+      <Label className={error ? "text-destructive" : ""}>{label}{required && <span className="text-destructive"> *</span>}</Label>
       <div className="relative">
         <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
@@ -150,7 +152,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           placeholder={placeholder}
-          className="pl-10 pr-10"
+          className={cn(
+            "pl-10 pr-10", 
+            error && "border-destructive bg-destructive/5 focus-visible:ring-destructive"
+          )}
           autoComplete="off"
           required={required}
         />

@@ -1,19 +1,13 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon } from 'lucide-react';
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
-import RouteMap from '@/components/map/RouteMap';
 import { Address } from '@/hooks/useMapbox';
 import { WaitingTimeOption } from '@/hooks/useQuoteForm';
+import AddressFormSection from '@/components/quote/form/AddressFormSection';  // Correct import
 
 interface TripInfoStepProps {
   departureAddress: string;
@@ -134,9 +128,7 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
           destinationAddress={destinationAddress}
           setDestinationAddress={setDestinationAddress}
           departureCoordinates={departureCoordinates}
-          setDepartureCoordinates={setDepartureCoordinates}
           destinationCoordinates={destinationCoordinates}
-          setDestinationCoordinates={setDestinationCoordinates}
           date={date}
           setDate={setDate}
           time={time}
@@ -187,8 +179,8 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   {waitingTimeOptions.map(option => (
-                    <SelectItem key={option.minutes} value={option.minutes.toString()}>
-                      {option.label} (+{option.price} €)
+                    <SelectItem key={option.value} value={option.value.toString()}>
+                      {option.label} (+{option.value / 15 * 7.5} €)
                     </SelectItem>
                   ))}
                 </SelectContent>
