@@ -17,7 +17,7 @@ const Index = () => {
       <div id="quote-form" className="py-12 bg-muted">
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-10">Simulez un devis</h2>
-          <QuoteForm />
+          <QuoteForm showDashboardLink={false} />
         </div>
       </div>
       <Features />

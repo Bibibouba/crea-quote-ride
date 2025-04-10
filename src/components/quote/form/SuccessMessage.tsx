@@ -2,12 +2,14 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface SuccessMessageProps {
-  onCreateNew: () => void;
+  onCreateNew?: () => void;
+  showDashboardLink?: boolean;
 }
 
-const SuccessMessage: React.FC<SuccessMessageProps> = ({ onCreateNew }) => {
+const SuccessMessage: React.FC<SuccessMessageProps> = ({ onCreateNew, showDashboardLink = true }) => {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="bg-green-100 p-3 rounded-full mb-4">
@@ -17,9 +19,20 @@ const SuccessMessage: React.FC<SuccessMessageProps> = ({ onCreateNew }) => {
       <p className="text-muted-foreground mb-6 max-w-md">
         Votre devis a bien été enregistré dans notre système et sera accessible depuis votre dashboard.
       </p>
-      <Button onClick={onCreateNew}>
-        Créer un nouveau devis
-      </Button>
+      
+      <div className="flex gap-4">
+        {showDashboardLink ? (
+          <Button asChild>
+            <Link to="/dashboard/quotes">
+              Voir les devis
+            </Link>
+          </Button>
+        ) : (
+          <Button onClick={onCreateNew}>
+            Créer un nouveau devis
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

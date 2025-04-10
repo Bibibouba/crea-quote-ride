@@ -315,7 +315,9 @@ export type Database = {
           client_id: string
           created_at: string
           departure_location: string
+          distance_km: number | null
           driver_id: string
+          duration_minutes: number | null
           id: string
           quote_pdf: string | null
           ride_date: string
@@ -329,7 +331,9 @@ export type Database = {
           client_id: string
           created_at?: string
           departure_location: string
+          distance_km?: number | null
           driver_id: string
+          duration_minutes?: number | null
           id?: string
           quote_pdf?: string | null
           ride_date: string
@@ -343,7 +347,9 @@ export type Database = {
           client_id?: string
           created_at?: string
           departure_location?: string
+          distance_km?: number | null
           driver_id?: string
+          duration_minutes?: number | null
           id?: string
           quote_pdf?: string | null
           ride_date?: string

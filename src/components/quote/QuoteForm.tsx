@@ -13,17 +13,20 @@ import QuoteSummary from './form/QuoteSummary';
 import SuccessMessage from './form/SuccessMessage';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 
 interface QuoteFormProps {
   clientId?: string;
   onSuccess?: () => void;
+  showDashboardLink?: boolean;
 }
 
-const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
+const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboardLink = true }) => {
   const { user } = useAuth();
   const { addQuote } = useQuotes();
   const { clients } = useClients();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
@@ -268,7 +271,10 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
       ) : isQuoteSent ? (
         <Card>
           <CardContent className="pt-6">
-            <SuccessMessage onCreateNew={handleReset} />
+            <SuccessMessage 
+              onCreateNew={handleReset} 
+              showDashboardLink={showDashboardLink}
+            />
           </CardContent>
         </Card>
       ) : (

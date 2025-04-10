@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,19 +12,23 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, SendIcon, CheckIcon } from 'lucide-react';
+import { CalendarIcon, CheckIcon } from 'lucide-react';
 import { useVehicles } from '@/hooks/useVehicles';
 import { usePricing } from '@/hooks/use-pricing';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import QuoteForm from '@/components/quote/QuoteForm';
 import { supabase } from '@/integrations/supabase/client';
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 import RouteMap from '@/components/map/RouteMap';
 import { useMapbox, Address } from '@/hooks/useMapbox';
+import { useQuotes, QuoteWithCoordinates } from '@/hooks/useQuotes';
 
 const ClientSimulator = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { vehicles, loading: vehiclesLoading } = useVehicles();
+  const { addQuote } = useQuotes();
   const { 
     pricingSettings, 
     loading: pricingLoading,
@@ -170,7 +173,7 @@ const ClientSimulator = () => {
     }
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!firstName || !lastName || !email) {
@@ -178,16 +181,83 @@ const ClientSimulator = () => {
       return;
     }
     
+    if (!departureCoordinates || !destinationCoordinates) {
+      toast.error('Veuillez sélectionner des adresses valides pour le calcul du trajet');
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    setTimeout(() => {
-      toast.success('Votre devis a été envoyé à votre adresse e-mail');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      if (!userId) {
+        throw new Error("Utilisateur non authentifié");
+      }
+      
+      let clientId;
+      const { data: existingClients, error: clientsError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('email', email)
+        .eq('driver_id', userId)
+        .limit(1);
+      
+      if (clientsError) throw clientsError;
+      
+      if (existingClients && existingClients.length > 0) {
+        clientId = existingClients[0].id;
+      } else {
+        const { data: newClient, error: createError } = await supabase
+          .from('clients')
+          .insert({
+            driver_id: userId,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            client_type: 'personal'
+          })
+          .select()
+          .single();
+        
+        if (createError) throw createError;
+        clientId = newClient.id;
+      }
+      
+      const dateTime = new Date(date);
+      const [hours, minutes] = time.split(':').map(Number);
+      dateTime.setHours(hours, minutes);
+      
+      const vehicle = vehicles.find(v => v.id === selectedVehicle);
+      
+      const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
+        client_id: clientId,
+        vehicle_id: selectedVehicle || null,
+        departure_location: departureAddress,
+        arrival_location: destinationAddress,
+        departure_coordinates: departureCoordinates,
+        arrival_coordinates: destinationCoordinates,
+        distance_km: estimatedDistance,
+        duration_minutes: estimatedDuration,
+        ride_date: dateTime.toISOString(),
+        amount: price,
+        status: 'pending',
+        driver_id: ''
+      };
+      
+      await addQuote.mutateAsync(quoteData);
+      
+      toast.success('Votre devis a été enregistré avec succès');
       setIsSubmitting(false);
       setIsQuoteSent(true);
-    }, 1500);
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement du devis:', error);
+      toast.error(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      setIsSubmitting(false);
+    }
   };
 
-  // Gérer la sélection des adresses
   const handleDepartureSelect = (address: Address) => {
     setDepartureCoordinates(address.coordinates);
   };
@@ -196,7 +266,6 @@ const ClientSimulator = () => {
     setDestinationCoordinates(address.coordinates);
   };
 
-  // Gérer le calcul d'itinéraire
   const handleRouteCalculated = (distance: number, duration: number) => {
     setEstimatedDistance(Math.round(distance));
     setEstimatedDuration(Math.round(duration));
@@ -225,19 +294,24 @@ const ClientSimulator = () => {
               <div className="rounded-full bg-green-100 p-3 mb-4">
                 <CheckIcon className="h-6 w-6 text-green-600" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Devis envoyé avec succès</h3>
+              <h3 className="text-xl font-medium mb-2">Devis enregistré avec succès</h3>
               <p className="text-muted-foreground mb-6">
-                Votre devis a été envoyé à l'adresse : {email}
+                Le devis a été enregistré et envoyé à l'adresse : {email}
               </p>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setActiveTab('step1');
-                  setIsQuoteSent(false);
-                }}
-              >
-                Créer un nouveau devis
-              </Button>
+              <div className="flex gap-4">
+                <Button onClick={() => navigate('/dashboard/quotes')}>
+                  Voir tous les devis
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setActiveTab('step1');
+                    setIsQuoteSent(false);
+                  }}
+                >
+                  Créer un nouveau devis
+                </Button>
+              </div>
             </div>
           ) : (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -368,7 +442,6 @@ const ClientSimulator = () => {
                     </div>
                   </div>
 
-                  {/* Prévisualisation de la carte si les deux adresses ont été sélectionnées */}
                   {departureCoordinates && destinationCoordinates && (
                     <div className="mt-4">
                       <Label className="mb-2 block">Aperçu du trajet</Label>
@@ -511,7 +584,6 @@ const ClientSimulator = () => {
                             endTime.setHours(endHours);
                             endTime.setMinutes(endMinutes);
                             
-                            // Si l'heure de départ est pendant la nuit
                             const isNight = (
                               (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
                               (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
