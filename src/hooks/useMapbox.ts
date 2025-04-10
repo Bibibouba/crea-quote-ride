@@ -28,6 +28,13 @@ export function useMapbox() {
     const savedToken = localStorage.getItem('mapboxToken');
     if (savedToken) {
       setMapboxToken(savedToken);
+    } else {
+      // Utilisation du token par défaut si fourni
+      const defaultToken = 'pk.eyJ1IjoidnRjemVuIiwiYSI6ImNtOTl1OXNqZzA4bGIyaXM2aWo2N2l6MDQifQ.daEqarjKUihmXDqV8hGswg';
+      if (defaultToken) {
+        localStorage.setItem('mapboxToken', defaultToken);
+        setMapboxToken(defaultToken);
+      }
     }
   }, []);
 

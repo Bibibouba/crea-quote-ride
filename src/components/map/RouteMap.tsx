@@ -124,7 +124,10 @@ const RouteMap: React.FC<RouteMapProps> = ({
           data: {
             type: 'Feature',
             properties: {},
-            geometry: routeData.geometry
+            geometry: {
+              type: 'LineString', // Fix: Specify the exact type instead of using a variable
+              coordinates: routeData.geometry.coordinates
+            }
           }
         });
 
