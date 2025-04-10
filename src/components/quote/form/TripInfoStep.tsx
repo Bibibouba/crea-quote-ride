@@ -92,10 +92,10 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
   
   const validateForm = (): boolean => {
     const newErrors = {
-      departureAddress: !departureAddress.trim(),
-      destinationAddress: !destinationAddress.trim(),
+      departureAddress: !departureAddress || !departureAddress.trim(),
+      destinationAddress: !destinationAddress || !destinationAddress.trim(),
       date: !date,
-      time: !time.trim(),
+      time: !time || !time.trim(),
       vehicle: !selectedVehicle,
     };
     
