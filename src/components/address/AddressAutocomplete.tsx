@@ -30,6 +30,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const [suggestions, setSuggestions] = useState<Address[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const suggestionRef = useRef<HTMLUListElement>(null);
 
   // Mettre à jour le query si la valeur change de l'extérieur
@@ -53,18 +54,22 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     };
 
     const delayDebounce = setTimeout(() => {
-      fetchSuggestions();
+      if (!selectedAddress || query !== selectedAddress.fullAddress) {
+        fetchSuggestions();
+      }
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [query, searchAddresses]);
+  }, [query, searchAddresses, selectedAddress]);
 
   // Fermer les suggestions si on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         suggestionRef.current && 
-        !suggestionRef.current.contains(event.target as Node)
+        !suggestionRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
       ) {
         setShowSuggestions(false);
       }
@@ -80,6 +85,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     const value = e.target.value;
     setQuery(value);
     onChange(value);
+    
+    // Si l'utilisateur modifie le champ, on réinitialise l'adresse sélectionnée
+    if (selectedAddress && value !== selectedAddress.fullAddress) {
+      setSelectedAddress(null);
+    }
     
     // Si l'utilisateur efface le champ, on réinitialise l'adresse sélectionnée
     if (!value) {
@@ -101,16 +111,30 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     if (onSelect) onSelect(address);
   };
 
+  const handleInputFocus = () => {
+    // Ne montrer les suggestions que si on n'a pas encore sélectionné d'adresse
+    // ou si le query a été modifié depuis la dernière sélection
+    if (!selectedAddress || query !== selectedAddress.fullAddress) {
+      if (query.length >= 3 && suggestions.length > 0) {
+        setShowSuggestions(true);
+      }
+    }
+  };
+
   const clearInput = () => {
     setQuery('');
     onChange('');
     setSelectedAddress(null);
+    setShowSuggestions(false);
     if (onSelect) onSelect({
       id: '',
       name: '',
       fullAddress: '',
       coordinates: [0, 0]
     });
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   return (
@@ -119,9 +143,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       <div className="relative">
         <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={handleInputChange}
+          onFocus={handleInputFocus}
           placeholder={placeholder}
           className="pl-10 pr-10"
           autoComplete="off"
@@ -141,7 +167,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       {showSuggestions && suggestions.length > 0 && (
         <ul
           ref={suggestionRef}
-          className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-card border shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none text-sm"
+          className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-card border shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none text-sm"
         >
           {suggestions.map((suggestion) => (
             <li
