@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 type Coordinates = [number, number];
@@ -10,12 +11,12 @@ type RouteData = {
   };
 };
 
-export interface Address {
+export type Address = {
   id: string;
   name: string;
   fullAddress: string;
-  coordinates: [number, number];
-}
+  coordinates: Coordinates;
+};
 
 export function useMapbox() {
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
