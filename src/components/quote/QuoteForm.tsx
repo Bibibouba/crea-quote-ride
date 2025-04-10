@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
@@ -15,13 +14,13 @@ import SuccessMessage from './form/SuccessMessage';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { FormItem } from '@/components/ui/form';
 import { usePricing } from '@/hooks/use-pricing';
 import { useMapbox, Address } from '@/hooks/useMapbox';
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface QuoteFormProps {
   clientId?: string;
@@ -202,7 +201,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
       
       fetchUserInfo();
     }
-  }, [user]);
+  }, [user, clientId]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
