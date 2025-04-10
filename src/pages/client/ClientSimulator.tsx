@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuoteForm } from '@/hooks/useQuoteForm';
@@ -69,6 +68,16 @@ const ClientSimulator = () => {
     resetForm,
     navigate
   } = useQuoteForm();
+  
+  useEffect(() => {
+    console.log("Current form state:", {
+      departureAddress,
+      destinationAddress,
+      departureCoordinates,
+      destinationCoordinates,
+      activeTab
+    });
+  }, [departureAddress, destinationAddress, departureCoordinates, destinationCoordinates, activeTab]);
   
   if (vehiclesLoading || pricingLoading) {
     return (

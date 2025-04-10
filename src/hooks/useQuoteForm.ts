@@ -245,9 +245,12 @@ export function useQuoteForm() {
   ]);
   
   const handleNextStep = () => {
+    console.log("handleNextStep called with coordinates:", departureCoordinates, destinationCoordinates);
+    
     if (activeTab === 'step1') {
-      if (!departureAddress || !destinationAddress || !date || !time || !selectedVehicle) {
-        toast.error('Veuillez remplir tous les champs requis');
+      if (!departureAddress || !destinationAddress || !date || !time || !selectedVehicle || !departureCoordinates || !destinationCoordinates) {
+        console.error("Cannot proceed: missing required fields");
+        toast.error('Veuillez remplir tous les champs requis et sélectionner des adresses valides');
         return;
       }
       setActiveTab('step2');
@@ -362,11 +365,13 @@ export function useQuoteForm() {
   };
 
   const handleDepartureSelect = (address: Address) => {
+    console.log("Setting departure address:", address);
     setDepartureAddress(address.fullAddress);
     setDepartureCoordinates(address.coordinates);
   };
 
   const handleDestinationSelect = (address: Address) => {
+    console.log("Setting destination address:", address);
     setDestinationAddress(address.fullAddress);
     setDestinationCoordinates(address.coordinates);
   };

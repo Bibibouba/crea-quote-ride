@@ -19,17 +19,17 @@ export function useFormValidation() {
   });
   
   const validateTripForm = (
-    departureAddress: string,
-    destinationAddress: string,
+    departureAddress: string | undefined,
+    destinationAddress: string | undefined,
     date: Date | undefined,
-    time: string,
-    selectedVehicle: string
+    time: string | undefined,
+    selectedVehicle: string | undefined
   ): boolean => {
     const newErrors = {
-      departureAddress: !departureAddress || !departureAddress.trim(),
-      destinationAddress: !destinationAddress || !destinationAddress.trim(),
+      departureAddress: !departureAddress || departureAddress.trim() === '',
+      destinationAddress: !destinationAddress || destinationAddress.trim() === '',
       date: !date,
-      time: !time || !time.trim(),
+      time: !time || time.trim() === '',
       vehicle: !selectedVehicle,
     };
     

@@ -83,10 +83,27 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
   const { errors, validateTripForm, focusFirstError } = useFormValidation();
   
   const onNext = () => {
+    console.log("Validating form with values:", {
+      departureAddress,
+      destinationAddress,
+      date,
+      time,
+      selectedVehicle,
+      departureCoordinates,
+      destinationCoordinates
+    });
+    
+    // Vérifiez que les coordonnées sont définies
+    if (!departureCoordinates || !destinationCoordinates) {
+      console.error("Missing coordinates, cannot continue");
+      return;
+    }
+    
     if (validateTripForm(departureAddress, destinationAddress, date, time, selectedVehicle)) {
       handleNextStep();
     } else {
       focusFirstError();
+      console.log("Form validation failed, errors:", errors);
     }
   };
   
