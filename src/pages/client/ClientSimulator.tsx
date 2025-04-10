@@ -11,6 +11,7 @@ import SuccessMessageStep from '@/components/quote/form/SuccessMessageStep';
 const ClientSimulator = () => {
   const {
     activeTab,
+    setActiveTab, // This was missing - ensuring it's destructured from useQuoteForm
     departureAddress,
     setDepartureAddress,
     destinationAddress,
@@ -193,7 +194,7 @@ const ClientSimulator = () => {
                 <ClientInfoStep
                   firstName={firstName}
                   setFirstName={setFirstName}
-                  lastName={lastName}
+                  lastName={setLastName}
                   setLastName={setLastName}
                   email={email}
                   setEmail={setEmail}

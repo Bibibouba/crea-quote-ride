@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -426,6 +425,7 @@ export function useQuoteForm() {
   return {
     // Form state
     activeTab,
+    setActiveTab,
     departureAddress,
     setDepartureAddress,
     destinationAddress,
