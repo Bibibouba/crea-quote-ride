@@ -12,4 +12,6 @@ export type Quote = {
   quote_pdf: string | null;
   created_at: string;
   updated_at: string;
+  distance_km?: number;
+  duration_minutes?: number;
 };
