@@ -1,24 +1,11 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
 import { useToast } from '@/hooks/use-toast';
 
-// Extension du type Quote pour inclure les coordonnées
-export type QuoteWithCoordinates = Quote & {
-  departure_coordinates?: [number, number];
-  arrival_coordinates?: [number, number];
-  return_coordinates?: [number, number];
-  distance_km?: number;
-  duration_minutes?: number;
-  has_return_trip?: boolean;
-  has_waiting_time?: boolean;
-  waiting_time_minutes?: number;
-  waiting_time_price?: number;
-  return_to_same_address?: boolean;
-  custom_return_address?: string;
-  return_distance_km?: number;
-  return_duration_minutes?: number;
-};
+// Extended Quote type including coordinates
+export type QuoteWithCoordinates = Quote;
 
 export const useQuotes = (clientId?: string) => {
   const queryClient = useQueryClient();
@@ -97,7 +84,7 @@ export const useQuotes = (clientId?: string) => {
     },
   });
 
-  // Ajouter un nouveau devis avec les coordonnées et le calcul d'itinéraire
+  // Ajouter un nouveau devis
   const addQuote = useMutation({
     mutationFn: async (newQuote: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'>) => {
       // Get the current user's ID from Supabase
@@ -114,17 +101,10 @@ export const useQuotes = (clientId?: string) => {
         driver_id: userId
       };
 
-      // Filtrer les propriétés non supportées par la table
-      const { 
-        departure_coordinates, 
-        arrival_coordinates, 
-        return_coordinates,
-        ...quoteData 
-      } = quoteWithDriverId;
-
+      // Create the quote
       const { data, error } = await supabase
         .from('quotes')
-        .insert(quoteData)
+        .insert(quoteWithDriverId)
         .select()
         .single();
 

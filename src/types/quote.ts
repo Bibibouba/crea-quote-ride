@@ -23,4 +23,6 @@ export type Quote = {
   return_distance_km?: number;
   return_duration_minutes?: number;
   return_coordinates?: [number, number];
+  departure_coordinates?: [number, number];
+  arrival_coordinates?: [number, number];
 };

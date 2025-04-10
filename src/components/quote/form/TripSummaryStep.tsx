@@ -1,0 +1,226 @@
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
+import { ArrowLeftRight, ArrowRight, ArrowLeft } from 'lucide-react';
+import RouteMap from '@/components/map/RouteMap';
+
+interface TripSummaryStepProps {
+  departureAddress: string;
+  destinationAddress: string;
+  customReturnAddress: string;
+  departureCoordinates?: [number, number];
+  destinationCoordinates?: [number, number];
+  date?: Date;
+  time: string;
+  selectedVehicle: string;
+  passengers: string;
+  estimatedDistance: number;
+  estimatedDuration: number;
+  hasReturnTrip: boolean;
+  hasWaitingTime: boolean;
+  waitingTimeMinutes: number;
+  returnToSameAddress: boolean;
+  returnDistance: number;
+  returnDuration: number;
+  customReturnCoordinates?: [number, number];
+  quoteDetails: any;
+  vehicles: any[];
+  handleRouteCalculated: (distance: number, duration: number) => void;
+  handleNextStep: () => void;
+  handlePreviousStep: () => void;
+}
+
+const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
+  departureAddress,
+  destinationAddress,
+  customReturnAddress,
+  departureCoordinates,
+  destinationCoordinates,
+  date,
+  time,
+  selectedVehicle,
+  passengers,
+  estimatedDistance,
+  estimatedDuration,
+  hasReturnTrip,
+  hasWaitingTime,
+  waitingTimeMinutes,
+  returnToSameAddress,
+  returnDistance,
+  returnDuration,
+  customReturnCoordinates,
+  quoteDetails,
+  vehicles,
+  handleRouteCalculated,
+  handleNextStep,
+  handlePreviousStep
+}) => {
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border bg-card p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <p className="font-medium mb-1">Départ</p>
+            <p className="text-sm text-muted-foreground">{departureAddress || "Non spécifié"}</p>
+          </div>
+          <div>
+            <p className="font-medium mb-1">Destination</p>
+            <p className="text-sm text-muted-foreground">{destinationAddress || "Non spécifié"}</p>
+          </div>
+        </div>
+        
+        {hasReturnTrip && !returnToSameAddress && (
+          <div className="mt-4">
+            <p className="font-medium mb-1">Adresse de retour</p>
+            <p className="text-sm text-muted-foreground">{customReturnAddress || "Non spécifiée"}</p>
+          </div>
+        )}
+        
+        <Separator className="my-4" />
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Date</p>
+            <p className="text-sm font-medium">{date ? format(date, 'dd/MM/yyyy') : "Non spécifiée"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Heure</p>
+            <p className="text-sm font-medium">{time || "Non spécifiée"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Véhicule</p>
+            <p className="text-sm font-medium">
+              {vehicles.find(v => v.id === selectedVehicle)?.name || "Non spécifié"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Passagers</p>
+            <p className="text-sm font-medium">{passengers}</p>
+          </div>
+        </div>
+        
+        {hasReturnTrip && (
+          <div className="mt-4 p-2 bg-secondary/30 rounded-md">
+            <div className="flex items-center">
+              <ArrowLeftRight className="h-4 w-4 mr-2" />
+              <p className="text-sm font-medium">Aller-retour avec {hasWaitingTime ? `attente de ${waitingTimeMinutes} minutes` : 'retour immédiat'}</p>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="h-[250px] rounded-lg border overflow-hidden">
+          {departureCoordinates && destinationCoordinates ? (
+            <RouteMap
+              departure={departureCoordinates}
+              destination={destinationCoordinates}
+              onRouteCalculated={handleRouteCalculated}
+            />
+          ) : (
+            <div className="flex flex-col h-full items-center justify-center p-4 bg-muted">
+              <p className="text-sm text-muted-foreground mb-1">Carte du trajet</p>
+              <p className="text-xs">Sélectionnez des adresses valides pour afficher l'itinéraire</p>
+            </div>
+          )}
+        </div>
+        
+        <div className="space-y-4">
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="font-medium mb-3">Détails du trajet</h3>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <p className="text-sm">Distance estimée (aller)</p>
+                <p className="text-sm font-medium">{estimatedDistance} km</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-sm">Durée estimée (aller)</p>
+                <p className="text-sm font-medium">{estimatedDuration} min</p>
+              </div>
+              
+              {hasReturnTrip && !returnToSameAddress && customReturnCoordinates && (
+                <>
+                  <div className="flex justify-between">
+                    <p className="text-sm">Distance estimée (retour)</p>
+                    <p className="text-sm font-medium">{returnDistance} km</p>
+                  </div>
+                  <div className="flex justify-between">
+                    <p className="text-sm">Durée estimée (retour)</p>
+                    <p className="text-sm font-medium">{returnDuration} min</p>
+                  </div>
+                </>
+              )}
+              
+              <div className="flex justify-between">
+                <p className="text-sm">Heure d'arrivée estimée</p>
+                <p className="text-sm font-medium">
+                  {time ? (
+                    (() => {
+                      const [hours, minutes] = time.split(':').map(Number);
+                      const arrivalTime = new Date();
+                      arrivalTime.setHours(hours);
+                      arrivalTime.setMinutes(minutes + estimatedDuration);
+                      return format(arrivalTime, 'HH:mm');
+                    })()
+                  ) : "Non spécifiée"}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="font-medium mb-3">Détails du prix</h3>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <div className="flex items-center">
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <p className="text-sm">Trajet aller</p>
+                </div>
+                <p className="text-sm font-medium">{quoteDetails?.oneWayPrice}€</p>
+              </div>
+              
+              {hasWaitingTime && (
+                <div className="flex justify-between">
+                  <p className="text-sm">Temps d'attente ({waitingTimeMinutes} min)</p>
+                  <p className="text-sm font-medium">{quoteDetails?.waitingTimePrice}€</p>
+                </div>
+              )}
+              
+              {hasReturnTrip && (
+                <div className="flex justify-between">
+                  <div className="flex items-center">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    <p className="text-sm">Trajet retour</p>
+                  </div>
+                  <p className="text-sm font-medium">{quoteDetails?.returnPrice}€</p>
+                </div>
+              )}
+              
+              <Separator className="my-2" />
+              
+              <div className="flex justify-between font-medium">
+                <p>Prix total</p>
+                <p className="text-lg">{quoteDetails?.totalPrice}€</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={handlePreviousStep}>
+          Retour
+        </Button>
+        <Button onClick={handleNextStep}>
+          Continuer
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default TripSummaryStep;
