@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
 import { formatDuration } from '@/lib/formatDuration';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuoteSummaryProps {
   departureAddress: string;
@@ -68,6 +69,8 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   returnDuration = 0,
   returnCoordinates
 }) => {
+  const isMobile = useIsMobile();
+  
   // Calculate the return price if applicable
   const returnPrice = hasReturnTrip ? (returnToSameAddress ? estimatedPrice : Math.round(returnDistance * basePrice)) : 0;
   
@@ -88,23 +91,23 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   
   return (
     <div className="space-y-6">
-      <div className="bg-secondary p-4 rounded-lg space-y-4">
-        <div className="flex justify-between">
-          <div>
+      <div className="bg-secondary/30 p-4 rounded-lg space-y-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+          <div className="w-full sm:w-1/2">
             <p className="text-sm font-medium">Départ</p>
-            <p className="text-sm text-muted-foreground">{departureAddress}</p>
+            <p className="text-sm text-muted-foreground break-words">{departureAddress}</p>
           </div>
-          <div className="text-right">
+          <div className="w-full sm:w-1/2 sm:text-right">
             <p className="text-sm font-medium">Destination</p>
-            <p className="text-sm text-muted-foreground">{destinationAddress}</p>
+            <p className="text-sm text-muted-foreground break-words">{destinationAddress}</p>
           </div>
         </div>
-        <div className="flex justify-between border-t pt-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between border-t pt-4 gap-4">
           <div>
             <p className="text-sm font-medium">Distance estimée</p>
             <p className="text-sm text-muted-foreground">{estimatedDistance} km</p>
           </div>
-          <div className="text-right">
+          <div className="sm:text-right">
             <p className="text-sm font-medium">Durée estimée</p>
             <p className="text-sm text-muted-foreground">{formatDuration(estimatedDuration)}</p>
           </div>
@@ -112,7 +115,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="h-[400px] rounded-lg overflow-hidden">
+        <div className="h-[400px] rounded-lg overflow-hidden border">
           <RouteMap
             departure={departureCoordinates}
             destination={destinationCoordinates}
@@ -138,7 +141,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
               {/* Trajet aller */}
               <div className="flex justify-between">
                 <div className="flex items-center">
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className="h-4 w-4 mr-2 flex-shrink-0" />
                   <p className="font-medium">Trajet aller</p>
                 </div>
                 <p>{estimatedPrice}€</p>
@@ -148,7 +151,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
               {hasWaitingTime && (
                 <div className="flex justify-between">
                   <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2" />
+                    <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
                     <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
                   </div>
                   <p>{waitingTimePrice}€</p>
@@ -159,7 +162,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
               {hasReturnTrip && (
                 <div className="flex justify-between">
                   <div className="flex items-center">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    <ArrowLeft className="h-4 w-4 mr-2 flex-shrink-0" />
                     <p className="font-medium">
                       Trajet retour {returnToSameAddress ? '(même adresse)' : ''}
                     </p>
@@ -171,7 +174,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
               {/* Display custom return address if applicable */}
               {hasReturnTrip && !returnToSameAddress && customReturnAddress && (
                 <div className="text-sm text-muted-foreground">
-                  <p>Adresse de retour : {customReturnAddress}</p>
+                  <p className="break-words">Adresse de retour : {customReturnAddress}</p>
                   {returnDistance > 0 && (
                     <p className="mt-1">Distance : {returnDistance} km | Durée : {formatDuration(returnDuration)}</p>
                   )}
@@ -191,7 +194,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
       
       {showClientInfo && clientInfoComponent}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Button 
           className="w-full"
           onClick={onSaveQuote}
@@ -209,7 +212,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
             </>
           )}
         </Button>
-        <Button variant="outline" onClick={onEditQuote}>
+        <Button variant="outline" onClick={onEditQuote} className="w-full">
           Modifier le devis
         </Button>
       </div>

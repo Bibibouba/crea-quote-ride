@@ -61,27 +61,27 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
   return (
     <div className="space-y-6">
       <div className="rounded-lg border bg-card p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <p className="font-medium mb-1">Départ</p>
-            <p className="text-sm text-muted-foreground">{departureAddress || "Non spécifié"}</p>
+            <p className="text-sm text-muted-foreground break-words">{departureAddress || "Non spécifié"}</p>
           </div>
           <div>
             <p className="font-medium mb-1">Destination</p>
-            <p className="text-sm text-muted-foreground">{destinationAddress || "Non spécifié"}</p>
+            <p className="text-sm text-muted-foreground break-words">{destinationAddress || "Non spécifié"}</p>
           </div>
         </div>
         
         {hasReturnTrip && !returnToSameAddress && (
           <div className="mt-4">
             <p className="font-medium mb-1">Adresse de retour</p>
-            <p className="text-sm text-muted-foreground">{customReturnAddress || "Non spécifiée"}</p>
+            <p className="text-sm text-muted-foreground break-words">{customReturnAddress || "Non spécifiée"}</p>
           </div>
         )}
         
         <Separator className="my-4" />
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Date</p>
             <p className="text-sm font-medium">{date ? format(date, 'dd/MM/yyyy') : "Non spécifiée"}</p>
@@ -105,7 +105,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
         {hasReturnTrip && (
           <div className="mt-4 p-2 bg-secondary/30 rounded-md">
             <div className="flex items-center">
-              <ArrowLeftRight className="h-4 w-4 mr-2" />
+              <ArrowLeftRight className="h-4 w-4 mr-2 flex-shrink-0" />
               <p className="text-sm font-medium">Aller-retour avec {hasWaitingTime ? `attente de ${waitingTimeMinutes} minutes` : 'retour immédiat'}</p>
             </div>
           </div>
@@ -178,7 +178,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <div className="flex items-center">
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className="h-4 w-4 mr-2 flex-shrink-0" />
                   <p className="text-sm">Trajet aller</p>
                 </div>
                 <p className="text-sm font-medium">{quoteDetails?.oneWayPrice}€</p>
@@ -194,7 +194,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
               {hasReturnTrip && (
                 <div className="flex justify-between">
                   <div className="flex items-center">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    <ArrowLeft className="h-4 w-4 mr-2 flex-shrink-0" />
                     <p className="text-sm">Trajet retour</p>
                   </div>
                   <p className="text-sm font-medium">{quoteDetails?.returnPrice}€</p>
@@ -212,11 +212,11 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
         </div>
       </div>
       
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={handlePreviousStep}>
+      <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
+        <Button variant="outline" onClick={handlePreviousStep} className="w-full sm:w-auto order-1 sm:order-none">
           Retour
         </Button>
-        <Button onClick={handleNextStep}>
+        <Button onClick={handleNextStep} className="w-full sm:w-auto order-0 sm:order-none">
           Continuer
         </Button>
       </div>

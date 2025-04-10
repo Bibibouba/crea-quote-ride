@@ -90,7 +90,12 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+  
+  /* Add viewport-aware margin/padding for better mobile display */
+  .container {
+    @apply px-4 sm:px-6 lg:px-8;
   }
 }
 
@@ -100,4 +105,51 @@
 
 .hero-gradient {
   @apply bg-gradient-to-r from-primary/10 via-secondary/5 to-transparent;
+}
+
+/* Add responsive styles for better mobile experience */
+@layer utilities {
+  .mobile-full {
+    @apply w-full sm:w-auto;
+  }
+  
+  .mobile-stack {
+    @apply flex-col sm:flex-row;
+  }
+  
+  .mobile-reverse {
+    @apply flex-col-reverse sm:flex-row;
+  }
+  
+  /* Fix for dropdowns in mobile view */
+  .radix-dropdown-content {
+    @apply z-50 max-h-[80vh] overflow-y-auto;
+  }
+  
+  /* Make address suggestions scrollable on mobile */
+  .address-suggestions {
+    @apply max-h-[30vh] overflow-y-auto;
+  }
+}
+
+/* Improve mobile scrolling experience */
+html, body {
+  @apply overscroll-none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix for select and calendar elements on mobile */
+.select-content, 
+.calendar-content {
+  @apply z-[100] overflow-visible;
+}
+
+/* Map container responsive fix */
+.map-container {
+  @apply h-[250px] sm:h-[400px] w-full rounded-md overflow-hidden border;
+}
+
+/* Input field touch improvement */
+input, select, textarea, button {
+  @apply touch-manipulation;
 }

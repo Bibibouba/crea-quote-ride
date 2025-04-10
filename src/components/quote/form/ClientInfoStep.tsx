@@ -31,7 +31,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
     <form className="space-y-6" onSubmit={handleSubmit}>
       <div className="border rounded-md p-4 space-y-4">
         <h3 className="font-medium">Vos coordonnées</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="firstName">Prénom</Label>
             <Input
@@ -63,11 +63,11 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         </div>
       </div>
       
-      <div className="flex justify-between">
-        <Button type="button" variant="outline" onClick={handlePreviousStep}>
+      <div className="flex flex-col sm:flex-row justify-between gap-3">
+        <Button type="button" variant="outline" onClick={handlePreviousStep} className="w-full sm:w-auto order-1 sm:order-none">
           Retour
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto order-0 sm:order-none">
           {isSubmitting ? 'Envoi en cours...' : 'Envoyer le devis'}
         </Button>
       </div>
