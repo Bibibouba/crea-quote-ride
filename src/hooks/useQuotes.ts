@@ -102,7 +102,9 @@ export const useQuotes = (clientId?: string) => {
         // Store coordinates as arrays for Supabase
         departure_coordinates: newQuote.departure_coordinates || null,
         arrival_coordinates: newQuote.arrival_coordinates || null,
-        return_coordinates: newQuote.return_coordinates || null
+        return_coordinates: newQuote.return_coordinates || null,
+        return_distance_km: newQuote.return_distance_km || null,
+        return_duration_minutes: newQuote.return_duration_minutes || null
       };
 
       console.log('Saving quote data:', JSON.stringify(quoteWithDriverId, null, 2));

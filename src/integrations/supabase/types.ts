@@ -326,6 +326,8 @@ export type Database = {
           id: string
           quote_pdf: string | null
           return_coordinates: number[] | null
+          return_distance_km: number | null
+          return_duration_minutes: number | null
           return_to_same_address: boolean | null
           ride_date: string
           status: string
@@ -351,6 +353,8 @@ export type Database = {
           id?: string
           quote_pdf?: string | null
           return_coordinates?: number[] | null
+          return_distance_km?: number | null
+          return_duration_minutes?: number | null
           return_to_same_address?: boolean | null
           ride_date: string
           status?: string
@@ -376,6 +380,8 @@ export type Database = {
           id?: string
           quote_pdf?: string | null
           return_coordinates?: number[] | null
+          return_distance_km?: number | null
+          return_duration_minutes?: number | null
           return_to_same_address?: boolean | null
           ride_date?: string
           status?: string
