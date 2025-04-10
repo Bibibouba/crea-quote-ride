@@ -125,7 +125,7 @@ const ClientSimulator = () => {
       startTime.setMinutes(startMinutes);
       
       const endTime = new Date();
-      const [endHours, endMinutes] = pricingSettings.wait_night_end?.split(':').map(Number) || [0, 0];
+      const [endHours, endMinutes] = pricingSettings.night_rate_end?.split(':').map(Number) || [0, 0];
       endTime.setHours(endHours);
       endTime.setMinutes(endMinutes);
       

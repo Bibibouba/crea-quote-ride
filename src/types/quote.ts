@@ -22,4 +22,5 @@ export type Quote = {
   custom_return_address?: string;
   return_distance_km?: number;
   return_duration_minutes?: number;
+  return_coordinates?: [number, number];
 };
