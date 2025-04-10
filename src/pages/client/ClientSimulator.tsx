@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,26 +13,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, MapIcon, SendIcon, CheckIcon } from 'lucide-react';
+import { CalendarIcon, SendIcon, CheckIcon } from 'lucide-react';
 import { useVehicles } from '@/hooks/useVehicles';
 import { usePricing } from '@/hooks/use-pricing';
 import { toast } from 'sonner';
 import QuoteForm from '@/components/quote/QuoteForm';
 import { supabase } from '@/integrations/supabase/client';
-
-interface Address {
-  id: string;
-  name: string;
-  fullAddress: string;
-}
-
-const mockAddresses: Address[] = [
-  { id: '1', name: 'Aéroport Paris CDG', fullAddress: 'Aéroport Paris-Charles de Gaulle, 95700 Roissy-en-France' },
-  { id: '2', name: 'Gare du Nord', fullAddress: '18 Rue de Dunkerque, 75010 Paris' },
-  { id: '3', name: 'Tour Eiffel', fullAddress: 'Champ de Mars, 5 Avenue Anatole France, 75007 Paris' },
-  { id: '4', name: 'Arc de Triomphe', fullAddress: 'Place Charles de Gaulle, 75008 Paris' },
-  { id: '5', name: 'Disneyland Paris', fullAddress: 'Boulevard de Parc, 77700 Coupvray' },
-];
+import AddressAutocomplete from '@/components/address/AddressAutocomplete';
+import RouteMap from '@/components/map/RouteMap';
+import { useMapbox, Address } from '@/hooks/useMapbox';
 
 const ClientSimulator = () => {
   const { user } = useAuth();
@@ -45,6 +35,8 @@ const ClientSimulator = () => {
   const [activeTab, setActiveTab] = useState('step1');
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
+  const [departureCoordinates, setDepartureCoordinates] = useState<[number, number] | undefined>(undefined);
+  const [destinationCoordinates, setDestinationCoordinates] = useState<[number, number] | undefined>(undefined);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState('09:00');
   const [selectedVehicle, setSelectedVehicle] = useState('');
@@ -194,6 +186,21 @@ const ClientSimulator = () => {
       setIsQuoteSent(true);
     }, 1500);
   };
+
+  // Gérer la sélection des adresses
+  const handleDepartureSelect = (address: Address) => {
+    setDepartureCoordinates(address.coordinates);
+  };
+
+  const handleDestinationSelect = (address: Address) => {
+    setDestinationCoordinates(address.coordinates);
+  };
+
+  // Gérer le calcul d'itinéraire
+  const handleRouteCalculated = (distance: number, duration: number) => {
+    setEstimatedDistance(Math.round(distance));
+    setEstimatedDuration(Math.round(duration));
+  };
   
   if (vehiclesLoading || pricingLoading) {
     return (
@@ -264,47 +271,23 @@ const ClientSimulator = () => {
               <TabsContent value="step1" className="space-y-6">
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="departure">Adresse de départ</Label>
-                      <div className="relative">
-                        <MapIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <select 
-                          id="departure"
-                          className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          value={departureAddress}
-                          onChange={(e) => setDepartureAddress(e.target.value)}
-                          required
-                        >
-                          <option value="">Sélectionnez une adresse de départ</option>
-                          {mockAddresses.map(address => (
-                            <option key={address.id} value={address.fullAddress}>
-                              {address.name} - {address.fullAddress}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                    <AddressAutocomplete
+                      label="Adresse de départ"
+                      placeholder="Saisissez l'adresse de départ"
+                      value={departureAddress}
+                      onChange={setDepartureAddress}
+                      onSelect={handleDepartureSelect}
+                      required
+                    />
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="destination">Adresse de destination</Label>
-                      <div className="relative">
-                        <MapIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <select 
-                          id="destination"
-                          className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          value={destinationAddress}
-                          onChange={(e) => setDestinationAddress(e.target.value)}
-                          required
-                        >
-                          <option value="">Sélectionnez une adresse de destination</option>
-                          {mockAddresses.map(address => (
-                            <option key={address.id} value={address.fullAddress}>
-                              {address.name} - {address.fullAddress}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                    <AddressAutocomplete
+                      label="Adresse de destination"
+                      placeholder="Saisissez l'adresse de destination"
+                      value={destinationAddress}
+                      onChange={setDestinationAddress}
+                      onSelect={handleDestinationSelect}
+                      required
+                    />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -384,6 +367,24 @@ const ClientSimulator = () => {
                       </Select>
                     </div>
                   </div>
+
+                  {/* Prévisualisation de la carte si les deux adresses ont été sélectionnées */}
+                  {departureCoordinates && destinationCoordinates && (
+                    <div className="mt-4">
+                      <Label className="mb-2 block">Aperçu du trajet</Label>
+                      <RouteMap
+                        departure={departureCoordinates}
+                        destination={destinationCoordinates}
+                        onRouteCalculated={handleRouteCalculated}
+                      />
+                      {estimatedDistance > 0 && estimatedDuration > 0 && (
+                        <div className="flex justify-between mt-2 text-sm">
+                          <p className="text-muted-foreground">Distance estimée: <span className="font-medium">{estimatedDistance} km</span></p>
+                          <p className="text-muted-foreground">Durée estimée: <span className="font-medium">{estimatedDuration} min</span></p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex justify-end">
@@ -431,9 +432,19 @@ const ClientSimulator = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex flex-col h-[250px] rounded-lg border bg-muted items-center justify-center p-4">
-                    <p className="text-sm text-muted-foreground mb-1">Carte du trajet</p>
-                    <p className="text-xs">(Simulée - Dans une version réelle, une carte interactive serait affichée ici)</p>
+                  <div className="h-[250px] rounded-lg border overflow-hidden">
+                    {departureCoordinates && destinationCoordinates ? (
+                      <RouteMap
+                        departure={departureCoordinates}
+                        destination={destinationCoordinates}
+                        onRouteCalculated={handleRouteCalculated}
+                      />
+                    ) : (
+                      <div className="flex flex-col h-full items-center justify-center p-4 bg-muted">
+                        <p className="text-sm text-muted-foreground mb-1">Carte du trajet</p>
+                        <p className="text-xs">Sélectionnez des adresses valides pour afficher l'itinéraire</p>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-4">

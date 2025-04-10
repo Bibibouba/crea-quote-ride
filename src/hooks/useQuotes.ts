@@ -4,6 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
 import { useToast } from '@/hooks/use-toast';
 
+// Extension du type Quote pour inclure les coordonnées
+export type QuoteWithCoordinates = Quote & {
+  departure_coordinates?: [number, number];
+  arrival_coordinates?: [number, number];
+  distance_km?: number;
+  duration_minutes?: number;
+};
+
 export const useQuotes = (clientId?: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -81,9 +89,9 @@ export const useQuotes = (clientId?: string) => {
     },
   });
 
-  // Ajouter un nouveau devis
+  // Ajouter un nouveau devis avec les coordonnées et le calcul d'itinéraire
   const addQuote = useMutation({
-    mutationFn: async (newQuote: Omit<Quote, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'>) => {
+    mutationFn: async (newQuote: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'>) => {
       // Get the current user's ID from Supabase
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
@@ -98,9 +106,12 @@ export const useQuotes = (clientId?: string) => {
         driver_id: userId
       };
 
+      // Filtrer les propriétés non supportées par la table
+      const { departure_coordinates, arrival_coordinates, distance_km, duration_minutes, ...quoteData } = quoteWithDriverId;
+
       const { data, error } = await supabase
         .from('quotes')
-        .insert(quoteWithDriverId)
+        .insert(quoteData)
         .select()
         .single();
 

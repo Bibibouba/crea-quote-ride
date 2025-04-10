@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon, MapIcon, CarFrontIcon, NavigationIcon, DollarSignIcon, CheckIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, CarFrontIcon, DollarSignIcon, CheckIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
@@ -13,9 +13,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuotes } from '@/hooks/useQuotes';
+import { useQuotes, QuoteWithCoordinates } from '@/hooks/useQuotes';
 import { useClients } from '@/hooks/useClients';
 import { supabase } from '@/integrations/supabase/client';
+import AddressAutocomplete from '@/components/address/AddressAutocomplete';
+import RouteMap from '@/components/map/RouteMap';
+import { useMapbox, Address } from '@/hooks/useMapbox';
 
 interface QuoteFormProps {
   clientId?: string;
@@ -30,6 +33,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
   
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
+  const [departureCoordinates, setDepartureCoordinates] = useState<[number, number] | undefined>(undefined);
+  const [destinationCoordinates, setDestinationCoordinates] = useState<[number, number] | undefined>(undefined);
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('12:00');
   const [selectedVehicle, setSelectedVehicle] = useState('');
@@ -43,9 +48,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   
-  // Valeurs estimées pour le devis
-  const estimatedDistance = 40; // km
-  const estimatedDuration = 45; // minutes
+  // Valeurs calculées pour le devis
+  const [estimatedDistance, setEstimatedDistance] = useState(0);
+  const [estimatedDuration, setEstimatedDuration] = useState(0);
   
   // Véhicules disponibles (normalement ces données viendraient d'une API)
   const vehicles = [
@@ -102,11 +107,20 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simuler un délai d'API
-    setTimeout(() => {
-      setShowQuote(true);
+    // Si les deux adresses ont des coordonnées, on peut déjà calculer l'itinéraire
+    if (departureCoordinates && destinationCoordinates) {
+      setTimeout(() => {
+        setShowQuote(true);
+        setIsLoading(false);
+      }, 500);
+    } else {
+      toast({
+        title: 'Adresses incomplètes',
+        description: 'Veuillez sélectionner des adresses valides pour le départ et la destination',
+        variant: 'destructive',
+      });
       setIsLoading(false);
-    }, 1000);
+    }
   };
   
   const handleSaveQuote = async () => {
@@ -114,6 +128,15 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
       toast({
         title: 'Date manquante',
         description: 'Veuillez sélectionner une date pour le trajet',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (!departureCoordinates || !destinationCoordinates) {
+      toast({
+        title: 'Adresses incomplètes',
+        description: 'Veuillez sélectionner des adresses valides pour le calcul du trajet',
         variant: 'destructive'
       });
       return;
@@ -159,17 +182,24 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
-      // Enregistrer le devis dans la base de données
-      await addQuote.mutateAsync({
+      // Créer un objet quote avec les coordonnées
+      const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
         client_id: finalClientId,
         vehicle_id: null, // Dans un cas réel, ce serait l'ID du véhicule sélectionné
         departure_location: departureAddress,
         arrival_location: destinationAddress,
+        departure_coordinates: departureCoordinates,
+        arrival_coordinates: destinationCoordinates,
+        distance_km: estimatedDistance,
+        duration_minutes: estimatedDuration, 
         ride_date: dateTime.toISOString(),
         amount: estimatedPrice,
         status: 'pending',
         driver_id: '' // Ce champ sera automatiquement rempli dans la fonction addQuote
-      });
+      };
+      
+      // Enregistrer le devis dans la base de données
+      await addQuote.mutateAsync(quoteData);
       
       toast({
         title: 'Devis enregistré',
@@ -192,6 +222,21 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
       setIsSubmitting(false);
     }
   };
+
+  // Gérer la sélection des adresses
+  const handleDepartureSelect = (address: Address) => {
+    setDepartureCoordinates(address.coordinates);
+  };
+
+  const handleDestinationSelect = (address: Address) => {
+    setDestinationCoordinates(address.coordinates);
+  };
+
+  // Gérer le calcul d'itinéraire
+  const handleRouteCalculated = (distance: number, duration: number) => {
+    setEstimatedDistance(Math.round(distance));
+    setEstimatedDuration(Math.round(duration));
+  };
   
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -207,34 +252,22 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="departure">Adresse de départ</Label>
-                    <div className="relative">
-                      <MapIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        id="departure"
-                        placeholder="15 Rue de Rivoli, Paris"
-                        className="pl-10"
-                        value={departureAddress}
-                        onChange={(e) => setDepartureAddress(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="destination">Adresse de destination</Label>
-                    <div className="relative">
-                      <NavigationIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        id="destination"
-                        placeholder="Aéroport Charles de Gaulle, Paris"
-                        className="pl-10"
-                        value={destinationAddress}
-                        onChange={(e) => setDestinationAddress(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
+                  <AddressAutocomplete
+                    label="Adresse de départ"
+                    placeholder="Saisissez l'adresse de départ"
+                    value={departureAddress}
+                    onChange={setDepartureAddress}
+                    onSelect={handleDepartureSelect}
+                    required
+                  />
+                  <AddressAutocomplete
+                    label="Adresse de destination"
+                    placeholder="Saisissez l'adresse de destination"
+                    value={destinationAddress}
+                    onChange={setDestinationAddress}
+                    onSelect={handleDestinationSelect}
+                    required
+                  />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -326,6 +359,24 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
                     </Select>
                   </div>
                 </div>
+
+                {/* Prévisualisation de la carte si les deux adresses ont été sélectionnées */}
+                {departureCoordinates && destinationCoordinates && (
+                  <div className="mt-4">
+                    <Label className="mb-2 block">Aperçu du trajet</Label>
+                    <RouteMap
+                      departure={departureCoordinates}
+                      destination={destinationCoordinates}
+                      onRouteCalculated={handleRouteCalculated}
+                    />
+                    {estimatedDistance > 0 && estimatedDuration > 0 && (
+                      <div className="flex justify-between mt-2 text-sm">
+                        <p className="text-muted-foreground">Distance estimée: <span className="font-medium">{estimatedDistance} km</span></p>
+                        <p className="text-muted-foreground">Durée estimée: <span className="font-medium">{estimatedDuration} min</span></p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               
               <Button type="submit" className="w-full" disabled={isLoading}>
@@ -373,11 +424,11 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
                 <div className="flex justify-between">
                   <div>
                     <p className="text-sm font-medium">Départ</p>
-                    <p className="text-sm text-muted-foreground">{departureAddress || "15 Rue de Rivoli, Paris"}</p>
+                    <p className="text-sm text-muted-foreground">{departureAddress}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium">Destination</p>
-                    <p className="text-sm text-muted-foreground">{destinationAddress || "Aéroport Charles de Gaulle, Paris"}</p>
+                    <p className="text-sm text-muted-foreground">{destinationAddress}</p>
                   </div>
                 </div>
                 <div className="flex justify-between border-t pt-4">
@@ -390,6 +441,13 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess }) => {
                     <p className="text-sm text-muted-foreground">{estimatedDuration} minutes</p>
                   </div>
                 </div>
+              </div>
+              
+              <div className="w-full h-64">
+                <RouteMap
+                  departure={departureCoordinates}
+                  destination={destinationCoordinates}
+                />
               </div>
               
               <div className="space-y-4">
