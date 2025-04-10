@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -69,7 +70,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom pastel colors
+				pastelBlue: '#D3E4FD',
+				pastelGreen: '#F2FCE2',
+				pastelGray: '#F1F0FB',
+				pastelPurple: '#E5DEFF',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -95,18 +101,22 @@ export default {
 				},
 				'fade-in': {
 					from: {
-						opacity: 0
+						opacity: 0,
+						transform: 'translateY(10px)'
 					},
 					to: {
-						opacity: 1
+						opacity: 1,
+						transform: 'translateY(0)'
 					}
 				},
 				'fade-out': {
 					from: {
-						opacity: 1
+						opacity: 1,
+						transform: 'translateY(0)'
 					},
 					to: {
-						opacity: 0
+						opacity: 0,
+						transform: 'translateY(10px)'
 					}
 				},
 				'slide-in': {
@@ -129,7 +139,11 @@ export default {
 			},
 			screens: {
 				'xs': '475px',
-			}
+			},
+			backgroundImage: {
+				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

@@ -80,9 +80,9 @@ const ClientSimulator = () => {
   
   return (
     <div className="container mx-auto py-8">
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle>Simulateur d'interface client</CardTitle>
+      <Card className="max-w-4xl mx-auto shadow-md">
+        <CardHeader className="bg-gradient-to-r from-primary/10 via-secondary/5 to-transparent">
+          <CardTitle className="text-primary">Simulateur d'interface client</CardTitle>
           <CardDescription>
             Visualisez ce que vos clients verront lors d'une demande de devis
           </CardDescription>
@@ -96,34 +96,46 @@ const ClientSimulator = () => {
             />
           ) : (
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'step1' | 'step2' | 'step3')} className="space-y-6">
-              <TabsList className="grid grid-cols-3 mb-8">
-                <TabsTrigger value="step1">
+              <TabsList className="grid grid-cols-3 mb-8 p-1 bg-muted/60">
+                <TabsTrigger 
+                  value="step1"
+                  className="data-[state=active]:bg-pastelBlue/60 data-[state=active]:text-primary"
+                >
                   <span className="flex items-center">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full border mr-2 bg-background">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border mr-2 bg-background border-primary/20">
                       1
                     </span>
-                    Informations du trajet
+                    <span className="hidden sm:inline">Informations du trajet</span>
+                    <span className="sm:hidden">Trajet</span>
                   </span>
                 </TabsTrigger>
-                <TabsTrigger value="step2">
+                <TabsTrigger 
+                  value="step2"
+                  className="data-[state=active]:bg-pastelGreen/60 data-[state=active]:text-primary"
+                >
                   <span className="flex items-center">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full border mr-2 bg-background">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border mr-2 bg-background border-primary/20">
                       2
                     </span>
-                    Calcul du trajet
+                    <span className="hidden sm:inline">Calcul du trajet</span>
+                    <span className="sm:hidden">Calcul</span>
                   </span>
                 </TabsTrigger>
-                <TabsTrigger value="step3">
+                <TabsTrigger 
+                  value="step3"
+                  className="data-[state=active]:bg-pastelGray/60 data-[state=active]:text-primary"
+                >
                   <span className="flex items-center">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full border mr-2 bg-background">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border mr-2 bg-background border-primary/20">
                       3
                     </span>
-                    Informations client
+                    <span className="hidden sm:inline">Informations client</span>
+                    <span className="sm:hidden">Client</span>
                   </span>
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="step1">
+              <TabsContent value="step1" className="animate-fade-in">
                 <TripInfoStep
                   departureAddress={departureAddress}
                   setDepartureAddress={setDepartureAddress}
@@ -162,7 +174,7 @@ const ClientSimulator = () => {
                 />
               </TabsContent>
               
-              <TabsContent value="step2">
+              <TabsContent value="step2" className="animate-fade-in">
                 <TripSummaryStep
                   departureAddress={departureAddress}
                   destinationAddress={destinationAddress}
@@ -190,7 +202,7 @@ const ClientSimulator = () => {
                 />
               </TabsContent>
               
-              <TabsContent value="step3">
+              <TabsContent value="step3" className="animate-fade-in">
                 <ClientInfoStep
                   firstName={firstName}
                   setFirstName={setFirstName}
