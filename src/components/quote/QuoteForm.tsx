@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -290,7 +291,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         ? (returnToSameAddress ? estimatedPrice : Math.round(returnDistance * basePrice)) 
         : 0;
       
-      const totalPrice = estimatedPrice;
+      // Changed from const to let to allow reassignment
+      let totalPrice = estimatedPrice;
       if (hasWaitingTime) {
         totalPrice += waitingTimePrice;
       }

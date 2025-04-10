@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 import { Address } from '@/hooks/useMapbox';
 import { WaitingTimeOption } from '@/hooks/useQuoteForm';
-import AddressFormSection from '@/components/address/AddressFormSection';  // Fixed import path
+import AddressFormSection from '@/components/address/AddressFormSection';
 
 interface TripInfoStepProps {
   departureAddress: string;
@@ -129,8 +129,8 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
           setDestinationAddress={setDestinationAddress}
           departureCoordinates={departureCoordinates}
           destinationCoordinates={destinationCoordinates}
-          setDepartureCoordinates={handleDepartureSelect}
-          setDestinationCoordinates={handleDestinationSelect}
+          setDepartureCoordinates={(address) => handleDepartureSelect(address as unknown as Address)}
+          setDestinationCoordinates={(address) => handleDestinationSelect(address as unknown as Address)}
           date={date || new Date()}
           setDate={setDate}
           time={time}
@@ -182,7 +182,7 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
                 <SelectContent>
                   {waitingTimeOptions.map(option => (
                     <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label} (+{option.value / 15 * 7.5} €)
+                      {option.label} (+{(option.value / 15) * 7.5} €)
                     </SelectItem>
                   ))}
                 </SelectContent>
