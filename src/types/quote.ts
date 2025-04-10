@@ -14,4 +14,8 @@ export type Quote = {
   updated_at: string;
   distance_km?: number;
   duration_minutes?: number;
+  has_return_trip?: boolean;
+  has_waiting_time?: boolean;
+  waiting_time_minutes?: number;
+  waiting_time_price?: number;
 };

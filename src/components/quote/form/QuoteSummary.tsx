@@ -5,6 +5,7 @@ import { DollarSignIcon, Loader2 } from 'lucide-react';
 import RouteMap from '@/components/map/RouteMap';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Separator } from '@/components/ui/separator';
 
 interface QuoteSummaryProps {
   departureAddress: string;
@@ -25,6 +26,10 @@ interface QuoteSummaryProps {
   showClientInfo: boolean;
   clientInfoComponent?: React.ReactNode;
   vehicles: Array<{ id: string; name: string; basePrice: number; description: string }>;
+  hasReturnTrip?: boolean;
+  hasWaitingTime?: boolean;
+  waitingTimeMinutes?: number;
+  waitingTimePrice?: number;
 }
 
 const QuoteSummary: React.FC<QuoteSummaryProps> = ({
@@ -45,8 +50,27 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   onEditQuote,
   showClientInfo,
   clientInfoComponent,
-  vehicles
+  vehicles,
+  hasReturnTrip = false,
+  hasWaitingTime = false,
+  waitingTimeMinutes = 0,
+  waitingTimePrice = 0
 }) => {
+  // Calculate the total price including waiting time
+  const totalPrice = hasWaitingTime ? estimatedPrice + waitingTimePrice : estimatedPrice;
+  
+  // Format waiting time for display
+  const formatWaitingTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    if (hours > 0) {
+      return `${hours} heure${hours > 1 ? 's' : ''}${remainingMinutes > 0 ? ` et ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}` : ''}`;
+    } else {
+      return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    }
+  };
+  
   return (
     <div className="space-y-6">
       <div className="bg-secondary p-4 rounded-lg space-y-4">
@@ -92,9 +116,34 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
           <p className="font-medium">Prix au kilomètre</p>
           <p>{basePrice.toFixed(2)}€/km</p>
         </div>
+        
+        {/* Display option for return trip */}
+        {hasReturnTrip && (
+          <div className="flex justify-between">
+            <p className="font-medium">Option aller-retour</p>
+            <p>Oui</p>
+          </div>
+        )}
+        
+        {/* Display waiting time information */}
+        {hasWaitingTime && (
+          <>
+            <div className="flex justify-between">
+              <p className="font-medium">Temps d'attente</p>
+              <p>{formatWaitingTime(waitingTimeMinutes)}</p>
+            </div>
+            <div className="flex justify-between">
+              <p className="font-medium">Prix du temps d'attente</p>
+              <p>{waitingTimePrice}€</p>
+            </div>
+          </>
+        )}
+        
+        <Separator className="my-2" />
+        
         <div className="flex justify-between border-t border-border/60 pt-4">
           <p className="font-medium">Montant total</p>
-          <p className="text-xl font-bold">{estimatedPrice}€</p>
+          <p className="text-xl font-bold">{totalPrice}€</p>
         </div>
       </div>
       

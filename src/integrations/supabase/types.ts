@@ -318,12 +318,16 @@ export type Database = {
           distance_km: number | null
           driver_id: string
           duration_minutes: number | null
+          has_return_trip: boolean | null
+          has_waiting_time: boolean | null
           id: string
           quote_pdf: string | null
           ride_date: string
           status: string
           updated_at: string
           vehicle_id: string | null
+          waiting_time_minutes: number | null
+          waiting_time_price: number | null
         }
         Insert: {
           amount: number
@@ -334,12 +338,16 @@ export type Database = {
           distance_km?: number | null
           driver_id: string
           duration_minutes?: number | null
+          has_return_trip?: boolean | null
+          has_waiting_time?: boolean | null
           id?: string
           quote_pdf?: string | null
           ride_date: string
           status?: string
           updated_at?: string
           vehicle_id?: string | null
+          waiting_time_minutes?: number | null
+          waiting_time_price?: number | null
         }
         Update: {
           amount?: number
@@ -350,12 +358,16 @@ export type Database = {
           distance_km?: number | null
           driver_id?: string
           duration_minutes?: number | null
+          has_return_trip?: boolean | null
+          has_waiting_time?: boolean | null
           id?: string
           quote_pdf?: string | null
           ride_date?: string
           status?: string
           updated_at?: string
           vehicle_id?: string | null
+          waiting_time_minutes?: number | null
+          waiting_time_price?: number | null
         }
         Relationships: [
           {

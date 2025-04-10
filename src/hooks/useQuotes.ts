@@ -10,6 +10,10 @@ export type QuoteWithCoordinates = Quote & {
   arrival_coordinates?: [number, number];
   distance_km?: number;
   duration_minutes?: number;
+  has_return_trip?: boolean;
+  has_waiting_time?: boolean;
+  waiting_time_minutes?: number;
+  waiting_time_price?: number;
 };
 
 export const useQuotes = (clientId?: string) => {
@@ -107,7 +111,7 @@ export const useQuotes = (clientId?: string) => {
       };
 
       // Filtrer les propriétés non supportées par la table
-      const { departure_coordinates, arrival_coordinates, distance_km, duration_minutes, ...quoteData } = quoteWithDriverId;
+      const { departure_coordinates, arrival_coordinates, ...quoteData } = quoteWithDriverId;
 
       const { data, error } = await supabase
         .from('quotes')

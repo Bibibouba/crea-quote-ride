@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +15,11 @@ import SuccessMessage from './form/SuccessMessage';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { FormItem } from '@/components/ui/form';
+import { usePricing } from '@/hooks/use-pricing';
 
 interface QuoteFormProps {
   clientId?: string;
@@ -27,6 +33,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
   const { clients } = useClients();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { pricingSettings } = usePricing();
   
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
@@ -51,6 +58,12 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
   
+  // New state for return trip and waiting time
+  const [hasReturnTrip, setHasReturnTrip] = useState(false);
+  const [hasWaitingTime, setHasWaitingTime] = useState(false);
+  const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
+  const [waitingTimePrice, setWaitingTimePrice] = useState(0);
+  
   const vehicles = [
     { id: "sedan", name: "Berline", basePrice: 1.8, description: "Mercedes Classe E ou équivalent" },
     { id: "van", name: "Van", basePrice: 2.2, description: "Mercedes Classe V ou équivalent" },
@@ -59,6 +72,70 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
   
   const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
   const estimatedPrice = Math.round(estimatedDistance * basePrice);
+  
+  // Generate waiting time options in 15-minute increments
+  const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
+    const minutes = (i + 1) * 15;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    let label = "";
+    if (hours > 0) {
+      label += `${hours} heure${hours > 1 ? 's' : ''}`;
+      if (remainingMinutes > 0) {
+        label += ` et ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
+      }
+    } else {
+      label = `${minutes} minutes`;
+    }
+    
+    return {
+      value: minutes,
+      label
+    };
+  });
+  
+  // Calculate waiting time price
+  useEffect(() => {
+    if (!hasWaitingTime || !pricingSettings) return;
+    
+    const pricePerMin = pricingSettings.waiting_fee_per_minute || 0.5;
+    const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
+    
+    // Calculate by quarter-hour increments using wait_price_per_15min
+    const quarters = Math.ceil(waitingTimeMinutes / 15);
+    let price = quarters * pricePerQuarter;
+    
+    // Apply night rate if enabled
+    if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      const tripTime = new Date();
+      tripTime.setHours(hours);
+      tripTime.setMinutes(minutes);
+      
+      const startTime = new Date();
+      const [startHours, startMinutes] = pricingSettings.wait_night_start?.split(':').map(Number) || [0, 0];
+      startTime.setHours(startHours);
+      startTime.setMinutes(startMinutes);
+      
+      const endTime = new Date();
+      const [endHours, endMinutes] = pricingSettings.wait_night_end?.split(':').map(Number) || [0, 0];
+      endTime.setHours(endHours);
+      endTime.setMinutes(endMinutes);
+      
+      const isNight = (
+        (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
+        (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
+      );
+      
+      if (isNight) {
+        const nightPercentage = pricingSettings.wait_night_percentage || 0;
+        price += price * (nightPercentage / 100);
+      }
+    }
+    
+    setWaitingTimePrice(Math.round(price));
+  }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
   
   useEffect(() => {
     if (clientId && clients.length > 0) {
@@ -173,6 +250,12 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
+      // Calculate final price including waiting time
+      let totalPrice = estimatedPrice;
+      if (hasWaitingTime) {
+        totalPrice += waitingTimePrice;
+      }
+      
       const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
         client_id: finalClientId,
         vehicle_id: null,
@@ -183,9 +266,13 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         distance_km: estimatedDistance,
         duration_minutes: estimatedDuration, 
         ride_date: dateTime.toISOString(),
-        amount: estimatedPrice,
+        amount: totalPrice,
         status: 'pending',
-        driver_id: ''
+        driver_id: '',
+        has_return_trip: hasReturnTrip,
+        has_waiting_time: hasWaitingTime,
+        waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
+        waiting_time_price: hasWaitingTime ? waitingTimePrice : 0
       };
       
       await addQuote.mutateAsync(quoteData);
@@ -257,6 +344,61 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
                 vehicles={vehicles}
               />
               
+              <div className="space-y-4 border rounded-md p-4 bg-secondary/20">
+                <h3 className="font-medium mb-2">Options supplémentaires</h3>
+                
+                <div className="flex items-center justify-between space-x-2">
+                  <div className="flex flex-col space-y-1">
+                    <Label htmlFor="return-trip" className="font-medium">Aller-retour</Label>
+                    <p className="text-sm text-muted-foreground">Souhaitez-vous prévoir un trajet retour ?</p>
+                  </div>
+                  <Switch 
+                    id="return-trip" 
+                    checked={hasReturnTrip} 
+                    onCheckedChange={setHasReturnTrip} 
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between space-x-2">
+                  <div className="flex flex-col space-y-1">
+                    <Label htmlFor="waiting-time" className="font-medium">Temps d'attente</Label>
+                    <p className="text-sm text-muted-foreground">Le chauffeur doit-il vous attendre (rendez-vous médical, etc) ?</p>
+                  </div>
+                  <Switch 
+                    id="waiting-time" 
+                    checked={hasWaitingTime} 
+                    onCheckedChange={setHasWaitingTime}
+                  />
+                </div>
+                
+                {hasWaitingTime && (
+                  <div className="pt-2">
+                    <Label htmlFor="waiting-duration" className="font-medium">Durée d'attente estimée</Label>
+                    <Select
+                      value={waitingTimeMinutes.toString()}
+                      onValueChange={(value) => setWaitingTimeMinutes(parseInt(value))}
+                    >
+                      <SelectTrigger id="waiting-duration" className="mt-1.5">
+                        <SelectValue placeholder="Sélectionnez une durée" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {waitingTimeOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value.toString()}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {waitingTimePrice > 0 && (
+                      <p className="text-sm mt-2">
+                        Prix du temps d'attente: <span className="font-medium">{waitingTimePrice}€</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+              
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
@@ -316,6 +458,10 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
                 ) : undefined
               }
               vehicles={vehicles}
+              hasReturnTrip={hasReturnTrip}
+              hasWaitingTime={hasWaitingTime}
+              waitingTimeMinutes={waitingTimeMinutes}
+              waitingTimePrice={waitingTimePrice}
             />
           </CardContent>
         </Card>
