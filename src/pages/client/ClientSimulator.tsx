@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, CheckIcon, Send } from 'lucide-react';
+import { CalendarIcon, CheckIcon, Send, ArrowLeftRight, Clock } from 'lucide-react';
 import { useVehicles } from '@/hooks/useVehicles';
 import { usePricing } from '@/hooks/use-pricing';
 import { toast } from 'sonner';
@@ -23,12 +24,14 @@ import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 import RouteMap from '@/components/map/RouteMap';
 import { useMapbox, Address } from '@/hooks/useMapbox';
 import { useQuotes, QuoteWithCoordinates } from '@/hooks/useQuotes';
+import { Switch } from '@/components/ui/switch';
 
 const ClientSimulator = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { vehicles, loading: vehiclesLoading } = useVehicles();
   const { addQuote } = useQuotes();
+  const { getRoute } = useMapbox();
   const { 
     pricingSettings, 
     loading: pricingLoading,
@@ -53,6 +56,17 @@ const ClientSimulator = () => {
   const [quoteDetails, setQuoteDetails] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
+  
+  // Options pour trajet aller-retour
+  const [hasReturnTrip, setHasReturnTrip] = useState(false);
+  const [hasWaitingTime, setHasWaitingTime] = useState(false);
+  const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
+  const [waitingTimePrice, setWaitingTimePrice] = useState(0);
+  const [returnToSameAddress, setReturnToSameAddress] = useState(true);
+  const [customReturnAddress, setCustomReturnAddress] = useState('');
+  const [customReturnCoordinates, setCustomReturnCoordinates] = useState<[number, number] | undefined>(undefined);
+  const [returnDistance, setReturnDistance] = useState(0);
+  const [returnDuration, setReturnDuration] = useState(0);
   
   useEffect(() => {
     if (user) {
@@ -80,6 +94,69 @@ const ClientSimulator = () => {
     }
   }, [user]);
   
+  // Calculate waiting time price
+  useEffect(() => {
+    if (!hasWaitingTime || !pricingSettings) return;
+    
+    const pricePerMin = pricingSettings.waiting_fee_per_minute || 0.5;
+    const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
+    
+    // Calculate by quarter-hour increments using wait_price_per_15min
+    const quarters = Math.ceil(waitingTimeMinutes / 15);
+    let price = quarters * pricePerQuarter;
+    
+    // Apply night rate if enabled
+    if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      const tripTime = new Date();
+      tripTime.setHours(hours);
+      tripTime.setMinutes(minutes);
+      
+      const startTime = new Date();
+      const [startHours, startMinutes] = pricingSettings.wait_night_start?.split(':').map(Number) || [0, 0];
+      startTime.setHours(startHours);
+      startTime.setMinutes(startMinutes);
+      
+      const endTime = new Date();
+      const [endHours, endMinutes] = pricingSettings.wait_night_end?.split(':').map(Number) || [0, 0];
+      endTime.setHours(endHours);
+      endTime.setMinutes(endMinutes);
+      
+      const isNight = (
+        (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
+        (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
+      );
+      
+      if (isNight) {
+        const nightPercentage = pricingSettings.wait_night_percentage || 0;
+        price += price * (nightPercentage / 100);
+      }
+    }
+    
+    setWaitingTimePrice(Math.round(price));
+  }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
+  
+  // Calculate return trip distance and duration
+  useEffect(() => {
+    const calculateReturnRoute = async () => {
+      if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
+        return;
+      }
+      
+      try {
+        const route = await getRoute(destinationCoordinates, customReturnCoordinates);
+        if (route) {
+          setReturnDistance(Math.round(route.distance));
+          setReturnDuration(Math.round(route.duration));
+        }
+      } catch (error) {
+        console.error("Erreur lors du calcul de l'itinéraire de retour:", error);
+      }
+    };
+    
+    calculateReturnRoute();
+  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
+  
   useEffect(() => {
     if (!selectedVehicle || !pricingSettings || !distanceTiers) return;
     
@@ -105,8 +182,10 @@ const ClientSimulator = () => {
       }
     }
     
-    let totalPrice = pricingSettings.base_fare + (estimatedDistance * pricePerKm);
+    // Prix de base pour le trajet aller
+    let oneWayPrice = pricingSettings.base_fare + (estimatedDistance * pricePerKm);
     
+    // Appliquer le tarif de nuit si actif
     if (pricingSettings.night_rate_enabled && time) {
       const [hours, minutes] = time.split(':').map(Number);
       const tripTime = new Date();
@@ -128,30 +207,64 @@ const ClientSimulator = () => {
         (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
       ) {
         const nightPercentage = pricingSettings.night_rate_percentage || 0;
-        totalPrice += totalPrice * (nightPercentage / 100);
+        oneWayPrice += oneWayPrice * (nightPercentage / 100);
       }
     }
     
-    if (totalPrice < pricingSettings.min_fare) {
-      totalPrice = pricingSettings.min_fare;
+    // Appliquer le prix minimum si nécessaire
+    if (oneWayPrice < pricingSettings.min_fare) {
+      oneWayPrice = pricingSettings.min_fare;
     }
+    
+    // Calculer le prix du retour si nécessaire
+    let returnPrice = 0;
+    if (hasReturnTrip) {
+      if (returnToSameAddress) {
+        returnPrice = oneWayPrice;
+      } else if (returnDistance > 0) {
+        returnPrice = pricingSettings.base_fare + (returnDistance * pricePerKm);
+        
+        // Appliquer le prix minimum si nécessaire
+        if (returnPrice < pricingSettings.min_fare) {
+          returnPrice = pricingSettings.min_fare;
+        }
+      }
+    }
+    
+    // Calculer le prix total
+    const totalPrice = oneWayPrice + (hasWaitingTime ? waitingTimePrice : 0) + returnPrice;
     
     setPrice(Math.round(totalPrice));
     
     setQuoteDetails({
       departureAddress,
       destinationAddress,
+      customReturnAddress,
       date: date ? format(date, 'dd/MM/yyyy') : '',
       time,
       vehicleName: vehicle.name,
       vehicleModel: vehicle.model,
       distance: estimatedDistance,
       duration: estimatedDuration,
+      returnDistance,
+      returnDuration,
       baseFare: pricingSettings.base_fare,
       pricePerKm,
-      totalPrice: Math.round(totalPrice)
+      oneWayPrice: Math.round(oneWayPrice),
+      waitingTimePrice: hasWaitingTime ? waitingTimePrice : 0,
+      returnPrice: Math.round(returnPrice),
+      totalPrice: Math.round(totalPrice),
+      hasReturnTrip,
+      hasWaitingTime,
+      waitingTimeMinutes,
+      returnToSameAddress
     });
-  }, [selectedVehicle, departureAddress, destinationAddress, date, time, estimatedDistance, vehicles, pricingSettings, distanceTiers]);
+  }, [
+    selectedVehicle, departureAddress, destinationAddress, date, time, 
+    estimatedDistance, vehicles, pricingSettings, distanceTiers,
+    hasReturnTrip, hasWaitingTime, waitingTimePrice, waitingTimeMinutes,
+    returnToSameAddress, customReturnAddress, returnDistance
+  ]);
   
   const handleNextStep = () => {
     if (activeTab === 'step1') {
@@ -183,6 +296,11 @@ const ClientSimulator = () => {
     
     if (!departureCoordinates || !destinationCoordinates) {
       toast.error('Veuillez sélectionner des adresses valides pour le calcul du trajet');
+      return;
+    }
+    
+    if (hasReturnTrip && !returnToSameAddress && !customReturnAddress) {
+      toast.error('Veuillez spécifier une adresse de retour');
       return;
     }
     
@@ -225,7 +343,7 @@ const ClientSimulator = () => {
         clientId = newClient.id;
       }
       
-      const dateTime = new Date(date);
+      const dateTime = new Date(date!);
       const [hours, minutes] = time.split(':').map(Number);
       dateTime.setHours(hours, minutes);
       
@@ -243,7 +361,16 @@ const ClientSimulator = () => {
         ride_date: dateTime.toISOString(),
         amount: price,
         status: 'pending',
-        driver_id: ''
+        driver_id: '',
+        has_return_trip: hasReturnTrip,
+        has_waiting_time: hasWaitingTime,
+        waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
+        waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
+        return_to_same_address: returnToSameAddress,
+        custom_return_address: customReturnAddress,
+        return_coordinates: customReturnCoordinates,
+        return_distance_km: returnDistance,
+        return_duration_minutes: returnDuration
       };
       
       await addQuote.mutateAsync(quoteData);
@@ -266,10 +393,37 @@ const ClientSimulator = () => {
     setDestinationCoordinates(address.coordinates);
   };
 
+  const handleReturnAddressSelect = (address: Address) => {
+    setCustomReturnAddress(address.fullAddress);
+    setCustomReturnCoordinates(address.coordinates);
+  };
+
   const handleRouteCalculated = (distance: number, duration: number) => {
     setEstimatedDistance(Math.round(distance));
     setEstimatedDuration(Math.round(duration));
   };
+  
+  // Generate waiting time options in 15-minute increments
+  const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
+    const minutes = (i + 1) * 15;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    let label = "";
+    if (hours > 0) {
+      label += `${hours} heure${hours > 1 ? 's' : ''}`;
+      if (remainingMinutes > 0) {
+        label += ` et ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
+      }
+    } else {
+      label = `${minutes} minutes`;
+    }
+    
+    return {
+      value: minutes,
+      label
+    };
+  });
   
   if (vehiclesLoading || pricingLoading) {
     return (
@@ -442,6 +596,91 @@ const ClientSimulator = () => {
                     </div>
                   </div>
 
+                  {/* Options d'aller-retour et temps d'attente */}
+                  <div className="space-y-4 border rounded-md p-4 bg-secondary/20">
+                    <h3 className="font-medium mb-2">Options supplémentaires</h3>
+                    
+                    <div className="flex items-center justify-between space-x-2">
+                      <div className="flex flex-col space-y-1">
+                        <Label htmlFor="return-trip" className="font-medium">Aller-retour</Label>
+                        <p className="text-sm text-muted-foreground">Souhaitez-vous prévoir un trajet retour ?</p>
+                      </div>
+                      <Switch 
+                        id="return-trip" 
+                        checked={hasReturnTrip} 
+                        onCheckedChange={setHasReturnTrip} 
+                      />
+                    </div>
+                    
+                    {hasReturnTrip && (
+                      <>
+                        <div className="flex items-center justify-between space-x-2">
+                          <div className="flex flex-col space-y-1">
+                            <Label htmlFor="waiting-time" className="font-medium">Temps d'attente</Label>
+                            <p className="text-sm text-muted-foreground">Le chauffeur doit-il vous attendre (rendez-vous médical, etc) ?</p>
+                          </div>
+                          <Switch 
+                            id="waiting-time" 
+                            checked={hasWaitingTime} 
+                            onCheckedChange={setHasWaitingTime}
+                          />
+                        </div>
+                        
+                        {hasWaitingTime && (
+                          <div className="pt-2">
+                            <Label htmlFor="waiting-duration" className="font-medium">Durée d'attente estimée</Label>
+                            <Select
+                              value={waitingTimeMinutes.toString()}
+                              onValueChange={(value) => setWaitingTimeMinutes(parseInt(value))}
+                            >
+                              <SelectTrigger id="waiting-duration" className="mt-1.5">
+                                <SelectValue placeholder="Sélectionnez une durée" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {waitingTimeOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value.toString()}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            
+                            {waitingTimePrice > 0 && (
+                              <p className="text-sm mt-2">
+                                Prix du temps d'attente: <span className="font-medium">{waitingTimePrice}€</span>
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-between space-x-2 pt-2">
+                          <div className="flex flex-col space-y-1">
+                            <Label htmlFor="same-address" className="font-medium">Retour à la même adresse</Label>
+                            <p className="text-sm text-muted-foreground">Souhaitez-vous être redéposé à la même adresse qu'à l'aller ?</p>
+                          </div>
+                          <Switch 
+                            id="same-address" 
+                            checked={returnToSameAddress} 
+                            onCheckedChange={setReturnToSameAddress}
+                          />
+                        </div>
+                        
+                        {!returnToSameAddress && (
+                          <div className="pt-2">
+                            <AddressAutocomplete
+                              label="Adresse de retour"
+                              placeholder="Saisissez l'adresse de retour"
+                              value={customReturnAddress}
+                              onChange={setCustomReturnAddress}
+                              onSelect={handleReturnAddressSelect}
+                              required
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
                   {departureCoordinates && destinationCoordinates && (
                     <div className="mt-4">
                       <Label className="mb-2 block">Aperçu du trajet</Label>
@@ -480,6 +719,13 @@ const ClientSimulator = () => {
                     </div>
                   </div>
                   
+                  {hasReturnTrip && !returnToSameAddress && (
+                    <div className="mt-4">
+                      <p className="font-medium mb-1">Adresse de retour</p>
+                      <p className="text-sm text-muted-foreground">{customReturnAddress || "Non spécifiée"}</p>
+                    </div>
+                  )}
+                  
                   <Separator className="my-4" />
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -502,6 +748,15 @@ const ClientSimulator = () => {
                       <p className="text-sm font-medium">{passengers}</p>
                     </div>
                   </div>
+                  
+                  {hasReturnTrip && (
+                    <div className="mt-4 p-2 bg-secondary/30 rounded-md">
+                      <div className="flex items-center">
+                        <ArrowLeftRight className="h-4 w-4 mr-2" />
+                        <p className="text-sm font-medium">Aller-retour avec {hasWaitingTime ? `attente de ${waitingTimeMinutes} minutes` : 'retour immédiat'}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -526,13 +781,27 @@ const ClientSimulator = () => {
                       
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <p className="text-sm">Distance estimée</p>
+                          <p className="text-sm">Distance estimée (aller)</p>
                           <p className="text-sm font-medium">{estimatedDistance} km</p>
                         </div>
                         <div className="flex justify-between">
-                          <p className="text-sm">Durée estimée</p>
+                          <p className="text-sm">Durée estimée (aller)</p>
                           <p className="text-sm font-medium">{estimatedDuration} min</p>
                         </div>
+                        
+                        {hasReturnTrip && !returnToSameAddress && customReturnCoordinates && (
+                          <>
+                            <div className="flex justify-between">
+                              <p className="text-sm">Distance estimée (retour)</p>
+                              <p className="text-sm font-medium">{returnDistance} km</p>
+                            </div>
+                            <div className="flex justify-between">
+                              <p className="text-sm">Durée estimée (retour)</p>
+                              <p className="text-sm font-medium">{returnDuration} min</p>
+                            </div>
+                          </>
+                        )}
+                        
                         <div className="flex justify-between">
                           <p className="text-sm">Heure d'arrivée estimée</p>
                           <p className="text-sm font-medium">
@@ -555,47 +824,31 @@ const ClientSimulator = () => {
                       
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <p className="text-sm">Forfait de base</p>
-                          <p className="text-sm">{pricingSettings?.base_fare.toFixed(2)}€</p>
-                        </div>
-                        <div className="flex justify-between">
-                          <p className="text-sm">Tarif kilométrique</p>
-                          <p className="text-sm">{quoteDetails?.pricePerKm.toFixed(2)}€/km</p>
-                        </div>
-                        <div className="flex justify-between">
-                          <p className="text-sm">Distance</p>
-                          <p className="text-sm">{estimatedDistance} km</p>
+                          <div className="flex items-center">
+                            <ArrowRight className="h-4 w-4 mr-2" />
+                            <p className="text-sm">Trajet aller</p>
+                          </div>
+                          <p className="text-sm font-medium">{quoteDetails?.oneWayPrice}€</p>
                         </div>
                         
-                        {pricingSettings?.night_rate_enabled && time && (
-                          (() => {
-                            const [hours, minutes] = time.split(':').map(Number);
-                            const tripTime = new Date();
-                            tripTime.setHours(hours);
-                            tripTime.setMinutes(minutes);
-                            
-                            const startTime = new Date();
-                            const [startHours, startMinutes] = pricingSettings.night_rate_start?.split(':').map(Number) || [0, 0];
-                            startTime.setHours(startHours);
-                            startTime.setMinutes(startMinutes);
-                            
-                            const endTime = new Date();
-                            const [endHours, endMinutes] = pricingSettings.night_rate_end?.split(':').map(Number) || [0, 0];
-                            endTime.setHours(endHours);
-                            endTime.setMinutes(endMinutes);
-                            
-                            const isNight = (
-                              (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
-                              (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
-                            );
-                            
-                            return isNight && (
-                              <div className="flex justify-between">
-                                <p className="text-sm">Majoration de nuit ({pricingSettings.night_rate_percentage}%)</p>
-                                <p className="text-sm">+{((price * (pricingSettings.night_rate_percentage || 0) / 100)).toFixed(2)}€</p>
-                              </div>
-                            );
-                          })()
+                        {hasWaitingTime && (
+                          <div className="flex justify-between">
+                            <div className="flex items-center">
+                              <Clock className="h-4 w-4 mr-2" />
+                              <p className="text-sm">Temps d'attente</p>
+                            </div>
+                            <p className="text-sm font-medium">{waitingTimePrice}€</p>
+                          </div>
+                        )}
+                        
+                        {hasReturnTrip && (
+                          <div className="flex justify-between">
+                            <div className="flex items-center">
+                              <ArrowLeft className="h-4 w-4 mr-2" />
+                              <p className="text-sm">Trajet retour</p>
+                            </div>
+                            <p className="text-sm font-medium">{quoteDetails?.returnPrice}€</p>
+                          </div>
                         )}
                         
                         <Separator className="my-2" />
@@ -645,6 +898,27 @@ const ClientSimulator = () => {
                         </p>
                       </div>
                     </div>
+                    
+                    {hasReturnTrip && (
+                      <div className="mt-3 border-t pt-3">
+                        <p className="text-sm font-medium mb-2">Options sélectionnées :</p>
+                        <ul className="text-sm space-y-1">
+                          <li className="flex items-center">
+                            <ArrowLeftRight className="h-3.5 w-3.5 mr-2" />
+                            Aller-retour
+                          </li>
+                          {hasWaitingTime && (
+                            <li className="flex items-center">
+                              <Clock className="h-3.5 w-3.5 mr-2" />
+                              Temps d'attente : {waitingTimeOptions.find(o => o.value === waitingTimeMinutes)?.label}
+                            </li>
+                          )}
+                          {!returnToSameAddress && customReturnAddress && (
+                            <li>Adresse de retour personnalisée : {customReturnAddress}</li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
                     
                     <Separator className="my-3" />
                     

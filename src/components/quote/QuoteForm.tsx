@@ -20,6 +20,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { FormItem } from '@/components/ui/form';
 import { usePricing } from '@/hooks/use-pricing';
+import { useMapbox, Address } from '@/hooks/useMapbox';
+import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 
 interface QuoteFormProps {
   clientId?: string;
@@ -34,6 +36,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
   const { toast } = useToast();
   const navigate = useNavigate();
   const { pricingSettings } = usePricing();
+  const { getRoute } = useMapbox();
   
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
@@ -58,11 +61,16 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
   
-  // New state for return trip and waiting time
+  // Options pour trajet aller-retour
   const [hasReturnTrip, setHasReturnTrip] = useState(false);
   const [hasWaitingTime, setHasWaitingTime] = useState(false);
   const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
   const [waitingTimePrice, setWaitingTimePrice] = useState(0);
+  const [returnToSameAddress, setReturnToSameAddress] = useState(true);
+  const [customReturnAddress, setCustomReturnAddress] = useState('');
+  const [customReturnCoordinates, setCustomReturnCoordinates] = useState<[number, number] | undefined>(undefined);
+  const [returnDistance, setReturnDistance] = useState(0);
+  const [returnDuration, setReturnDuration] = useState(0);
   
   const vehicles = [
     { id: "sedan", name: "Berline", basePrice: 1.8, description: "Mercedes Classe E ou équivalent" },
@@ -94,6 +102,27 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
       label
     };
   });
+  
+  // Calculate return trip distance and duration
+  useEffect(() => {
+    const calculateReturnRoute = async () => {
+      if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
+        return;
+      }
+      
+      try {
+        const route = await getRoute(destinationCoordinates, customReturnCoordinates);
+        if (route) {
+          setReturnDistance(Math.round(route.distance));
+          setReturnDuration(Math.round(route.duration));
+        }
+      } catch (error) {
+        console.error("Erreur lors du calcul de l'itinéraire de retour:", error);
+      }
+    };
+    
+    calculateReturnRoute();
+  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
   
   // Calculate waiting time price
   useEffect(() => {
@@ -193,6 +222,11 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
       setIsLoading(false);
     }
   };
+
+  const handleReturnAddressSelect = (address: Address) => {
+    setCustomReturnAddress(address.fullAddress);
+    setCustomReturnCoordinates(address.coordinates);
+  };
   
   const handleSaveQuote = async () => {
     if (!date) {
@@ -208,6 +242,15 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
       toast({
         title: 'Adresses incomplètes',
         description: 'Veuillez sélectionner des adresses valides pour le calcul du trajet',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (hasReturnTrip && !returnToSameAddress && !customReturnAddress) {
+      toast({
+        title: 'Adresse de retour manquante',
+        description: 'Veuillez spécifier une adresse de retour',
         variant: 'destructive'
       });
       return;
@@ -250,10 +293,18 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
-      // Calculate final price including waiting time
+      // Calculate return price if applicable
+      const returnPrice = hasReturnTrip 
+        ? (returnToSameAddress ? estimatedPrice : Math.round(returnDistance * basePrice)) 
+        : 0;
+      
+      // Calculate total price including waiting time and return trip
       let totalPrice = estimatedPrice;
       if (hasWaitingTime) {
         totalPrice += waitingTimePrice;
+      }
+      if (hasReturnTrip) {
+        totalPrice += returnPrice;
       }
       
       const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
@@ -272,7 +323,12 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         has_return_trip: hasReturnTrip,
         has_waiting_time: hasWaitingTime,
         waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
-        waiting_time_price: hasWaitingTime ? waitingTimePrice : 0
+        waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
+        return_to_same_address: returnToSameAddress,
+        custom_return_address: customReturnAddress,
+        return_coordinates: customReturnCoordinates,
+        return_distance_km: returnDistance,
+        return_duration_minutes: returnDuration
       };
       
       await addQuote.mutateAsync(quoteData);
@@ -359,43 +415,72 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
                   />
                 </div>
                 
-                <div className="flex items-center justify-between space-x-2">
-                  <div className="flex flex-col space-y-1">
-                    <Label htmlFor="waiting-time" className="font-medium">Temps d'attente</Label>
-                    <p className="text-sm text-muted-foreground">Le chauffeur doit-il vous attendre (rendez-vous médical, etc) ?</p>
-                  </div>
-                  <Switch 
-                    id="waiting-time" 
-                    checked={hasWaitingTime} 
-                    onCheckedChange={setHasWaitingTime}
-                  />
-                </div>
-                
-                {hasWaitingTime && (
-                  <div className="pt-2">
-                    <Label htmlFor="waiting-duration" className="font-medium">Durée d'attente estimée</Label>
-                    <Select
-                      value={waitingTimeMinutes.toString()}
-                      onValueChange={(value) => setWaitingTimeMinutes(parseInt(value))}
-                    >
-                      <SelectTrigger id="waiting-duration" className="mt-1.5">
-                        <SelectValue placeholder="Sélectionnez une durée" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {waitingTimeOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value.toString()}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {hasReturnTrip && (
+                  <>
+                    <div className="flex items-center justify-between space-x-2">
+                      <div className="flex flex-col space-y-1">
+                        <Label htmlFor="waiting-time" className="font-medium">Temps d'attente</Label>
+                        <p className="text-sm text-muted-foreground">Le chauffeur doit-il vous attendre (rendez-vous médical, etc) ?</p>
+                      </div>
+                      <Switch 
+                        id="waiting-time" 
+                        checked={hasWaitingTime} 
+                        onCheckedChange={setHasWaitingTime}
+                      />
+                    </div>
                     
-                    {waitingTimePrice > 0 && (
-                      <p className="text-sm mt-2">
-                        Prix du temps d'attente: <span className="font-medium">{waitingTimePrice}€</span>
-                      </p>
+                    {hasWaitingTime && (
+                      <div className="pt-2">
+                        <Label htmlFor="waiting-duration" className="font-medium">Durée d'attente estimée</Label>
+                        <Select
+                          value={waitingTimeMinutes.toString()}
+                          onValueChange={(value) => setWaitingTimeMinutes(parseInt(value))}
+                        >
+                          <SelectTrigger id="waiting-duration" className="mt-1.5">
+                            <SelectValue placeholder="Sélectionnez une durée" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {waitingTimeOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value.toString()}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        {waitingTimePrice > 0 && (
+                          <p className="text-sm mt-2">
+                            Prix du temps d'attente: <span className="font-medium">{waitingTimePrice}€</span>
+                          </p>
+                        )}
+                      </div>
                     )}
-                  </div>
+                    
+                    <div className="flex items-center justify-between space-x-2 pt-2">
+                      <div className="flex flex-col space-y-1">
+                        <Label htmlFor="same-address" className="font-medium">Retour à la même adresse</Label>
+                        <p className="text-sm text-muted-foreground">Souhaitez-vous être redéposé à la même adresse qu'à l'aller ?</p>
+                      </div>
+                      <Switch 
+                        id="same-address" 
+                        checked={returnToSameAddress} 
+                        onCheckedChange={setReturnToSameAddress}
+                      />
+                    </div>
+                    
+                    {!returnToSameAddress && (
+                      <div className="pt-2">
+                        <AddressAutocomplete
+                          label="Adresse de retour"
+                          placeholder="Saisissez l'adresse de retour"
+                          value={customReturnAddress}
+                          onChange={setCustomReturnAddress}
+                          onSelect={handleReturnAddressSelect}
+                          required
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               
@@ -462,6 +547,11 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
               hasWaitingTime={hasWaitingTime}
               waitingTimeMinutes={waitingTimeMinutes}
               waitingTimePrice={waitingTimePrice}
+              returnToSameAddress={returnToSameAddress}
+              customReturnAddress={customReturnAddress}
+              returnDistance={returnDistance}
+              returnDuration={returnDuration}
+              returnCoordinates={customReturnCoordinates}
             />
           </CardContent>
         </Card>

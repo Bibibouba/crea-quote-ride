@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { DollarSignIcon, Loader2 } from 'lucide-react';
+import { DollarSignIcon, Loader2, ArrowRight, ArrowLeft, Clock } from 'lucide-react';
 import RouteMap from '@/components/map/RouteMap';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -30,6 +30,11 @@ interface QuoteSummaryProps {
   hasWaitingTime?: boolean;
   waitingTimeMinutes?: number;
   waitingTimePrice?: number;
+  returnToSameAddress?: boolean;
+  customReturnAddress?: string;
+  returnDistance?: number;
+  returnDuration?: number;
+  returnCoordinates?: [number, number] | undefined;
 }
 
 const QuoteSummary: React.FC<QuoteSummaryProps> = ({
@@ -54,10 +59,18 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   hasReturnTrip = false,
   hasWaitingTime = false,
   waitingTimeMinutes = 0,
-  waitingTimePrice = 0
+  waitingTimePrice = 0,
+  returnToSameAddress = true,
+  customReturnAddress = '',
+  returnDistance = 0,
+  returnDuration = 0,
+  returnCoordinates
 }) => {
-  // Calculate the total price including waiting time
-  const totalPrice = hasWaitingTime ? estimatedPrice + waitingTimePrice : estimatedPrice;
+  // Calculate the return price if applicable
+  const returnPrice = hasReturnTrip ? (returnToSameAddress ? estimatedPrice : Math.round(returnDistance * basePrice)) : 0;
+  
+  // Calculate the total price including waiting time and return trip
+  const totalPrice = estimatedPrice + (hasWaitingTime ? waitingTimePrice : 0) + returnPrice;
   
   // Format waiting time for display
   const formatWaitingTime = (minutes: number) => {
@@ -117,26 +130,47 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
           <p>{basePrice.toFixed(2)}€/km</p>
         </div>
         
-        {/* Display option for return trip */}
-        {hasReturnTrip && (
-          <div className="flex justify-between">
-            <p className="font-medium">Option aller-retour</p>
-            <p>Oui</p>
+        {/* Trajet aller */}
+        <div className="flex justify-between">
+          <div className="flex items-center">
+            <ArrowRight className="h-4 w-4 mr-2" />
+            <p className="font-medium">Trajet aller</p>
           </div>
-        )}
+          <p>{estimatedPrice}€</p>
+        </div>
         
         {/* Display waiting time information */}
         {hasWaitingTime && (
-          <>
-            <div className="flex justify-between">
-              <p className="font-medium">Temps d'attente</p>
-              <p>{formatWaitingTime(waitingTimeMinutes)}</p>
+          <div className="flex justify-between">
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-2" />
+              <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
             </div>
-            <div className="flex justify-between">
-              <p className="font-medium">Prix du temps d'attente</p>
-              <p>{waitingTimePrice}€</p>
+            <p>{waitingTimePrice}€</p>
+          </div>
+        )}
+        
+        {/* Display return trip information */}
+        {hasReturnTrip && (
+          <div className="flex justify-between">
+            <div className="flex items-center">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              <p className="font-medium">
+                Trajet retour {returnToSameAddress ? '(même adresse)' : ''}
+              </p>
             </div>
-          </>
+            <p>{returnPrice}€</p>
+          </div>
+        )}
+        
+        {/* Display custom return address if applicable */}
+        {hasReturnTrip && !returnToSameAddress && customReturnAddress && (
+          <div className="text-sm text-muted-foreground">
+            <p>Adresse de retour : {customReturnAddress}</p>
+            {returnDistance > 0 && (
+              <p className="mt-1">Distance : {returnDistance} km | Durée : {returnDuration} min</p>
+            )}
+          </div>
         )}
         
         <Separator className="my-2" />

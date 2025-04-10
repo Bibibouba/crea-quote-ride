@@ -18,4 +18,8 @@ export type Quote = {
   has_waiting_time?: boolean;
   waiting_time_minutes?: number;
   waiting_time_price?: number;
+  return_to_same_address?: boolean;
+  custom_return_address?: string;
+  return_distance_km?: number;
+  return_duration_minutes?: number;
 };
