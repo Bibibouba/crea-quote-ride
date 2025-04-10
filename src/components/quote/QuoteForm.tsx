@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuotes, QuoteWithCoordinates } from '@/hooks/useQuotes';
 import { useClients } from '@/hooks/useClients';
 import { supabase } from '@/integrations/supabase/client';
-import AddressFormSection from './form/AddressFormSection';
+import AddressFormSection from '@/components/address/AddressFormSection';
 import ClientInfoSection from './form/ClientInfoSection';
 import QuoteSummary from './form/QuoteSummary';
 import SuccessMessage from './form/SuccessMessage';
@@ -61,7 +60,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
   
-  // Options pour trajet aller-retour
   const [hasReturnTrip, setHasReturnTrip] = useState(false);
   const [hasWaitingTime, setHasWaitingTime] = useState(false);
   const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
@@ -81,7 +79,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
   const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
   const estimatedPrice = Math.round(estimatedDistance * basePrice);
   
-  // Generate waiting time options in 15-minute increments
   const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
     const minutes = (i + 1) * 15;
     const hours = Math.floor(minutes / 60);
@@ -103,7 +100,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
     };
   });
   
-  // Calculate return trip distance and duration
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -124,18 +120,15 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
     calculateReturnRoute();
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
   
-  // Calculate waiting time price
   useEffect(() => {
     if (!hasWaitingTime || !pricingSettings) return;
     
     const pricePerMin = pricingSettings.waiting_fee_per_minute || 0.5;
     const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
     
-    // Calculate by quarter-hour increments using wait_price_per_15min
     const quarters = Math.ceil(waitingTimeMinutes / 15);
     let price = quarters * pricePerQuarter;
     
-    // Apply night rate if enabled
     if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
       const [hours, minutes] = time.split(':').map(Number);
       const tripTime = new Date();
@@ -293,13 +286,11 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
-      // Calculate return price if applicable
       const returnPrice = hasReturnTrip 
         ? (returnToSameAddress ? estimatedPrice : Math.round(returnDistance * basePrice)) 
         : 0;
       
-      // Calculate total price including waiting time and return trip
-      let totalPrice = estimatedPrice;
+      const totalPrice = estimatedPrice;
       if (hasWaitingTime) {
         totalPrice += waitingTimePrice;
       }

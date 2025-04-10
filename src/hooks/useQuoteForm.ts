@@ -14,10 +14,6 @@ export type QuoteFormStep = 'step1' | 'step2' | 'step3';
 export interface WaitingTimeOption {
   value: number;
   label: string;
-  // These are no longer used, but kept for backward compatibility
-  // until all references are updated
-  minutes?: number; 
-  price?: number;
 }
 
 export function useQuoteForm() {
@@ -32,7 +28,6 @@ export function useQuoteForm() {
     distanceTiers
   } = usePricing();
   
-  // Form state
   const [activeTab, setActiveTab] = useState<QuoteFormStep>('step1');
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
@@ -52,7 +47,6 @@ export function useQuoteForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
   
-  // Return trip options
   const [hasReturnTrip, setHasReturnTrip] = useState(false);
   const [hasWaitingTime, setHasWaitingTime] = useState(false);
   const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
@@ -63,7 +57,6 @@ export function useQuoteForm() {
   const [returnDistance, setReturnDistance] = useState(0);
   const [returnDuration, setReturnDuration] = useState(0);
   
-  // Fetch user info
   useEffect(() => {
     if (user) {
       const fetchUserInfo = async () => {
@@ -90,17 +83,14 @@ export function useQuoteForm() {
     }
   }, [user]);
   
-  // Calculate waiting time price
   useEffect(() => {
     if (!hasWaitingTime || !pricingSettings) return;
     
     const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
     
-    // Calculate by quarter-hour increments using wait_price_per_15min
     const quarters = Math.ceil(waitingTimeMinutes / 15);
     let price = quarters * pricePerQuarter;
     
-    // Apply night rate if enabled
     if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
       const [hours, minutes] = time.split(':').map(Number);
       const tripTime = new Date();
@@ -131,7 +121,6 @@ export function useQuoteForm() {
     setWaitingTimePrice(Math.round(price));
   }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
   
-  // Calculate return trip distance and duration
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -152,7 +141,6 @@ export function useQuoteForm() {
     calculateReturnRoute();
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
   
-  // Calculate price based on distance, vehicle, and options
   useEffect(() => {
     if (!selectedVehicle || !pricingSettings || !distanceTiers) return;
     
@@ -178,10 +166,8 @@ export function useQuoteForm() {
       }
     }
     
-    // Prix de base pour le trajet aller
     let oneWayPrice = pricingSettings.base_fare + (estimatedDistance * pricePerKm);
     
-    // Appliquer le tarif de nuit si actif
     if (pricingSettings.night_rate_enabled && time) {
       const [hours, minutes] = time.split(':').map(Number);
       const tripTime = new Date();
@@ -207,12 +193,10 @@ export function useQuoteForm() {
       }
     }
     
-    // Appliquer le prix minimum si nécessaire
     if (oneWayPrice < pricingSettings.min_fare) {
       oneWayPrice = pricingSettings.min_fare;
     }
     
-    // Calculer le prix du retour si nécessaire
     let returnPrice = 0;
     if (hasReturnTrip) {
       if (returnToSameAddress) {
@@ -220,14 +204,12 @@ export function useQuoteForm() {
       } else if (returnDistance > 0) {
         returnPrice = pricingSettings.base_fare + (returnDistance * pricePerKm);
         
-        // Appliquer le prix minimum si nécessaire
         if (returnPrice < pricingSettings.min_fare) {
           returnPrice = pricingSettings.min_fare;
         }
       }
     }
     
-    // Calculer le prix total
     const totalPrice = oneWayPrice + (hasWaitingTime ? waitingTimePrice : 0) + returnPrice;
     
     setPrice(Math.round(totalPrice));
@@ -399,7 +381,6 @@ export function useQuoteForm() {
     setEstimatedDuration(Math.round(duration));
   };
   
-  // Generate waiting time options in 15-minute increments
   const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
     const minutes = (i + 1) * 15;
     const hours = Math.floor(minutes / 60);
@@ -427,7 +408,6 @@ export function useQuoteForm() {
   };
   
   return {
-    // Form state
     activeTab,
     setActiveTab,
     departureAddress,
@@ -457,7 +437,6 @@ export function useQuoteForm() {
     isSubmitting,
     isQuoteSent,
     
-    // Return trip state
     hasReturnTrip,
     setHasReturnTrip,
     hasWaitingTime,
@@ -474,12 +453,10 @@ export function useQuoteForm() {
     returnDuration,
     waitingTimeOptions,
     
-    // Loading states
     vehiclesLoading,
     pricingLoading,
     vehicles,
     
-    // Handlers
     handleNextStep,
     handlePreviousStep,
     handleSubmit,

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 import { Address } from '@/hooks/useMapbox';
 import { WaitingTimeOption } from '@/hooks/useQuoteForm';
-import AddressFormSection from '@/components/quote/form/AddressFormSection';  // Correct import
+import AddressFormSection from '@/components/address/AddressFormSection';  // Fixed import path
 
 interface TripInfoStepProps {
   departureAddress: string;
@@ -129,7 +129,9 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
           setDestinationAddress={setDestinationAddress}
           departureCoordinates={departureCoordinates}
           destinationCoordinates={destinationCoordinates}
-          date={date}
+          setDepartureCoordinates={handleDepartureSelect}
+          setDestinationCoordinates={handleDestinationSelect}
+          date={date || new Date()}
           setDate={setDate}
           time={time}
           setTime={setTime}
