@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { MapPinIcon, XCircleIcon } from 'lucide-react';
 import { useMapbox, Address } from '@/hooks/useMapbox';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AddressAutocompleteProps {
   label: string;
@@ -31,7 +32,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const suggestionRef = useRef<HTMLUListElement>(null);
+  const suggestionRef = useRef<HTMLDivElement>(null);
 
   // Mettre à jour le query si la valeur change de l'extérieur
   useEffect(() => {
@@ -165,21 +166,26 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
-        <ul
+        <div 
           ref={suggestionRef}
-          className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-card border shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none text-sm"
+          className="absolute z-50 mt-1 w-full rounded-md bg-card border shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+          style={{ maxHeight: '240px', overflow: 'hidden' }}
         >
-          {suggestions.map((suggestion) => (
-            <li
-              key={suggestion.id}
-              onClick={() => handleSelectSuggestion(suggestion)}
-              className="relative cursor-pointer select-none py-2 px-4 hover:bg-secondary"
-            >
-              <div className="font-medium">{suggestion.name}</div>
-              <div className="text-xs text-muted-foreground">{suggestion.fullAddress}</div>
-            </li>
-          ))}
-        </ul>
+          <ScrollArea className="max-h-60 w-full">
+            <ul className="text-sm py-2">
+              {suggestions.map((suggestion) => (
+                <li
+                  key={suggestion.id}
+                  onClick={() => handleSelectSuggestion(suggestion)}
+                  className="relative cursor-pointer select-none py-2 px-4 hover:bg-secondary"
+                >
+                  <div className="font-medium">{suggestion.name}</div>
+                  <div className="text-xs text-muted-foreground">{suggestion.fullAddress}</div>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        </div>
       )}
 
       {isLoading && query.length >= 3 && suggestions.length === 0 && (

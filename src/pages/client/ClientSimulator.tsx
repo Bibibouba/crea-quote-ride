@@ -11,7 +11,7 @@ import SuccessMessageStep from '@/components/quote/form/SuccessMessageStep';
 const ClientSimulator = () => {
   const {
     activeTab,
-    setActiveTab, // This was missing - ensuring it's destructured from useQuoteForm
+    setActiveTab,
     departureAddress,
     setDepartureAddress,
     destinationAddress,
@@ -95,7 +95,7 @@ const ClientSimulator = () => {
               navigateToDashboard={() => navigate('/dashboard/quotes')}
             />
           ) : (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'step1' | 'step2' | 'step3')} className="space-y-6">
               <TabsList className="grid grid-cols-3 mb-8">
                 <TabsTrigger value="step1">
                   <span className="flex items-center">
@@ -194,7 +194,7 @@ const ClientSimulator = () => {
                 <ClientInfoStep
                   firstName={firstName}
                   setFirstName={setFirstName}
-                  lastName={setLastName}
+                  lastName={lastName}
                   setLastName={setLastName}
                   email={email}
                   setEmail={setEmail}
