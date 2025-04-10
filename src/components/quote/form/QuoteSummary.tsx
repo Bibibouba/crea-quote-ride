@@ -2,11 +2,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { DollarSignIcon, Loader2, Clock } from 'lucide-react';
-import { ArrowRight, ArrowLeft } from 'lucide-react'; // Added missing imports
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 import RouteMap from '@/components/map/RouteMap';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
+import { formatDuration } from '@/lib/formatDuration';
 
 interface QuoteSummaryProps {
   departureAddress: string;
@@ -105,80 +106,86 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
           </div>
           <div className="text-right">
             <p className="text-sm font-medium">Durée estimée</p>
-            <p className="text-sm text-muted-foreground">{estimatedDuration} minutes</p>
+            <p className="text-sm text-muted-foreground">{formatDuration(estimatedDuration)}</p>
           </div>
         </div>
       </div>
       
-      <div className="w-full h-64">
-        <RouteMap
-          departure={departureCoordinates}
-          destination={destinationCoordinates}
-        />
-      </div>
-      
-      <div className="space-y-4">
-        <div className="flex justify-between">
-          <p className="font-medium">Véhicule sélectionné</p>
-          <p>{vehicles.find(v => v.id === selectedVehicle)?.name || "Berline"}</p>
-        </div>
-        <div className="flex justify-between">
-          <p className="font-medium">Nombre de passagers</p>
-          <p>{passengers} {parseInt(passengers) === 1 ? 'passager' : 'passagers'}</p>
-        </div>
-        <div className="flex justify-between">
-          <p className="font-medium">Prix au kilomètre</p>
-          <p>{basePrice.toFixed(2)}€/km</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="h-[400px] rounded-lg overflow-hidden">
+          <RouteMap
+            departure={departureCoordinates}
+            destination={destinationCoordinates}
+          />
         </div>
         
-        {/* Trajet aller */}
-        <div className="flex justify-between">
-          <div className="flex items-center">
-            <ArrowRight className="h-4 w-4 mr-2" />
-            <p className="font-medium">Trajet aller</p>
-          </div>
-          <p>{estimatedPrice}€</p>
-        </div>
-        
-        {/* Display waiting time information */}
-        {hasWaitingTime && (
-          <div className="flex justify-between">
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-2" />
-              <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
+        <div className="space-y-4">
+          <div className="rounded-lg border bg-card p-4">
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <p className="font-medium">Véhicule sélectionné</p>
+                <p>{vehicles.find(v => v.id === selectedVehicle)?.name || "Berline"}</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="font-medium">Nombre de passagers</p>
+                <p>{passengers} {parseInt(passengers) === 1 ? 'passager' : 'passagers'}</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="font-medium">Prix au kilomètre</p>
+                <p>{basePrice.toFixed(2)}€/km</p>
+              </div>
+              
+              {/* Trajet aller */}
+              <div className="flex justify-between">
+                <div className="flex items-center">
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <p className="font-medium">Trajet aller</p>
+                </div>
+                <p>{estimatedPrice}€</p>
+              </div>
+              
+              {/* Display waiting time information */}
+              {hasWaitingTime && (
+                <div className="flex justify-between">
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-2" />
+                    <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
+                  </div>
+                  <p>{waitingTimePrice}€</p>
+                </div>
+              )}
+              
+              {/* Display return trip information */}
+              {hasReturnTrip && (
+                <div className="flex justify-between">
+                  <div className="flex items-center">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    <p className="font-medium">
+                      Trajet retour {returnToSameAddress ? '(même adresse)' : ''}
+                    </p>
+                  </div>
+                  <p>{returnPrice}€</p>
+                </div>
+              )}
+              
+              {/* Display custom return address if applicable */}
+              {hasReturnTrip && !returnToSameAddress && customReturnAddress && (
+                <div className="text-sm text-muted-foreground">
+                  <p>Adresse de retour : {customReturnAddress}</p>
+                  {returnDistance > 0 && (
+                    <p className="mt-1">Distance : {returnDistance} km | Durée : {formatDuration(returnDuration)}</p>
+                  )}
+                </div>
+              )}
+              
+              <Separator className="my-2" />
+              
+              <div className="flex justify-between border-t border-border/60 pt-4">
+                <p className="font-medium">Montant total</p>
+                <p className="text-xl font-bold">{totalPrice}€</p>
+              </div>
             </div>
-            <p>{waitingTimePrice}€</p>
           </div>
-        )}
-        
-        {/* Display return trip information */}
-        {hasReturnTrip && (
-          <div className="flex justify-between">
-            <div className="flex items-center">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              <p className="font-medium">
-                Trajet retour {returnToSameAddress ? '(même adresse)' : ''}
-              </p>
-            </div>
-            <p>{returnPrice}€</p>
-          </div>
-        )}
-        
-        {/* Display custom return address if applicable */}
-        {hasReturnTrip && !returnToSameAddress && customReturnAddress && (
-          <div className="text-sm text-muted-foreground">
-            <p>Adresse de retour : {customReturnAddress}</p>
-            {returnDistance > 0 && (
-              <p className="mt-1">Distance : {returnDistance} km | Durée : {returnDuration} min</p>
-            )}
-          </div>
-        )}
-        
-        <Separator className="my-2" />
-        
-        <div className="flex justify-between border-t border-border/60 pt-4">
-          <p className="font-medium">Montant total</p>
-          <p className="text-xl font-bold">{totalPrice}€</p>
         </div>
       </div>
       

@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { ArrowLeftRight, ArrowRight, ArrowLeft } from 'lucide-react';
 import RouteMap from '@/components/map/RouteMap';
+import { formatDuration } from '@/lib/formatDuration';
 
 interface TripSummaryStepProps {
   departureAddress: string;
@@ -112,7 +113,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="h-[250px] rounded-lg border overflow-hidden">
+        <div className="h-[400px] rounded-lg border overflow-hidden">
           {departureCoordinates && destinationCoordinates ? (
             <RouteMap
               departure={departureCoordinates}
@@ -138,7 +139,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
               </div>
               <div className="flex justify-between">
                 <p className="text-sm">Durée estimée (aller)</p>
-                <p className="text-sm font-medium">{estimatedDuration} min</p>
+                <p className="text-sm font-medium">{formatDuration(estimatedDuration)}</p>
               </div>
               
               {hasReturnTrip && !returnToSameAddress && customReturnCoordinates && (
@@ -149,7 +150,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <p className="text-sm">Durée estimée (retour)</p>
-                    <p className="text-sm font-medium">{returnDuration} min</p>
+                    <p className="text-sm font-medium">{formatDuration(returnDuration)}</p>
                   </div>
                 </>
               )}

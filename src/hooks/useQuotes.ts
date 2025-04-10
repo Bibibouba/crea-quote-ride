@@ -98,8 +98,14 @@ export const useQuotes = (clientId?: string) => {
       // Add the driver_id to the quote data
       const quoteWithDriverId = {
         ...newQuote,
-        driver_id: userId
+        driver_id: userId,
+        // Convertir les coordonnées en format JSON pour Supabase si elles existent
+        departure_coordinates: newQuote.departure_coordinates ? newQuote.departure_coordinates : null,
+        arrival_coordinates: newQuote.arrival_coordinates ? newQuote.arrival_coordinates : null,
+        return_coordinates: newQuote.return_coordinates ? newQuote.return_coordinates : null
       };
+
+      console.log('Saving quote data:', JSON.stringify(quoteWithDriverId, null, 2));
 
       // Create the quote
       const { data, error } = await supabase
