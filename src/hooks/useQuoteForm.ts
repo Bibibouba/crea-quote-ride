@@ -9,9 +9,12 @@ import { useVehicles } from '@/hooks/useVehicles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useQuoteAddresses } from '@/hooks/useQuoteAddresses';
-import { useQuoteWaitingTime } from '@/hooks/useQuoteWaitingTime';
+import { useQuoteWaitingTime, WaitingTimeOption } from '@/hooks/useQuoteWaitingTime';
 import { useQuoteClient } from '@/hooks/useQuoteClient';
 import { useQuotePricing } from '@/hooks/useQuotePricing';
+
+// Re-export the WaitingTimeOption type so components can import it from useQuoteForm
+export type { WaitingTimeOption };
 
 export type QuoteFormStep = 'step1' | 'step2' | 'step3';
 
