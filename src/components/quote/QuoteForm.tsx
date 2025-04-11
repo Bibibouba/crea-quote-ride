@@ -291,12 +291,12 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         ? (returnToSameAddress ? estimatedPrice : Math.round(returnDistance * basePrice)) 
         : 0;
       
-      const totalPrice = estimatedPrice;
+      let totalPriceCalculated = estimatedPrice;
       if (hasWaitingTime) {
-        totalPrice += waitingTimePrice;
+        totalPriceCalculated += waitingTimePrice;
       }
       if (hasReturnTrip) {
-        totalPrice += returnPrice;
+        totalPriceCalculated += returnPrice;
       }
       
       const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
@@ -309,7 +309,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         distance_km: estimatedDistance,
         duration_minutes: estimatedDuration, 
         ride_date: dateTime.toISOString(),
-        amount: totalPrice,
+        amount: totalPriceCalculated,
         status: 'pending',
         driver_id: '',
         has_return_trip: hasReturnTrip,

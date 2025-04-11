@@ -60,6 +60,7 @@ export function useQuoteForm(clientId?: string) {
   
   const [quoteDetails, setQuoteDetails] = useState<any>(null);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
+  const [calculatedPrice, setCalculatedPrice] = useState(0);
   
   useEffect(() => {
     if (clientId && clients.length > 0) {
@@ -272,14 +273,16 @@ export function useQuoteForm(clientId?: string) {
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
-      const basePrice = vehicles?.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
+      const selectedVehicleData = vehiclesList.find(v => v.id === selectedVehicle);
+      const basePrice = selectedVehicleData?.basePrice || 1.8;
+      
       const oneWayPrice = Math.round(estimatedDistance * basePrice);
       const returnPrice = hasReturnTrip 
         ? (returnToSameAddress ? oneWayPrice : Math.round(returnDistance * basePrice)) 
         : 0;
       const totalPrice = oneWayPrice + (hasWaitingTime ? waitingTimePrice : 0) + returnPrice;
-      const price = totalPrice;
       
+      setCalculatedPrice(totalPrice);
       setQuoteDetails({
         oneWayPrice,
         returnPrice,
@@ -386,7 +389,7 @@ export function useQuoteForm(clientId?: string) {
     estimatedDuration,
     isSubmitting,
     
-    price,
+    price: calculatedPrice,
     quoteDetails,
     isQuoteSent,
     
