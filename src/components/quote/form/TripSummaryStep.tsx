@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { ArrowLeftRight, ArrowRight, ArrowLeft, Users, Moon, Calendar } from 'lucide-react';
+import { ArrowLeftRight, ArrowRight, ArrowLeft } from 'lucide-react';
 import RouteMap from '@/components/map/RouteMap';
 import { formatDuration } from '@/lib/formatDuration';
 
@@ -58,10 +58,6 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
   handleNextStep,
   handlePreviousStep
 }) => {
-  const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
-  const isNightRate = quoteDetails?.isNightRate;
-  const isSunday = quoteDetails?.isSunday;
-  
   return (
     <div className="space-y-6">
       <div className="rounded-lg border bg-card p-4 mb-6">
@@ -97,19 +93,12 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
           <div>
             <p className="text-xs text-muted-foreground mb-1">Véhicule</p>
             <p className="text-sm font-medium">
-              {selectedVehicleInfo?.name || "Non spécifié"}
+              {vehicles.find(v => v.id === selectedVehicle)?.name || "Non spécifié"}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground mb-1">Passagers</p>
-            <div className="flex items-center gap-1 text-sm font-medium">
-              <span>{passengers}</span>
-              {selectedVehicleInfo && (
-                <span className="text-xs text-muted-foreground">
-                  (capacité: {selectedVehicleInfo.capacity})
-                </span>
-              )}
-            </div>
+            <p className="text-sm font-medium">{passengers}</p>
           </div>
         </div>
         
@@ -187,17 +176,10 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
             <h3 className="font-medium mb-3">Détails du prix</h3>
             
             <div className="space-y-2">
-              <div className="flex justify-between items-start">
-                <div className="text-sm">
-                  <div className="flex items-center">
-                    <ArrowRight className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <p className="font-medium">Trajet aller</p>
-                  </div>
-                  {quoteDetails?.basePrice && (
-                    <p className="text-xs text-muted-foreground ml-6 mt-0.5">
-                      {estimatedDistance} km × {quoteDetails.basePrice.toFixed(2)}€/km
-                    </p>
-                  )}
+              <div className="flex justify-between">
+                <div className="flex items-center">
+                  <ArrowRight className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <p className="text-sm">Trajet aller</p>
                 </div>
                 <p className="text-sm font-medium">{quoteDetails?.oneWayPrice}€</p>
               </div>
@@ -210,37 +192,12 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
               )}
               
               {hasReturnTrip && (
-                <div className="flex justify-between items-start">
-                  <div className="text-sm">
-                    <div className="flex items-center">
-                      <ArrowLeft className="h-4 w-4 mr-2 flex-shrink-0" />
-                      <p className="font-medium">Trajet retour</p>
-                    </div>
-                    {quoteDetails?.basePrice && (
-                      <p className="text-xs text-muted-foreground ml-6 mt-0.5">
-                        {returnToSameAddress ? estimatedDistance : returnDistance} km × {quoteDetails.basePrice.toFixed(2)}€/km
-                      </p>
-                    )}
+                <div className="flex justify-between">
+                  <div className="flex items-center">
+                    <ArrowLeft className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <p className="text-sm">Trajet retour</p>
                   </div>
                   <p className="text-sm font-medium">{quoteDetails?.returnPrice}€</p>
-                </div>
-              )}
-              
-              {/* Afficher les conditions tarifaires spéciales si présentes */}
-              {(isNightRate || isSunday) && (
-                <div className="bg-secondary/20 p-2 rounded-md mt-2 text-sm">
-                  {isNightRate && (
-                    <div className="flex items-center mb-1">
-                      <Moon className="h-4 w-4 mr-1" />
-                      <span>Tarif de nuit appliqué</span>
-                    </div>
-                  )}
-                  {isSunday && (
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      <span>Majoration dimanche/jour férié</span>
-                    </div>
-                  )}
                 </div>
               )}
               

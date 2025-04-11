@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useMapbox, Address } from '@/hooks/useMapbox';
@@ -7,8 +8,6 @@ import { useQuotes, QuoteWithCoordinates } from '@/hooks/useQuotes';
 import { usePricing } from '@/hooks/use-pricing';
 import { useVehicles } from '@/hooks/useVehicles';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { useClients } from '@/hooks/useClients';
 
 export type QuoteFormStep = 'step1' | 'step2' | 'step3';
 
@@ -17,22 +16,20 @@ export interface WaitingTimeOption {
   label: string;
 }
 
-export function useQuoteForm(clientId?: string) {
+export function useQuoteForm() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { vehicles, loading: vehiclesLoading } = useVehicles();
-  const { clients } = useClients();
   const { addQuote } = useQuotes();
   const { getRoute } = useMapbox();
-  const { toast } = useToast();
   const { 
     pricingSettings, 
     loading: pricingLoading,
     distanceTiers
   } = usePricing();
   
+  // Form state
   const [activeTab, setActiveTab] = useState<QuoteFormStep>('step1');
-  
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
   const [departureCoordinates, setDepartureCoordinates] = useState<[number, number] | undefined>(undefined);
@@ -44,10 +41,14 @@ export function useQuoteForm(clientId?: string) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [estimatedDistance, setEstimatedDistance] = useState(0);
-  const [estimatedDuration, setEstimatedDuration] = useState(0);
+  const [estimatedDistance, setEstimatedDistance] = useState(40);
+  const [estimatedDuration, setEstimatedDuration] = useState(45);
+  const [price, setPrice] = useState(0);
+  const [quoteDetails, setQuoteDetails] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isQuoteSent, setIsQuoteSent] = useState(false);
   
+  // Return trip options
   const [hasReturnTrip, setHasReturnTrip] = useState(false);
   const [hasWaitingTime, setHasWaitingTime] = useState(false);
   const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
@@ -58,23 +59,9 @@ export function useQuoteForm(clientId?: string) {
   const [returnDistance, setReturnDistance] = useState(0);
   const [returnDuration, setReturnDuration] = useState(0);
   
-  const [quoteDetails, setQuoteDetails] = useState<any>(null);
-  const [isQuoteSent, setIsQuoteSent] = useState(false);
-  const [calculatedPrice, setCalculatedPrice] = useState(0);
-  
+  // Fetch user info
   useEffect(() => {
-    if (clientId && clients.length > 0) {
-      const client = clients.find(c => c.id === clientId);
-      if (client) {
-        setFirstName(client.first_name);
-        setLastName(client.last_name);
-        setEmail(client.email);
-      }
-    }
-  }, [clientId, clients]);
-  
-  useEffect(() => {
-    if (user && !clientId) {
+    if (user) {
       const fetchUserInfo = async () => {
         try {
           const { data, error } = await supabase
@@ -97,16 +84,19 @@ export function useQuoteForm(clientId?: string) {
       
       fetchUserInfo();
     }
-  }, [user, clientId]);
+  }, [user]);
   
+  // Calculate waiting time price
   useEffect(() => {
     if (!hasWaitingTime || !pricingSettings) return;
     
     const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
     
+    // Calculate by quarter-hour increments using wait_price_per_15min
     const quarters = Math.ceil(waitingTimeMinutes / 15);
     let price = quarters * pricePerQuarter;
     
+    // Apply night rate if enabled
     if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
       const [hours, minutes] = time.split(':').map(Number);
       const tripTime = new Date();
@@ -137,6 +127,7 @@ export function useQuoteForm(clientId?: string) {
     setWaitingTimePrice(Math.round(price));
   }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
   
+  // Calculate return trip distance and duration
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -157,26 +148,254 @@ export function useQuoteForm(clientId?: string) {
     calculateReturnRoute();
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
   
-  const handleDepartureSelect = useCallback((address: Address) => {
+  // Calculate price based on distance, vehicle, and options
+  useEffect(() => {
+    if (!selectedVehicle || !pricingSettings || !distanceTiers) return;
+    
+    const vehicle = vehicles.find(v => v.id === selectedVehicle);
+    if (!vehicle) return;
+    
+    const vehicleTypeId = vehicle.vehicle_type_id;
+    
+    let pricePerKm = pricingSettings.price_per_km;
+    
+    if (distanceTiers && distanceTiers.length > 0) {
+      const applicableTiers = distanceTiers.filter(tier => 
+        !tier.vehicle_id || tier.vehicle_id === vehicleTypeId
+      );
+      
+      const applicableTier = applicableTiers.find(tier => 
+        estimatedDistance >= tier.min_km && 
+        (!tier.max_km || estimatedDistance <= tier.max_km)
+      );
+      
+      if (applicableTier) {
+        pricePerKm = applicableTier.price_per_km;
+      }
+    }
+    
+    // Prix de base pour le trajet aller
+    let oneWayPrice = pricingSettings.base_fare + (estimatedDistance * pricePerKm);
+    
+    // Appliquer le tarif de nuit si actif
+    if (pricingSettings.night_rate_enabled && time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      const tripTime = new Date();
+      tripTime.setHours(hours);
+      tripTime.setMinutes(minutes);
+      
+      const startTime = new Date();
+      const [startHours, startMinutes] = pricingSettings.night_rate_start?.split(':').map(Number) || [0, 0];
+      startTime.setHours(startHours);
+      startTime.setMinutes(startMinutes);
+      
+      const endTime = new Date();
+      const [endHours, endMinutes] = pricingSettings.night_rate_end?.split(':').map(Number) || [0, 0];
+      endTime.setHours(endHours);
+      endTime.setMinutes(endMinutes);
+      
+      if (
+        (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
+        (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
+      ) {
+        const nightPercentage = pricingSettings.night_rate_percentage || 0;
+        oneWayPrice += oneWayPrice * (nightPercentage / 100);
+      }
+    }
+    
+    // Appliquer le prix minimum si nécessaire
+    if (oneWayPrice < pricingSettings.min_fare) {
+      oneWayPrice = pricingSettings.min_fare;
+    }
+    
+    // Calculer le prix du retour si nécessaire
+    let returnPrice = 0;
+    if (hasReturnTrip) {
+      if (returnToSameAddress) {
+        returnPrice = oneWayPrice;
+      } else if (returnDistance > 0) {
+        returnPrice = pricingSettings.base_fare + (returnDistance * pricePerKm);
+        
+        // Appliquer le prix minimum si nécessaire
+        if (returnPrice < pricingSettings.min_fare) {
+          returnPrice = pricingSettings.min_fare;
+        }
+      }
+    }
+    
+    // Calculer le prix total
+    const totalPrice = oneWayPrice + (hasWaitingTime ? waitingTimePrice : 0) + returnPrice;
+    
+    setPrice(Math.round(totalPrice));
+    
+    setQuoteDetails({
+      departureAddress,
+      destinationAddress,
+      customReturnAddress,
+      date: date ? format(date, 'dd/MM/yyyy') : '',
+      time,
+      vehicleName: vehicle.name,
+      vehicleModel: vehicle.model,
+      distance: estimatedDistance,
+      duration: estimatedDuration,
+      returnDistance,
+      returnDuration,
+      baseFare: pricingSettings.base_fare,
+      pricePerKm,
+      oneWayPrice: Math.round(oneWayPrice),
+      waitingTimePrice: hasWaitingTime ? waitingTimePrice : 0,
+      returnPrice: Math.round(returnPrice),
+      totalPrice: Math.round(totalPrice),
+      hasReturnTrip,
+      hasWaitingTime,
+      waitingTimeMinutes,
+      returnToSameAddress
+    });
+  }, [
+    selectedVehicle, departureAddress, destinationAddress, date, time, 
+    estimatedDistance, vehicles, pricingSettings, distanceTiers,
+    hasReturnTrip, hasWaitingTime, waitingTimePrice, waitingTimeMinutes,
+    returnToSameAddress, customReturnAddress, returnDistance
+  ]);
+  
+  const handleNextStep = () => {
+    if (activeTab === 'step1') {
+      if (!departureAddress || !destinationAddress || !date || !time || !selectedVehicle) {
+        toast.error('Veuillez remplir tous les champs requis');
+        return;
+      }
+      setActiveTab('step2');
+    } else if (activeTab === 'step2') {
+      setActiveTab('step3');
+    }
+  };
+  
+  const handlePreviousStep = () => {
+    if (activeTab === 'step2') {
+      setActiveTab('step1');
+    } else if (activeTab === 'step3') {
+      setActiveTab('step2');
+    }
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!firstName || !lastName || !email) {
+      toast.error('Veuillez remplir tous les champs requis');
+      return;
+    }
+    
+    if (!departureCoordinates || !destinationCoordinates) {
+      toast.error('Veuillez sélectionner des adresses valides pour le calcul du trajet');
+      return;
+    }
+    
+    if (hasReturnTrip && !returnToSameAddress && !customReturnAddress) {
+      toast.error('Veuillez spécifier une adresse de retour');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      if (!userId) {
+        throw new Error("Utilisateur non authentifié");
+      }
+      
+      let clientId;
+      const { data: existingClients, error: clientsError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('email', email)
+        .eq('driver_id', userId)
+        .limit(1);
+      
+      if (clientsError) throw clientsError;
+      
+      if (existingClients && existingClients.length > 0) {
+        clientId = existingClients[0].id;
+      } else {
+        const { data: newClient, error: createError } = await supabase
+          .from('clients')
+          .insert({
+            driver_id: userId,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            client_type: 'personal'
+          })
+          .select()
+          .single();
+        
+        if (createError) throw createError;
+        clientId = newClient.id;
+      }
+      
+      const dateTime = new Date(date!);
+      const [hours, minutes] = time.split(':').map(Number);
+      dateTime.setHours(hours, minutes);
+      
+      const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
+        client_id: clientId,
+        vehicle_id: selectedVehicle || null,
+        departure_location: departureAddress,
+        arrival_location: destinationAddress,
+        departure_coordinates: departureCoordinates,
+        arrival_coordinates: destinationCoordinates,
+        distance_km: estimatedDistance,
+        duration_minutes: estimatedDuration,
+        ride_date: dateTime.toISOString(),
+        amount: price,
+        status: 'pending',
+        driver_id: '',
+        has_return_trip: hasReturnTrip,
+        has_waiting_time: hasWaitingTime,
+        waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
+        waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
+        return_to_same_address: returnToSameAddress,
+        custom_return_address: customReturnAddress,
+        return_coordinates: customReturnCoordinates,
+        return_distance_km: returnDistance,
+        return_duration_minutes: returnDuration
+      };
+      
+      await addQuote.mutateAsync(quoteData);
+      
+      toast.success('Votre devis a été enregistré avec succès');
+      setIsSubmitting(false);
+      setIsQuoteSent(true);
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement du devis:', error);
+      toast.error(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDepartureSelect = (address: Address) => {
     setDepartureAddress(address.fullAddress);
     setDepartureCoordinates(address.coordinates);
-  }, []);
+  };
 
-  const handleDestinationSelect = useCallback((address: Address) => {
+  const handleDestinationSelect = (address: Address) => {
     setDestinationAddress(address.fullAddress);
     setDestinationCoordinates(address.coordinates);
-  }, []);
+  };
 
-  const handleReturnAddressSelect = useCallback((address: Address) => {
+  const handleReturnAddressSelect = (address: Address) => {
     setCustomReturnAddress(address.fullAddress);
     setCustomReturnCoordinates(address.coordinates);
-  }, []);
+  };
 
-  const handleRouteCalculated = useCallback((distance: number, duration: number) => {
+  const handleRouteCalculated = (distance: number, duration: number) => {
     setEstimatedDistance(Math.round(distance));
     setEstimatedDuration(Math.round(duration));
-  }, []);
+  };
   
+  // Generate waiting time options in 15-minute increments
   const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
     const minutes = (i + 1) * 15;
     const hours = Math.floor(minutes / 60);
@@ -198,178 +417,15 @@ export function useQuoteForm(clientId?: string) {
     };
   });
 
-  const vehiclesList = [
-    { id: "sedan", name: "Berline", basePrice: 1.8, description: "Mercedes Classe E ou équivalent", capacity: 4 },
-    { id: "van", name: "Van", basePrice: 2.2, description: "Mercedes Classe V ou équivalent", capacity: 7 },
-    { id: "luxury", name: "Luxe", basePrice: 2.5, description: "Mercedes Classe S ou équivalent", capacity: 3 }
-  ];
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-    }
-    
-    if (!date) {
-      toast({
-        title: 'Date manquante',
-        description: 'Veuillez sélectionner une date pour le trajet',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    if (!departureCoordinates || !destinationCoordinates) {
-      toast({
-        title: 'Adresses incomplètes',
-        description: 'Veuillez sélectionner des adresses valides pour le calcul du trajet',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    if (hasReturnTrip && !returnToSameAddress && !customReturnAddress) {
-      toast({
-        title: 'Adresse de retour manquante',
-        description: 'Veuillez spécifier une adresse de retour',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      const dateTime = new Date(date);
-      const [hours, minutes] = time.split(':');
-      dateTime.setHours(parseInt(hours), parseInt(minutes));
-      
-      let finalClientId = clientId;
-      
-      if (!clientId && firstName && lastName && email) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id;
-        
-        if (!userId) {
-          throw new Error("Utilisateur non authentifié");
-        }
-        
-        const { data, error } = await supabase
-          .from('clients')
-          .insert({
-            driver_id: userId,
-            first_name: firstName,
-            last_name: lastName,
-            email: email,
-            client_type: 'personal'
-          })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        finalClientId = data.id;
-      }
-      
-      if (!finalClientId) {
-        throw new Error("Aucun client spécifié pour ce devis");
-      }
-      
-      const selectedVehicleData = vehiclesList.find(v => v.id === selectedVehicle);
-      const basePrice = selectedVehicleData?.basePrice || 1.8;
-      
-      const oneWayPrice = Math.round(estimatedDistance * basePrice);
-      const returnPrice = hasReturnTrip 
-        ? (returnToSameAddress ? oneWayPrice : Math.round(returnDistance * basePrice)) 
-        : 0;
-      const totalPrice = oneWayPrice + (hasWaitingTime ? waitingTimePrice : 0) + returnPrice;
-      
-      setCalculatedPrice(totalPrice);
-      setQuoteDetails({
-        oneWayPrice,
-        returnPrice,
-        waitingTimePrice: hasWaitingTime ? waitingTimePrice : 0,
-        totalPrice,
-        basePrice,
-        isNightRate: false,
-        isSunday: false
-      });
-      
-      const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
-        client_id: finalClientId,
-        vehicle_id: null,
-        departure_location: departureAddress,
-        arrival_location: destinationAddress,
-        departure_coordinates: departureCoordinates,
-        arrival_coordinates: destinationCoordinates,
-        distance_km: estimatedDistance,
-        duration_minutes: estimatedDuration, 
-        ride_date: dateTime.toISOString(),
-        amount: totalPrice,
-        status: 'pending',
-        driver_id: '',
-        has_return_trip: hasReturnTrip,
-        has_waiting_time: hasWaitingTime,
-        waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
-        waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
-        return_to_same_address: returnToSameAddress,
-        custom_return_address: customReturnAddress,
-        return_coordinates: customReturnCoordinates,
-        return_distance_km: returnDistance,
-        return_duration_minutes: returnDuration
-      };
-      
-      await addQuote.mutateAsync(quoteData);
-      
-      toast({
-        title: 'Devis enregistré',
-        description: 'Votre devis a été enregistré avec succès',
-      });
-      
-      setIsQuoteSent(true);
-      
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement du devis:', error);
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de l'enregistrement: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
-        variant: 'destructive',
-      });
-      throw error;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const resetForm = () => {
-    setDepartureAddress('');
-    setDestinationAddress('');
-    setDepartureCoordinates(undefined);
-    setDestinationCoordinates(undefined);
-    setDate(new Date());
-    setTime('09:00');
-    setSelectedVehicle('');
-    setPassengers('1');
-    setHasReturnTrip(false);
-    setHasWaitingTime(false);
-    setWaitingTimeMinutes(15);
-    setReturnToSameAddress(true);
-    setCustomReturnAddress('');
-    setCustomReturnCoordinates(undefined);
-  };
-  
-  const handleNextStep = () => {
-    if (activeTab === 'step1') setActiveTab('step2');
-    else if (activeTab === 'step2') setActiveTab('step3');
-  };
-  
-  const handlePreviousStep = () => {
-    if (activeTab === 'step3') setActiveTab('step2');
-    else if (activeTab === 'step2') setActiveTab('step1');
+    setActiveTab('step1');
+    setIsQuoteSent(false);
   };
   
   return {
+    // Form state
     activeTab,
     setActiveTab,
-    
     departureAddress,
     setDepartureAddress,
     destinationAddress,
@@ -392,13 +448,12 @@ export function useQuoteForm(clientId?: string) {
     setEmail,
     estimatedDistance,
     estimatedDuration,
-    isSubmitting,
-    
-    price: calculatedPrice,
+    price,
     quoteDetails,
+    isSubmitting,
     isQuoteSent,
-    setIsQuoteSent,
     
+    // Return trip state
     hasReturnTrip,
     setHasReturnTrip,
     hasWaitingTime,
@@ -415,13 +470,14 @@ export function useQuoteForm(clientId?: string) {
     returnDuration,
     waitingTimeOptions,
     
+    // Loading states
     vehiclesLoading,
     pricingLoading,
-    vehicles: vehiclesList,
+    vehicles,
     
+    // Handlers
     handleNextStep,
     handlePreviousStep,
-    
     handleSubmit,
     handleDepartureSelect,
     handleDestinationSelect,
