@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckIcon } from 'lucide-react';
+import { CheckIcon, Home, FileText } from 'lucide-react';
 
 interface SuccessMessageStepProps {
   email: string;
@@ -21,17 +21,20 @@ const SuccessMessageStep: React.FC<SuccessMessageStepProps> = ({
       </div>
       <h3 className="text-xl font-medium mb-2">Devis enregistré avec succès</h3>
       <p className="text-muted-foreground mb-6">
-        Le devis a été enregistré et envoyé à l'adresse : {email}
+        Le devis a été enregistré et envoyé à l'adresse : <span className="font-medium">{email}</span>
       </p>
-      <div className="flex gap-4">
-        <Button onClick={navigateToDashboard}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
+        <Button onClick={navigateToDashboard} className="w-full flex items-center justify-center gap-2">
+          <FileText className="h-4 w-4" />
           Voir tous les devis
         </Button>
         <Button 
           variant="outline" 
           onClick={resetForm}
+          className="w-full flex items-center justify-center gap-2"
         >
-          Créer un nouveau devis
+          <Home className="h-4 w-4" />
+          Retour au tableau de bord
         </Button>
       </div>
     </div>

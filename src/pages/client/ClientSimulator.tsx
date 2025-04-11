@@ -38,6 +38,7 @@ const ClientSimulator = () => {
     quoteDetails,
     isSubmitting,
     isQuoteSent,
+    setIsQuoteSent,
     
     hasReturnTrip,
     setHasReturnTrip,
@@ -194,7 +195,7 @@ const ClientSimulator = () => {
                 <ClientInfoStep
                   firstName={firstName}
                   setFirstName={setFirstName}
-                  lastName={lastName}
+                  lastName={setLastName}
                   setLastName={setLastName}
                   email={email}
                   setEmail={setEmail}

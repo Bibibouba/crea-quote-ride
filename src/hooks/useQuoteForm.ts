@@ -199,9 +199,9 @@ export function useQuoteForm(clientId?: string) {
   });
 
   const vehiclesList = [
-    { id: "sedan", name: "Berline", basePrice: 1.8, description: "Mercedes Classe E ou équivalent" },
-    { id: "van", name: "Van", basePrice: 2.2, description: "Mercedes Classe V ou équivalent" },
-    { id: "luxury", name: "Luxe", basePrice: 2.5, description: "Mercedes Classe S ou équivalent" }
+    { id: "sedan", name: "Berline", basePrice: 1.8, description: "Mercedes Classe E ou équivalent", capacity: 4 },
+    { id: "van", name: "Van", basePrice: 2.2, description: "Mercedes Classe V ou équivalent", capacity: 7 },
+    { id: "luxury", name: "Luxe", basePrice: 2.5, description: "Mercedes Classe S ou équivalent", capacity: 3 }
   ];
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -287,7 +287,10 @@ export function useQuoteForm(clientId?: string) {
         oneWayPrice,
         returnPrice,
         waitingTimePrice: hasWaitingTime ? waitingTimePrice : 0,
-        totalPrice
+        totalPrice,
+        basePrice,
+        isNightRate: false,
+        isSunday: false
       });
       
       const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
@@ -320,6 +323,8 @@ export function useQuoteForm(clientId?: string) {
         title: 'Devis enregistré',
         description: 'Votre devis a été enregistré avec succès',
       });
+      
+      setIsQuoteSent(true);
       
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement du devis:', error);
@@ -392,6 +397,7 @@ export function useQuoteForm(clientId?: string) {
     price: calculatedPrice,
     quoteDetails,
     isQuoteSent,
+    setIsQuoteSent,
     
     hasReturnTrip,
     setHasReturnTrip,
