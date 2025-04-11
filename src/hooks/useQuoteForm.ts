@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -32,7 +31,8 @@ export function useQuoteForm(clientId?: string) {
     distanceTiers
   } = usePricing();
   
-  // Form state
+  const [activeTab, setActiveTab] = useState<QuoteFormStep>('step1');
+  
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
   const [departureCoordinates, setDepartureCoordinates] = useState<[number, number] | undefined>(undefined);
@@ -48,7 +48,6 @@ export function useQuoteForm(clientId?: string) {
   const [estimatedDuration, setEstimatedDuration] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Return trip options
   const [hasReturnTrip, setHasReturnTrip] = useState(false);
   const [hasWaitingTime, setHasWaitingTime] = useState(false);
   const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
@@ -59,7 +58,9 @@ export function useQuoteForm(clientId?: string) {
   const [returnDistance, setReturnDistance] = useState(0);
   const [returnDuration, setReturnDuration] = useState(0);
   
-  // Fill form with client data if clientId is provided
+  const [quoteDetails, setQuoteDetails] = useState<any>(null);
+  const [isQuoteSent, setIsQuoteSent] = useState(false);
+  
   useEffect(() => {
     if (clientId && clients.length > 0) {
       const client = clients.find(c => c.id === clientId);
@@ -71,7 +72,6 @@ export function useQuoteForm(clientId?: string) {
     }
   }, [clientId, clients]);
   
-  // Fetch user info
   useEffect(() => {
     if (user && !clientId) {
       const fetchUserInfo = async () => {
@@ -98,17 +98,14 @@ export function useQuoteForm(clientId?: string) {
     }
   }, [user, clientId]);
   
-  // Calculate waiting time price
   useEffect(() => {
     if (!hasWaitingTime || !pricingSettings) return;
     
     const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
     
-    // Calculate by quarter-hour increments using wait_price_per_15min
     const quarters = Math.ceil(waitingTimeMinutes / 15);
     let price = quarters * pricePerQuarter;
     
-    // Apply night rate if enabled
     if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
       const [hours, minutes] = time.split(':').map(Number);
       const tripTime = new Date();
@@ -139,7 +136,6 @@ export function useQuoteForm(clientId?: string) {
     setWaitingTimePrice(Math.round(price));
   }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
   
-  // Calculate return trip distance and duration
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -180,7 +176,6 @@ export function useQuoteForm(clientId?: string) {
     setEstimatedDuration(Math.round(duration));
   }, []);
   
-  // Generate waiting time options in 15-minute increments
   const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
     const minutes = (i + 1) * 15;
     const hours = Math.floor(minutes / 60);
@@ -277,23 +272,20 @@ export function useQuoteForm(clientId?: string) {
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
-      // Calculate base price
-      const selectedVehicleObj = vehiclesList.find(v => v.id === selectedVehicle);
-      const basePrice = selectedVehicleObj?.basePrice || 1.8;
-      
-      // Calculate return price if applicable
+      const basePrice = vehicles?.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
+      const oneWayPrice = Math.round(estimatedDistance * basePrice);
       const returnPrice = hasReturnTrip 
-        ? (returnToSameAddress ? Math.round(estimatedDistance * basePrice) : Math.round(returnDistance * basePrice)) 
+        ? (returnToSameAddress ? oneWayPrice : Math.round(returnDistance * basePrice)) 
         : 0;
+      const totalPrice = oneWayPrice + (hasWaitingTime ? waitingTimePrice : 0) + returnPrice;
+      const price = totalPrice;
       
-      // Calculate total price including waiting time and return trip
-      let totalPrice = Math.round(estimatedDistance * basePrice);
-      if (hasWaitingTime) {
-        totalPrice += waitingTimePrice;
-      }
-      if (hasReturnTrip) {
-        totalPrice += returnPrice;
-      }
+      setQuoteDetails({
+        oneWayPrice,
+        returnPrice,
+        waitingTimePrice: hasWaitingTime ? waitingTimePrice : 0,
+        totalPrice
+      });
       
       const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
         client_id: finalClientId,
@@ -356,8 +348,20 @@ export function useQuoteForm(clientId?: string) {
     setCustomReturnCoordinates(undefined);
   };
   
+  const handleNextStep = () => {
+    if (activeTab === 'step1') setActiveTab('step2');
+    else if (activeTab === 'step2') setActiveTab('step3');
+  };
+  
+  const handlePreviousStep = () => {
+    if (activeTab === 'step3') setActiveTab('step2');
+    else if (activeTab === 'step2') setActiveTab('step1');
+  };
+  
   return {
-    // Form state
+    activeTab,
+    setActiveTab,
+    
     departureAddress,
     setDepartureAddress,
     destinationAddress,
@@ -382,7 +386,10 @@ export function useQuoteForm(clientId?: string) {
     estimatedDuration,
     isSubmitting,
     
-    // Return trip state
+    price,
+    quoteDetails,
+    isQuoteSent,
+    
     hasReturnTrip,
     setHasReturnTrip,
     hasWaitingTime,
@@ -399,12 +406,13 @@ export function useQuoteForm(clientId?: string) {
     returnDuration,
     waitingTimeOptions,
     
-    // Loading states
     vehiclesLoading,
     pricingLoading,
     vehicles: vehiclesList,
     
-    // Handlers
+    handleNextStep,
+    handlePreviousStep,
+    
     handleSubmit,
     handleDepartureSelect,
     handleDestinationSelect,
