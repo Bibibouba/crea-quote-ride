@@ -3,21 +3,22 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
-import { useAuth } from '@/contexts/AuthContext';
-import { inscriptionFormSchema, InscriptionFormValues } from '@/schemas/inscriptionSchema';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { inscriptionFormSchema, InscriptionFormValues } from '@/schemas/inscriptionSchema';
 import PersonalInfoFields from './PersonalInfoFields';
 import EmailField from './EmailField';
 import PasswordFields from './PasswordFields';
 import CompanyNameField from './CompanyNameField';
 import TermsField from './TermsField';
 import SubmitButton from './SubmitButton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const InscriptionForm = () => {
-  const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -36,6 +37,8 @@ const InscriptionForm = () => {
 
   const onSubmit = async (data: InscriptionFormValues) => {
     setIsLoading(true);
+    setError(null);
+    
     try {
       // 1. Create user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -52,11 +55,15 @@ const InscriptionForm = () => {
 
       if (authError) throw authError;
 
+      if (!authData.user) {
+        throw new Error("Échec de la création de l'utilisateur");
+      }
+
       // Insert profile data
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
-          id: authData.user?.id,
+          id: authData.user.id,
           first_name: data.firstName,
           last_name: data.lastName,
           email: data.email,
@@ -69,7 +76,7 @@ const InscriptionForm = () => {
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .insert({
-          driver_id: authData.user?.id,
+          driver_id: authData.user.id,
           first_name: data.firstName,
           last_name: data.lastName,
           full_name: `${data.firstName} ${data.lastName}`,
@@ -102,19 +109,31 @@ const InscriptionForm = () => {
 
       toast({
         title: "Compte créé avec succès",
-        description: "Votre période d'essai de 14 jours a démarré. Vous allez être redirigé vers le tableau de bord.",
+        description: "Votre période d'essai de 14 jours a démarré. Vous allez être redirigé vers la page de connexion.",
       });
       
-      // Redirect to dashboard after a few seconds
+      // Redirect to connexion page after 2 seconds
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/connexion');
       }, 2000);
       
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error('Erreur d\'inscription:', error);
+      
+      // Afficher un message d'erreur user-friendly
+      if (error.code === 'user_already_exists') {
+        setError('Cet email est déjà utilisé. Veuillez essayer avec un autre email ou vous connecter.');
+      } else if (error.code === 'invalid_email') {
+        setError('Email invalide. Veuillez vérifier votre adresse email.');
+      } else if (error.code === 'weak_password') {
+        setError('Mot de passe trop faible. Utilisez au moins 6 caractères.');
+      } else {
+        setError(error.message || "Une erreur s'est produite lors de l'inscription");
+      }
+      
       toast({
         title: "Erreur lors de l'inscription",
-        description: error instanceof Error ? error.message : "Une erreur inattendue s'est produite",
+        description: error.message || "Une erreur inattendue s'est produite",
         variant: "destructive"
       });
     } finally {
@@ -125,6 +144,13 @@ const InscriptionForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
         <PersonalInfoFields control={form.control} />
         <EmailField control={form.control} />
         <PasswordFields control={form.control} />

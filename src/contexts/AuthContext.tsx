@@ -51,12 +51,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error, data } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+      
       if (error) {
+        console.error("Erreur de connexion:", error);
         throw error;
       }
-      navigate('/dashboard');
+      
+      // Navigation vers le dashboard est gérée par onAuthStateChange
     } catch (error: any) {
+      console.error("Erreur de connexion détaillée:", error);
       toast.error(`Erreur de connexion: ${error.message}`);
       throw error;
     }
@@ -85,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         navigate('/connexion');
       }
     } catch (error: any) {
+      console.error("Erreur d'inscription:", error);
       toast.error(`Erreur d'inscription: ${error.message}`);
       throw error;
     }
