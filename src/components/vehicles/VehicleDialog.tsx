@@ -28,7 +28,7 @@ const VehicleDialog = ({ open, onOpenChange, vehicle, onSave }: VehicleDialogPro
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         
-        <VehicleForm initialData={vehicle || {}} onSubmit={handleSave} />
+        <VehicleForm defaultValues={vehicle || {}} onSubmit={handleSave} />
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

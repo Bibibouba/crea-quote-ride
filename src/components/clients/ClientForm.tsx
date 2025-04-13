@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
-import { clientFormSchema, ClientFormValues } from './client-form/ClientFormSchema';
+import { clientSchema, ClientFormValues } from './client-form/ClientFormSchema';
 import ClientTypeSelector from './client-form/ClientTypeSelector';
 import PersonalClientForm from './client-form/PersonalClientForm';
 import CompanyClientForm from './client-form/CompanyClientForm';
@@ -19,7 +19,7 @@ export interface ClientFormProps {
 
 const ClientForm = ({ initialData, onSuccess, onCancel }: ClientFormProps) => {
   const form = useForm<ClientFormValues>({
-    resolver: zodResolver(clientFormSchema),
+    resolver: zodResolver(clientSchema),
     defaultValues: {
       client_type: initialData.client_type || 'personal',
       first_name: initialData.first_name || '',
@@ -27,11 +27,7 @@ const ClientForm = ({ initialData, onSuccess, onCancel }: ClientFormProps) => {
       email: initialData.email || '',
       phone: initialData.phone || '',
       company_name: initialData.company_name || '',
-      company_address: initialData.company_address || '',
-      company_siret: initialData.company_siret || '',
-      contact_name: initialData.contact_name || '',
-      contact_email: initialData.contact_email || '',
-      contact_phone: initialData.contact_phone || '',
+      address: initialData.address || '',
       notes: initialData.notes || '',
     }
   });
@@ -50,15 +46,18 @@ const ClientForm = ({ initialData, onSuccess, onCancel }: ClientFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <ClientTypeSelector control={form.control} />
+        <ClientTypeSelector 
+          clientType={clientType} 
+          onClientTypeChange={(type) => form.setValue('client_type', type)} 
+        />
         
         {clientType === 'personal' ? (
-          <PersonalClientForm control={form.control} />
+          <PersonalClientForm form={form} />
         ) : (
-          <CompanyClientForm control={form.control} />
+          <CompanyClientForm form={form} />
         )}
         
-        <ClientFormFooter control={form.control} />
+        <ClientFormFooter form={form} />
         
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>

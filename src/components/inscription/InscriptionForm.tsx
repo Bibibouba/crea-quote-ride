@@ -81,13 +81,16 @@ const InscriptionForm = () => {
           last_name: data.lastName,
           full_name: `${data.firstName} ${data.lastName}`,
           email: data.email,
-          company_name: data.companyName,
+          entreprise: data.companyName, // Updated to match database schema
           client_type: 'personal'
         })
         .select()
         .single();
 
-      if (clientError) throw clientError;
+      if (clientError) {
+        console.error('Error creating client:', clientError);
+        throw clientError;
+      }
 
       // 3. Create an entry in the utilisations table
       const applicationId = '9550b69a-c2df-4639-8b5e-d5c845b03b33';
@@ -120,7 +123,7 @@ const InscriptionForm = () => {
     } catch (error: any) {
       console.error('Erreur d\'inscription:', error);
       
-      // Afficher un message d'erreur user-friendly
+      // Display user-friendly error message
       if (error.code === 'user_already_exists') {
         setError('Cet email est déjà utilisé. Veuillez essayer avec un autre email ou vous connecter.');
       } else if (error.code === 'invalid_email') {

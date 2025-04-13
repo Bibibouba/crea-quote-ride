@@ -1,45 +1,77 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { useVehicles } from '@/hooks/useVehicles';
-import VehicleDialog from '@/components/vehicles/VehicleDialog';
 import VehicleCard from '@/components/vehicles/VehicleCard';
+import VehicleDialog from '@/components/vehicles/VehicleDialog';
 import EmptyVehicleState from '@/components/vehicles/EmptyVehicleState';
-import { PlusCircle } from 'lucide-react';
+import { Vehicle } from '@/types/vehicle';
+import { useToast } from '@/hooks/use-toast';
 
 const VehiclesPage = () => {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingVehicle, setEditingVehicle] = useState(null);
-  const { vehicles, loading, handleDeleteVehicle, handleSaveVehicle } = useVehicles();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const { vehicles, isLoading, error, addVehicle, updateVehicle } = useVehicles();
+  const { toast } = useToast();
 
-  const openAddDialog = () => {
+  const handleAddClick = () => {
     setEditingVehicle(null);
-    setDialogOpen(true);
+    setIsDialogOpen(true);
   };
 
-  const openEditDialog = (vehicle) => {
+  const handleEditClick = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
-    setDialogOpen(true);
+    setIsDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
+  const handleSaveVehicle = async (values: any, editingVehicle: Vehicle | null) => {
+    try {
+      if (editingVehicle) {
+        await updateVehicle.mutateAsync({
+          id: editingVehicle.id,
+          ...values
+        });
+        toast({
+          title: "Véhicule mis à jour",
+          description: `Le véhicule ${values.name} a été mis à jour avec succès.`,
+        });
+      } else {
+        await addVehicle.mutateAsync(values);
+        toast({
+          title: "Véhicule ajouté",
+          description: `Le véhicule ${values.name} a été ajouté avec succès.`,
+        });
+      }
+      return true;
+    } catch (error: any) {
+      console.error("Error saving vehicle:", error);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de l'enregistrement du véhicule: ${error.message}`,
+        variant: "destructive",
+      });
+      return false;
+    }
   };
 
-  const handleActivationChange = async (id, isActive) => {
-    // Find the vehicle
-    const vehicle = vehicles.find(v => v.id === id);
-    if (!vehicle) return;
-    
-    // Update with new active status
-    await handleSaveVehicle({
-      ...vehicle,
-      is_active: isActive
-    }, vehicle);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Chargement des véhicules...</p>
+      </div>
+    );
+  }
 
-  if (loading) {
-    return <div>Chargement des véhicules...</div>;
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <p className="text-red-500">Erreur: {error}</p>
+        <Button className="mt-4" onClick={() => window.location.reload()}>
+          Réessayer
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -48,34 +80,32 @@ const VehiclesPage = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Véhicules</h1>
           <p className="text-muted-foreground">
-            Gérez vos véhicules disponibles pour les courses
+            Gérez votre flotte de véhicules disponibles pour les transferts
           </p>
         </div>
-        <Button onClick={openAddDialog}>
-          <PlusCircle className="mr-2 h-4 w-4" />
+        <Button onClick={handleAddClick}>
+          <Plus className="mr-2 h-4 w-4" />
           Ajouter un véhicule
         </Button>
       </div>
 
       {vehicles.length === 0 ? (
-        <EmptyVehicleState onAddClick={openAddDialog} />
+        <EmptyVehicleState onAddClick={handleAddClick} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vehicles.map((vehicle) => (
-            <VehicleCard
-              key={vehicle.id}
-              vehicle={vehicle}
-              onEdit={() => openEditDialog(vehicle)}
-              onDelete={() => handleDeleteVehicle(vehicle.id)}
-              onActivationChange={(isActive) => handleActivationChange(vehicle.id, isActive)}
+            <VehicleCard 
+              key={vehicle.id} 
+              vehicle={vehicle} 
+              onEditClick={() => handleEditClick(vehicle)} 
             />
           ))}
         </div>
       )}
 
       <VehicleDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
         vehicle={editingVehicle}
         onSave={handleSaveVehicle}
       />
