@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,6 +29,36 @@ const ClientForm: React.FC<ClientFormProps> = ({
   const [clientType, setClientType] = useState<ClientType>(
     initialData?.client_type || 'personal'
   );
+
+  const defaultValues: ClientFormValues = {
+    first_name: '',
+    last_name: '',
+    email: '',
+    client_type: 'personal' as ClientType,
+    gender: 'prefer_not_to_say' as Gender,
+    company_name: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zip_code: '',
+    country: '',
+    notes: '',
+    client_code: '',
+  };
+
+  const genderOptions = [
+    { value: 'male' as Gender, label: 'Monsieur' },
+    { value: 'female' as Gender, label: 'Madame' },
+    { value: 'other' as Gender, label: 'Autre' },
+    { value: 'prefer_not_to_say' as Gender, label: 'Ne pas préciser' },
+  ];
+
+  const formOptionsByType = {
+    'personal': PersonalClientForm,
+    'business': CompanyClientForm,
+    'corporate': CompanyClientForm
+  };
 
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),

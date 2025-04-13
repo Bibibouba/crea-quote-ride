@@ -12,7 +12,7 @@ export interface Quote {
   duration_minutes: number;
   ride_date: string;
   amount: number;
-  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled' | 'declined';
   has_return_trip: boolean;
   has_waiting_time: boolean;
   waiting_time_minutes: number | null;
@@ -25,4 +25,15 @@ export interface Quote {
   quote_pdf: string | null;
   created_at: string;
   updated_at: string;
+  
+  // Relations loaded with joins
+  clients?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  vehicles?: {
+    name: string;
+    model: string;
+  };
 }
