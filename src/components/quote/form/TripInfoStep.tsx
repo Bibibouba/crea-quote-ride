@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Users } from 'lucide-react';
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 import RouteMap from '@/components/map/RouteMap';
 import { Address } from '@/hooks/useMapbox';
@@ -163,9 +163,12 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
                 {vehicles.map((vehicle) => (
                   <SelectItem key={vehicle.id} value={vehicle.id}>
                     <div className="flex flex-col">
-                      <span>{vehicle.name} - {vehicle.model}</span>
+                      <span className="font-medium">{vehicle.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        Capacité: {vehicle.capacity} passagers
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" /> {vehicle.capacity} passagers - {vehicle.basePrice.toFixed(2)}€/km
+                        </span>
+                        <span>{vehicle.description}</span>
                       </span>
                     </div>
                   </SelectItem>
@@ -187,6 +190,12 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
                 ))}
               </SelectContent>
             </Select>
+            
+            {selectedVehicle && vehicles.find(v => v.id === selectedVehicle)?.capacity < parseInt(passengers) && (
+              <p className="text-sm text-red-500 mt-1">
+                Attention: Le nombre de passagers dépasse la capacité du véhicule sélectionné ({vehicles.find(v => v.id === selectedVehicle)?.capacity} places).
+              </p>
+            )}
           </div>
         </div>
 

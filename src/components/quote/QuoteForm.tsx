@@ -14,13 +14,14 @@ import SuccessMessage from './form/SuccessMessage';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { FormItem } from '@/components/ui/form';
 import { usePricing } from '@/hooks/use-pricing';
 import { useMapbox, Address } from '@/hooks/useMapbox';
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import QuoteFormOptions from './form/QuoteFormOptions';
 
 interface QuoteFormProps {
   clientId?: string;
@@ -60,7 +61,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
   
-  // Options pour trajet aller-retour
   const [hasReturnTrip, setHasReturnTrip] = useState(false);
   const [hasWaitingTime, setHasWaitingTime] = useState(false);
   const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
@@ -80,7 +80,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
   const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
   const estimatedPrice = Math.round(estimatedDistance * basePrice);
   
-  // Generate waiting time options in 15-minute increments
   const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
     const minutes = (i + 1) * 15;
     const hours = Math.floor(minutes / 60);
@@ -102,7 +101,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
     };
   });
   
-  // Calculate return trip distance and duration
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -123,18 +121,15 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
     calculateReturnRoute();
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
   
-  // Calculate waiting time price
   useEffect(() => {
     if (!hasWaitingTime || !pricingSettings) return;
     
     const pricePerMin = pricingSettings.waiting_fee_per_minute || 0.5;
     const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
     
-    // Calculate by quarter-hour increments using wait_price_per_15min
     const quarters = Math.ceil(waitingTimeMinutes / 15);
     let price = quarters * pricePerQuarter;
     
-    // Apply night rate if enabled
     if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
       const [hours, minutes] = time.split(':').map(Number);
       const tripTime = new Date();
@@ -181,21 +176,13 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
     if (user && !clientId) {
       const fetchUserInfo = async () => {
         try {
-          // Try to fetch user profile from profiles table
           const { data, error } = await supabase
             .from('profiles')
             .select('first_name, last_name, email')
             .eq('id', user.id)
             .single();
           
-          if (error) {
-            console.log('Profile not found, using auth metadata');
-            // Fallback to auth metadata
-            setFirstName(user.user_metadata?.first_name || '');
-            setLastName(user.user_metadata?.last_name || '');
-            setEmail(user.email || '');
-            return;
-          }
+          if (error) throw error;
           
           if (data) {
             setFirstName(data.first_name || '');
@@ -210,7 +197,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
       fetchUserInfo();
     }
   }, [user, clientId]);
-
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -272,51 +259,48 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
       
       let finalClientId = selectedClient;
       
-      if (!selectedClient && firstName && lastName && email && user) {
-        try {
-          // Create a new client
-          const { data, error } = await supabase
-            .from('clients')
-            .insert({
-              driver_id: user.id,
-              first_name: firstName,
-              last_name: lastName,
-              full_name: `${firstName} ${lastName}`,
-              email: email,
-              client_type: 'personal'
-            })
-            .select()
-            .single();
-          
-          if (error) throw error;
-          finalClientId = data.id;
-        } catch (error) {
-          console.error('Error creating client:', error);
-          throw new Error("Erreur lors de la création du client");
+      if (!selectedClient && firstName && lastName && email) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        if (!userId) {
+          throw new Error("Utilisateur non authentifié");
         }
+        
+        const { data, error } = await supabase
+          .from('clients')
+          .insert({
+            driver_id: userId,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            client_type: 'personal'
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        finalClientId = data.id;
       }
       
       if (!finalClientId) {
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
-      // Calculate return price if applicable
       const returnPrice = hasReturnTrip 
         ? (returnToSameAddress ? estimatedPrice : Math.round(returnDistance * basePrice)) 
         : 0;
       
-      // Calculate total price including waiting time and return trip
-      let totalPrice = estimatedPrice;
+      let totalPriceCalculated = estimatedPrice;
       if (hasWaitingTime) {
-        totalPrice += waitingTimePrice;
+        totalPriceCalculated += waitingTimePrice;
       }
       if (hasReturnTrip) {
-        totalPrice += returnPrice;
+        totalPriceCalculated += returnPrice;
       }
       
       const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
         client_id: finalClientId,
-        driver_id: user?.id || '',
         vehicle_id: null,
         departure_location: departureAddress,
         arrival_location: destinationAddress,
@@ -325,17 +309,18 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         distance_km: estimatedDistance,
         duration_minutes: estimatedDuration, 
         ride_date: dateTime.toISOString(),
-        amount: totalPrice,
+        amount: totalPriceCalculated,
         status: 'pending',
+        driver_id: '',
         has_return_trip: hasReturnTrip,
         has_waiting_time: hasWaitingTime,
-        waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : null,
-        waiting_time_price: hasWaitingTime ? waitingTimePrice : null,
+        waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
+        waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
         return_to_same_address: returnToSameAddress,
         custom_return_address: customReturnAddress,
         return_coordinates: customReturnCoordinates,
-        return_distance_km: returnDistance || null,
-        return_duration_minutes: returnDuration || null
+        return_distance_km: returnDistance,
+        return_duration_minutes: returnDuration
       };
       
       await addQuote.mutateAsync(quoteData);

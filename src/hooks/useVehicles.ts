@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, VehicleType } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Vehicle, VehicleType } from '@/types/vehicle';
+import { Vehicle } from '@/types/vehicle';
 import { VehicleFormValues } from '@/components/vehicles/VehicleForm';
 
 export const useVehicles = () => {
@@ -69,7 +69,7 @@ export const useVehicles = () => {
   };
 
   const handleSaveVehicle = async (values: VehicleFormValues, editingVehicle: Vehicle | null) => {
-    if (!user) return false;
+    if (!user) return;
     
     setSubmitting(true);
     
@@ -124,11 +124,8 @@ export const useVehicles = () => {
           
         if (error) throw error;
         
-        // Update local state with the returned data
-        if (data && data.length > 0) {
-          setVehicles([data[0], ...vehicles]);
-        }
-        
+        // Update local state
+        setVehicles([data[0], ...vehicles]);
         toast.success('Véhicule ajouté avec succès');
         return true;
       }
@@ -166,7 +163,7 @@ export const useVehicles = () => {
   return {
     vehicles,
     vehicleTypes,
-    loading, // This is what the components expect
+    loading,
     typesLoading,
     submitting,
     handleSaveVehicle,

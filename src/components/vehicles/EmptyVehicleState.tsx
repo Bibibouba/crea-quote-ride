@@ -1,24 +1,28 @@
 
 import React from 'react';
+import { Car, PlusCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Car } from 'lucide-react';
 
 interface EmptyVehicleStateProps {
-  onAddClick: () => void;
+  onAddNew: () => void;
 }
 
-const EmptyVehicleState = ({ onAddClick }: EmptyVehicleStateProps) => {
+const EmptyVehicleState = ({ onAddNew }: EmptyVehicleStateProps) => {
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-background/50 min-h-[300px]">
-      <Car className="h-12 w-12 text-muted-foreground mb-4" strokeWidth={1.5} />
-      <h3 className="text-lg font-medium mb-2">Aucun véhicule</h3>
-      <p className="text-muted-foreground mb-6 max-w-md">
-        Vous n'avez pas encore ajouté de véhicule à votre flotte. Commencez par ajouter votre premier véhicule.
-      </p>
-      <Button onClick={onAddClick}>
-        Ajouter un véhicule
-      </Button>
-    </div>
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center py-12">
+        <Car className="mb-4 h-12 w-12 text-muted-foreground" />
+        <h3 className="mb-2 text-xl font-semibold">Aucun véhicule</h3>
+        <p className="mb-6 text-center text-muted-foreground">
+          Vous n'avez pas encore ajouté de véhicule à votre flotte.
+        </p>
+        <Button onClick={onAddNew}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Ajouter votre premier véhicule
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 

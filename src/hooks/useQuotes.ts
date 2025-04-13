@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 
 // Extended Quote type including coordinates
 export type QuoteWithCoordinates = Quote;
@@ -11,7 +10,6 @@ export type QuoteWithCoordinates = Quote;
 export const useQuotes = (clientId?: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user } = useAuth();
 
   // Get query key based on whether we're filtering by client
   const queryKey = clientId ? ['quotes', clientId] : ['quotes'];
@@ -24,8 +22,6 @@ export const useQuotes = (clientId?: string) => {
   } = useQuery({
     queryKey,
     queryFn: async () => {
-      if (!user) return [] as Quote[];
-      
       let query = supabase
         .from('quotes')
         .select(`
@@ -33,7 +29,6 @@ export const useQuotes = (clientId?: string) => {
           clients(first_name, last_name, email),
           vehicles(name, model)
         `)
-        .eq('driver_id', user.id)
         .order('created_at', { ascending: false });
 
       if (clientId) {
@@ -47,12 +42,11 @@ export const useQuotes = (clientId?: string) => {
         throw error;
       }
 
-      return data as unknown as (Quote & {
+      return data as (Quote & {
         clients: { first_name: string; last_name: string; email: string };
         vehicles: { name: string; model: string } | null;
       })[];
-    },
-    enabled: !!user, // Only run query if user exists
+    }
   });
 
   const updateQuoteStatus = useMutation({
@@ -94,14 +88,17 @@ export const useQuotes = (clientId?: string) => {
   const addQuote = useMutation({
     mutationFn: async (newQuote: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'>) => {
       // Get the current user's ID from Supabase
-      if (!user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      if (!userId) {
         throw new Error("User not authenticated");
       }
       
       // Add the driver_id to the quote data
       const quoteWithDriverId = {
         ...newQuote,
-        driver_id: user.id,
+        driver_id: userId,
         // Store coordinates as arrays for Supabase
         departure_coordinates: newQuote.departure_coordinates || null,
         arrival_coordinates: newQuote.arrival_coordinates || null,

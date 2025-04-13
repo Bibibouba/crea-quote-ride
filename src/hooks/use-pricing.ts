@@ -6,7 +6,6 @@ import { toast } from '@/hooks/use-toast';
 
 export interface PricingSettings {
   id: string;
-  driver_id: string;
   base_fare: number;
   price_per_km: number;
   waiting_fee_per_minute: number;
@@ -24,19 +23,14 @@ export interface PricingSettings {
   holiday_sunday_percentage: number | null;
   minimum_trip_minutes: number | null;
   service_area: string | null;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface DistanceTier {
   id?: string;
-  driver_id: string;
   min_km: number;
   max_km: number | null;
   price_per_km: number;
   vehicle_id: string | null;
-  created_at?: string;
-  updated_at?: string;
 }
 
 export const usePricing = () => {
@@ -71,24 +65,13 @@ export const usePricing = () => {
           setPricingSettings(pricingData[0] as PricingSettings);
           console.log("Pricing settings updated:", pricingData[0]);
         } else {
-          // Create default pricing if none exists
-          console.log("No pricing data found, creating default...");
-          const { data: newPricing, error: createError } = await supabase
-            .from('pricing')
-            .insert({
-              driver_id: user.id,
-              base_fare: 10,
-              price_per_km: 1.5,
-              waiting_fee_per_minute: 0.5,
-              min_fare: 20
-            })
-            .select()
-            .single();
-            
-          if (createError) throw createError;
-          
-          setPricingSettings(newPricing as PricingSettings);
-          console.log("Default pricing created:", newPricing);
+          console.warn("No pricing data found for user:", user.id);
+          setError("Aucune donnée de tarification trouvée. Veuillez actualiser la page.");
+          toast({
+            title: "Données manquantes",
+            description: "Aucune donnée de tarification trouvée. Veuillez actualiser la page.",
+            variant: "destructive",
+          });
         }
         
         const { data: tiersData, error: tiersError } = await supabase
@@ -100,26 +83,7 @@ export const usePricing = () => {
         if (tiersError) throw tiersError;
         
         console.log("Distance tiers data received:", tiersData);
-        
-        if (tiersData && tiersData.length > 0) {
-          setDistanceTiers(tiersData as DistanceTier[]);
-        } else {
-          // Create a default tier if none exists
-          const { data: newTier, error: newTierError } = await supabase
-            .from('distance_pricing_tiers')
-            .insert({
-              driver_id: user.id,
-              min_km: 0,
-              max_km: null,
-              price_per_km: 1.5,
-              vehicle_id: null
-            })
-            .select();
-            
-          if (newTierError) throw newTierError;
-          
-          setDistanceTiers(newTier as DistanceTier[]);
-        }
+        setDistanceTiers(tiersData as DistanceTier[] || []);
         
       } catch (error: any) {
         console.error('Error fetching pricing data:', error);

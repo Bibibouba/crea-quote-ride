@@ -1,40 +1,23 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Check, Ban, Clock, CalendarCheck, X } from 'lucide-react';
-import { QuoteStatus } from '@/types/quote';
+import { Quote } from '@/types/quote';
 
 interface QuoteStatusBadgeProps {
-  status: QuoteStatus;
+  status: Quote['status'];
 }
 
-const QuoteStatusBadge = ({ status }: QuoteStatusBadgeProps) => {
-  const getStatusConfig = () => {
-    switch (status) {
-      case 'pending':
-        return { icon: Clock, variant: 'outline', text: 'En attente' };
-      case 'accepted':
-        return { icon: Check, variant: 'success', text: 'Accepté' };
-      case 'rejected':
-      case 'declined':
-        return { icon: Ban, variant: 'destructive', text: 'Refusé' };
-      case 'completed':
-        return { icon: CalendarCheck, variant: 'default', text: 'Terminé' };
-      case 'cancelled':
-        return { icon: X, variant: 'secondary', text: 'Annulé' };
-      default:
-        return { icon: Clock, variant: 'outline', text: 'Inconnu' };
-    }
-  };
-
-  const { icon: Icon, variant, text } = getStatusConfig();
-
-  return (
-    <Badge variant={variant as any} className="gap-1 font-normal">
-      <Icon className="h-3 w-3" />
-      <span>{text}</span>
-    </Badge>
-  );
+const QuoteStatusBadge: React.FC<QuoteStatusBadgeProps> = ({ status }) => {
+  switch (status) {
+    case 'pending':
+      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">En attente</Badge>;
+    case 'accepted':
+      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Accepté</Badge>;
+    case 'declined':
+      return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Refusé</Badge>;
+    default:
+      return <Badge variant="outline">Inconnu</Badge>;
+  }
 };
 
 export default QuoteStatusBadge;

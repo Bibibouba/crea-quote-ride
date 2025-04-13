@@ -1,53 +1,38 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import { User, Building2 } from 'lucide-react';
 import { ClientType } from '@/types/client';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 
 interface ClientTypeSelectorProps {
   clientType: ClientType;
   onClientTypeChange: (type: ClientType) => void;
 }
 
-const clientTypes: Array<{value: ClientType; label: string; description: string}> = [
-  {
-    value: 'personal',
-    label: 'Particulier',
-    description: 'Clients particuliers pour des transferts privés'
-  },
-  {
-    value: 'business',
-    label: 'Entreprise',
-    description: 'Entreprises pour des déplacements professionnels'
-  },
-  {
-    value: 'corporate',
-    label: 'Corporate',
-    description: 'Grands comptes avec contrats spécifiques'
-  }
-];
-
-const ClientTypeSelector = ({ clientType, onClientTypeChange }: ClientTypeSelectorProps) => {
+const ClientTypeSelector: React.FC<ClientTypeSelectorProps> = ({
+  clientType,
+  onClientTypeChange
+}) => {
   return (
-    <div className="space-y-3">
-      <Label>Type de client</Label>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {clientTypes.map((type) => (
-          <div
-            key={type.value}
-            className={cn(
-              "border rounded-lg p-4 cursor-pointer transition-colors",
-              clientType === type.value
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50"
-            )}
-            onClick={() => onClientTypeChange(type.value)}
-          >
-            <h3 className="font-medium">{type.label}</h3>
-            <p className="text-sm text-muted-foreground mt-1">{type.description}</p>
-          </div>
-        ))}
-      </div>
+    <div className="flex items-center space-x-4 mb-6">
+      <Button
+        type="button"
+        variant={clientType === 'personal' ? 'default' : 'outline'}
+        className={`flex-1 py-6 ${clientType === 'personal' ? 'shadow-md border-primary/50' : ''}`}
+        onClick={() => onClientTypeChange('personal')}
+      >
+        <User className="mr-2 h-4 w-4" />
+        Particulier
+      </Button>
+      <Button
+        type="button"
+        variant={clientType === 'company' ? 'default' : 'outline'}
+        className={`flex-1 py-6 ${clientType === 'company' ? 'shadow-md border-primary/50' : ''}`}
+        onClick={() => onClientTypeChange('company')}
+      >
+        <Building2 className="mr-2 h-4 w-4" />
+        Société
+      </Button>
     </div>
   );
 };

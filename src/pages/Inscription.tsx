@@ -7,19 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import InscriptionForm from '@/components/inscription/InscriptionForm';
 
 const Inscription = () => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <Layout>
-        <div className="container py-12 flex justify-center items-center">
-          <div className="text-center">
-            Chargement...
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  const { user } = useAuth();
 
   if (user) {
     return <Navigate to="/dashboard" />;

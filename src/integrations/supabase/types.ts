@@ -9,345 +9,318 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_users: {
+      clients: {
         Row: {
+          address: string | null
+          birth_date: string | null
+          business_type: string | null
+          client_code: string | null
+          client_type: string
+          comments: string | null
+          company_name: string | null
+          created_at: string
+          driver_id: string
           email: string
+          first_name: string
+          gender: string | null
           id: string
-          mot_de_passe_hash: string
-          role: string | null
+          last_name: string
+          phone: string | null
+          siret: string | null
+          updated_at: string
+          vat_number: string | null
+          website: string | null
         }
         Insert: {
+          address?: string | null
+          birth_date?: string | null
+          business_type?: string | null
+          client_code?: string | null
+          client_type?: string
+          comments?: string | null
+          company_name?: string | null
+          created_at?: string
+          driver_id: string
           email: string
+          first_name: string
+          gender?: string | null
           id?: string
-          mot_de_passe_hash: string
-          role?: string | null
+          last_name: string
+          phone?: string | null
+          siret?: string | null
+          updated_at?: string
+          vat_number?: string | null
+          website?: string | null
         }
         Update: {
+          address?: string | null
+          birth_date?: string | null
+          business_type?: string | null
+          client_code?: string | null
+          client_type?: string
+          comments?: string | null
+          company_name?: string | null
+          created_at?: string
+          driver_id?: string
           email?: string
+          first_name?: string
+          gender?: string | null
           id?: string
-          mot_de_passe_hash?: string
-          role?: string | null
-        }
-        Relationships: []
-      }
-      applications: {
-        Row: {
-          afficher_accueil: boolean
-          date_creation: string
-          description_courte: string | null
-          famille_id: string | null
-          id: string
-          lien_site: string | null
-          logo_url: string | null
-          nom: string
-          prix_annuel: number | null
-          prix_mensuel: number | null
-        }
-        Insert: {
-          afficher_accueil?: boolean
-          date_creation?: string
-          description_courte?: string | null
-          famille_id?: string | null
-          id?: string
-          lien_site?: string | null
-          logo_url?: string | null
-          nom: string
-          prix_annuel?: number | null
-          prix_mensuel?: number | null
-        }
-        Update: {
-          afficher_accueil?: boolean
-          date_creation?: string
-          description_courte?: string | null
-          famille_id?: string | null
-          id?: string
-          lien_site?: string | null
-          logo_url?: string | null
-          nom?: string
-          prix_annuel?: number | null
-          prix_mensuel?: number | null
+          last_name?: string
+          phone?: string | null
+          siret?: string | null
+          updated_at?: string
+          vat_number?: string | null
+          website?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "applications_famille_id_fkey"
-            columns: ["famille_id"]
+            foreignKeyName: "clients_driver_id_fkey"
+            columns: ["driver_id"]
             isOneToOne: false
-            referencedRelation: "familles"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      clients: {
-        Row: {
-          client_type: string | null
-          date_inscription: string
-          driver_id: string | null
-          email: string
-          entreprise: string | null
-          first_name: string | null
-          full_name: string
-          id: string
-          last_name: string | null
-          mot_de_passe_hash: string | null
-        }
-        Insert: {
-          client_type?: string | null
-          date_inscription?: string
-          driver_id?: string | null
-          email: string
-          entreprise?: string | null
-          first_name?: string | null
-          full_name: string
-          id?: string
-          last_name?: string | null
-          mot_de_passe_hash?: string | null
-        }
-        Update: {
-          client_type?: string | null
-          date_inscription?: string
-          driver_id?: string | null
-          email?: string
-          entreprise?: string | null
-          first_name?: string | null
-          full_name?: string
-          id?: string
-          last_name?: string | null
-          mot_de_passe_hash?: string | null
-        }
-        Relationships: []
-      }
       company_settings: {
         Row: {
           banner_url: string | null
-          created_at: string | null
-          driver_id: string | null
+          created_at: string
+          driver_id: string
           font_family: string | null
           id: string
+          is_trial: boolean | null
           logo_url: string | null
           primary_color: string | null
           secondary_color: string | null
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
           banner_url?: string | null
-          created_at?: string | null
-          driver_id?: string | null
+          created_at?: string
+          driver_id: string
           font_family?: string | null
           id?: string
+          is_trial?: boolean | null
           logo_url?: string | null
           primary_color?: string | null
           secondary_color?: string | null
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           banner_url?: string | null
-          created_at?: string | null
-          driver_id?: string | null
+          created_at?: string
+          driver_id?: string
           font_family?: string | null
           id?: string
+          is_trial?: boolean | null
           logo_url?: string | null
           primary_color?: string | null
           secondary_color?: string | null
-          updated_at?: string | null
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "company_settings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       distance_pricing_tiers: {
         Row: {
-          created_at: string | null
-          driver_id: string | null
+          created_at: string
+          driver_id: string
           id: string
           max_km: number | null
           min_km: number
           price_per_km: number
-          updated_at: string | null
+          updated_at: string
           vehicle_id: string | null
+          vehicle_type_id: string | null
         }
         Insert: {
-          created_at?: string | null
-          driver_id?: string | null
+          created_at?: string
+          driver_id: string
           id?: string
           max_km?: number | null
           min_km: number
           price_per_km: number
-          updated_at?: string | null
+          updated_at?: string
           vehicle_id?: string | null
+          vehicle_type_id?: string | null
         }
         Update: {
-          created_at?: string | null
-          driver_id?: string | null
+          created_at?: string
+          driver_id?: string
           id?: string
           max_km?: number | null
           min_km?: number
           price_per_km?: number
-          updated_at?: string | null
+          updated_at?: string
           vehicle_id?: string | null
-        }
-        Relationships: []
-      }
-      familles: {
-        Row: {
-          date_creation: string
-          id: string
-          nom: string
-        }
-        Insert: {
-          date_creation?: string
-          id?: string
-          nom: string
-        }
-        Update: {
-          date_creation?: string
-          id?: string
-          nom?: string
-        }
-        Relationships: []
-      }
-      paiements: {
-        Row: {
-          application_id: string
-          client_id: string
-          date_paiement: string
-          id: string
-          montant: number
-          periode: Database["public"]["Enums"]["periode_paiement_type"]
-          statut: Database["public"]["Enums"]["statut_paiement_type"] | null
-          type_paiement: Database["public"]["Enums"]["type_paiement_type"]
-        }
-        Insert: {
-          application_id: string
-          client_id: string
-          date_paiement?: string
-          id?: string
-          montant: number
-          periode: Database["public"]["Enums"]["periode_paiement_type"]
-          statut?: Database["public"]["Enums"]["statut_paiement_type"] | null
-          type_paiement: Database["public"]["Enums"]["type_paiement_type"]
-        }
-        Update: {
-          application_id?: string
-          client_id?: string
-          date_paiement?: string
-          id?: string
-          montant?: number
-          periode?: Database["public"]["Enums"]["periode_paiement_type"]
-          statut?: Database["public"]["Enums"]["statut_paiement_type"] | null
-          type_paiement?: Database["public"]["Enums"]["type_paiement_type"]
+          vehicle_type_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "paiements_application_id_fkey"
-            columns: ["application_id"]
+            foreignKeyName: "distance_pricing_tiers_driver_id_fkey"
+            columns: ["driver_id"]
             isOneToOne: false
-            referencedRelation: "applications"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "paiements_client_id_fkey"
-            columns: ["client_id"]
+            foreignKeyName: "distance_pricing_tiers_vehicle_id_fkey"
+            columns: ["vehicle_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distance_pricing_tiers_vehicle_type_id_fkey"
+            columns: ["vehicle_type_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_types"
             referencedColumns: ["id"]
           },
         ]
       }
       pricing: {
         Row: {
-          base_fare: number | null
-          created_at: string | null
-          driver_id: string | null
+          base_fare: number
+          created_at: string
+          driver_id: string
+          holiday_sunday_percentage: number | null
           id: string
-          min_fare: number | null
+          min_fare: number
+          minimum_trip_fare: number | null
+          minimum_trip_minutes: number | null
           night_rate_enabled: boolean | null
           night_rate_end: string | null
           night_rate_percentage: number | null
           night_rate_start: string | null
-          price_per_km: number | null
-          updated_at: string | null
+          price_per_km: number
+          service_area: string | null
+          updated_at: string
+          vehicle_id: string | null
           wait_night_enabled: boolean | null
           wait_night_end: string | null
           wait_night_percentage: number | null
           wait_night_start: string | null
           wait_price_per_15min: number | null
-          waiting_fee_per_minute: number | null
+          waiting_fee_per_minute: number
         }
         Insert: {
-          base_fare?: number | null
-          created_at?: string | null
-          driver_id?: string | null
+          base_fare: number
+          created_at?: string
+          driver_id: string
+          holiday_sunday_percentage?: number | null
           id?: string
-          min_fare?: number | null
+          min_fare: number
+          minimum_trip_fare?: number | null
+          minimum_trip_minutes?: number | null
           night_rate_enabled?: boolean | null
           night_rate_end?: string | null
           night_rate_percentage?: number | null
           night_rate_start?: string | null
-          price_per_km?: number | null
-          updated_at?: string | null
+          price_per_km: number
+          service_area?: string | null
+          updated_at?: string
+          vehicle_id?: string | null
           wait_night_enabled?: boolean | null
           wait_night_end?: string | null
           wait_night_percentage?: number | null
           wait_night_start?: string | null
           wait_price_per_15min?: number | null
-          waiting_fee_per_minute?: number | null
+          waiting_fee_per_minute: number
         }
         Update: {
-          base_fare?: number | null
-          created_at?: string | null
-          driver_id?: string | null
+          base_fare?: number
+          created_at?: string
+          driver_id?: string
+          holiday_sunday_percentage?: number | null
           id?: string
-          min_fare?: number | null
+          min_fare?: number
+          minimum_trip_fare?: number | null
+          minimum_trip_minutes?: number | null
           night_rate_enabled?: boolean | null
           night_rate_end?: string | null
           night_rate_percentage?: number | null
           night_rate_start?: string | null
-          price_per_km?: number | null
-          updated_at?: string | null
+          price_per_km?: number
+          service_area?: string | null
+          updated_at?: string
+          vehicle_id?: string | null
           wait_night_enabled?: boolean | null
           wait_night_end?: string | null
           wait_night_percentage?: number | null
           wait_night_start?: string | null
           wait_price_per_15min?: number | null
-          waiting_fee_per_minute?: number | null
+          waiting_fee_per_minute?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pricing_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           company_name: string | null
+          created_at: string
           email: string | null
           first_name: string | null
           id: string
           last_name: string | null
+          updated_at: string
         }
         Insert: {
           company_name?: string | null
+          created_at?: string
           email?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
+          updated_at?: string
         }
         Update: {
           company_name?: string | null
+          created_at?: string
           email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
       quotes: {
         Row: {
           amount: number
-          arrival_coordinates: number[]
+          arrival_coordinates: number[] | null
           arrival_location: string
-          client_id: string | null
-          created_at: string | null
+          client_id: string
+          created_at: string
           custom_return_address: string | null
-          departure_coordinates: number[]
+          departure_coordinates: number[] | null
           departure_location: string
-          distance_km: number
-          driver_id: string | null
-          duration_minutes: number
+          distance_km: number | null
+          driver_id: string
+          duration_minutes: number | null
           has_return_trip: boolean | null
           has_waiting_time: boolean | null
           id: string
@@ -357,24 +330,24 @@ export type Database = {
           return_duration_minutes: number | null
           return_to_same_address: boolean | null
           ride_date: string
-          status: string | null
-          updated_at: string | null
+          status: string
+          updated_at: string
           vehicle_id: string | null
           waiting_time_minutes: number | null
           waiting_time_price: number | null
         }
         Insert: {
           amount: number
-          arrival_coordinates: number[]
+          arrival_coordinates?: number[] | null
           arrival_location: string
-          client_id?: string | null
-          created_at?: string | null
+          client_id: string
+          created_at?: string
           custom_return_address?: string | null
-          departure_coordinates: number[]
+          departure_coordinates?: number[] | null
           departure_location: string
-          distance_km: number
-          driver_id?: string | null
-          duration_minutes: number
+          distance_km?: number | null
+          driver_id: string
+          duration_minutes?: number | null
           has_return_trip?: boolean | null
           has_waiting_time?: boolean | null
           id?: string
@@ -384,24 +357,24 @@ export type Database = {
           return_duration_minutes?: number | null
           return_to_same_address?: boolean | null
           ride_date: string
-          status?: string | null
-          updated_at?: string | null
+          status?: string
+          updated_at?: string
           vehicle_id?: string | null
           waiting_time_minutes?: number | null
           waiting_time_price?: number | null
         }
         Update: {
           amount?: number
-          arrival_coordinates?: number[]
+          arrival_coordinates?: number[] | null
           arrival_location?: string
-          client_id?: string | null
-          created_at?: string | null
+          client_id?: string
+          created_at?: string
           custom_return_address?: string | null
-          departure_coordinates?: number[]
+          departure_coordinates?: number[] | null
           departure_location?: string
-          distance_km?: number
-          driver_id?: string | null
-          duration_minutes?: number
+          distance_km?: number | null
+          driver_id?: string
+          duration_minutes?: number | null
           has_return_trip?: boolean | null
           has_waiting_time?: boolean | null
           id?: string
@@ -411,8 +384,8 @@ export type Database = {
           return_duration_minutes?: number | null
           return_to_same_address?: boolean | null
           ride_date?: string
-          status?: string | null
-          updated_at?: string | null
+          status?: string
+          updated_at?: string
           vehicle_id?: string | null
           waiting_time_minutes?: number | null
           waiting_time_price?: number | null
@@ -425,127 +398,119 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      utilisations: {
-        Row: {
-          application_id: string
-          client_id: string
-          date_debut_essai: string
-          date_fin_essai: string | null
-          id: string
-          statut_essai: Database["public"]["Enums"]["statut_essai_type"] | null
-          temps_utilisation: number | null
-        }
-        Insert: {
-          application_id: string
-          client_id: string
-          date_debut_essai?: string
-          date_fin_essai?: string | null
-          id?: string
-          statut_essai?: Database["public"]["Enums"]["statut_essai_type"] | null
-          temps_utilisation?: number | null
-        }
-        Update: {
-          application_id?: string
-          client_id?: string
-          date_debut_essai?: string
-          date_fin_essai?: string | null
-          id?: string
-          statut_essai?: Database["public"]["Enums"]["statut_essai_type"] | null
-          temps_utilisation?: number | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "utilisations_application_id_fkey"
-            columns: ["application_id"]
+            foreignKeyName: "quotes_driver_id_fkey"
+            columns: ["driver_id"]
             isOneToOne: false
-            referencedRelation: "applications"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "utilisations_client_id_fkey"
-            columns: ["client_id"]
+            foreignKeyName: "quotes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
         ]
       }
       vehicle_types: {
         Row: {
-          created_at: string | null
-          driver_id: string | null
+          created_at: string
+          driver_id: string
           icon: string | null
           id: string
           is_default: boolean | null
           name: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
-          driver_id?: string | null
+          created_at?: string
+          driver_id: string
           icon?: string | null
           id?: string
           is_default?: boolean | null
           name: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
-          driver_id?: string | null
+          created_at?: string
+          driver_id?: string
           icon?: string | null
           id?: string
           is_default?: boolean | null
           name?: string
-          updated_at?: string | null
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_types_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicles: {
         Row: {
           capacity: number
-          created_at: string | null
-          driver_id: string | null
+          created_at: string
+          driver_id: string
           id: string
           image_url: string | null
           is_active: boolean | null
           is_luxury: boolean | null
           model: string
           name: string
-          updated_at: string | null
+          updated_at: string
           vehicle_type_id: string | null
           vehicle_type_name: string | null
         }
         Insert: {
           capacity: number
-          created_at?: string | null
-          driver_id?: string | null
+          created_at?: string
+          driver_id: string
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           is_luxury?: boolean | null
           model: string
           name: string
-          updated_at?: string | null
+          updated_at?: string
           vehicle_type_id?: string | null
           vehicle_type_name?: string | null
         }
         Update: {
           capacity?: number
-          created_at?: string | null
-          driver_id?: string | null
+          created_at?: string
+          driver_id?: string
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           is_luxury?: boolean | null
           model?: string
           name?: string
-          updated_at?: string | null
+          updated_at?: string
           vehicle_type_id?: string | null
           vehicle_type_name?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_vehicle_type_id_fkey"
+            columns: ["vehicle_type_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -555,10 +520,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      periode_paiement_type: "mensuel" | "annuel"
-      statut_essai_type: "en_cours" | "expiré" | "converti" | "actif"
-      statut_paiement_type: "payé" | "échoué" | "en_attente"
-      type_paiement_type: "Stripe" | "PayPal" | "CB"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -673,11 +635,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      periode_paiement_type: ["mensuel", "annuel"],
-      statut_essai_type: ["en_cours", "expiré", "converti", "actif"],
-      statut_paiement_type: ["payé", "échoué", "en_attente"],
-      type_paiement_type: ["Stripe", "PayPal", "CB"],
-    },
+    Enums: {},
   },
 } as const

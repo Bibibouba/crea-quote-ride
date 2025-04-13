@@ -1,44 +1,44 @@
 
-import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import CompanySettingsManager from '@/components/settings/company/CompanySettingsManager';
+import React from 'react';
+import { Settings2, Loader2 } from 'lucide-react';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import VehicleTypesManager from '@/components/settings/vehicle-types/VehicleTypesManager';
-import { Car, PaintBucket } from 'lucide-react';
+import CompanySettingsManager from '@/components/settings/company/CompanySettingsManager';
 
-const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState<string>('company');
-
+const Settings = () => {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Paramètres</h1>
-        <p className="text-muted-foreground">
-          Gérez vos paramètres d'entreprise et vos préférences
-        </p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Paramètres</h1>
+          <p className="text-muted-foreground">
+            Personnalisez vos devis et gérez vos informations
+          </p>
+        </div>
+        
+        <Tabs defaultValue="vehicle-types">
+          <TabsList>
+            <TabsTrigger value="vehicle-types">Types de véhicules</TabsTrigger>
+            <TabsTrigger value="company">Configuration de l'entreprise</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="vehicle-types" className="space-y-4 mt-4">
+            <VehicleTypesManager />
+          </TabsContent>
+          
+          <TabsContent value="company" className="space-y-4 mt-4">
+            <CompanySettingsManager />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-8">
-          <TabsTrigger value="company" className="flex items-center space-x-2">
-            <PaintBucket className="h-4 w-4" />
-            <span>Entreprise</span>
-          </TabsTrigger>
-          <TabsTrigger value="vehicle-types" className="flex items-center space-x-2">
-            <Car className="h-4 w-4" />
-            <span>Types de véhicules</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="company">
-          <CompanySettingsManager />
-        </TabsContent>
-
-        <TabsContent value="vehicle-types">
-          <VehicleTypesManager />
-        </TabsContent>
-      </Tabs>
-    </div>
+    </DashboardLayout>
   );
 };
 
-export default SettingsPage;
+export default Settings;

@@ -1,16 +1,28 @@
 
 import React from 'react';
-import { UseFormReturn } from 'react-hook-form';
-import { ClientFormValues } from './ClientFormSchema';
+import { Button } from '@/components/ui/button';
 
 interface ClientFormFooterProps {
-  form: UseFormReturn<ClientFormValues>;
+  onCancel?: () => void;
+  isSubmitting: boolean;
 }
 
-const ClientFormFooter: React.FC<ClientFormFooterProps> = ({ form }) => {
-  // This component can be used for any additional fields or features
-  // that should appear at the bottom of all client form types
-  return null;
+const ClientFormFooter: React.FC<ClientFormFooterProps> = ({ 
+  onCancel, 
+  isSubmitting 
+}) => {
+  return (
+    <div className="flex justify-end space-x-2 pt-4">
+      {onCancel && (
+        <Button variant="outline" type="button" onClick={onCancel}>
+          Annuler
+        </Button>
+      )}
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Enregistrement...' : 'Enregistrer le client'}
+      </Button>
+    </div>
+  );
 };
 
 export default ClientFormFooter;

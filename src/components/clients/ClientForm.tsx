@@ -1,72 +1,132 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
+import { Client, ClientType } from '@/types/client';
 import { Form } from '@/components/ui/form';
-import { clientSchema, ClientFormValues } from './client-form/ClientFormSchema';
+import { useClients } from '@/hooks/useClients';
+import { useToast } from '@/hooks/use-toast';
+
+// Import the refactored components
 import ClientTypeSelector from './client-form/ClientTypeSelector';
 import PersonalClientForm from './client-form/PersonalClientForm';
 import CompanyClientForm from './client-form/CompanyClientForm';
 import ClientFormFooter from './client-form/ClientFormFooter';
-import { Client } from '@/types/client';
+import { clientSchema, ClientFormValues, personalClientSchema, companyClientSchema } from './client-form/ClientFormSchema';
 
-export interface ClientFormProps {
-  initialData: Partial<Client>;
-  onSuccess: () => void;
-  onCancel: () => void;
+interface ClientFormProps {
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  initialData?: Partial<Client>;
 }
 
-const ClientForm = ({ initialData, onSuccess, onCancel }: ClientFormProps) => {
+const ClientForm: React.FC<ClientFormProps> = ({ 
+  onSuccess, 
+  onCancel, 
+  initialData 
+}) => {
+  const { addClient } = useClients();
+  const { toast } = useToast();
+  const [clientType, setClientType] = useState<ClientType>(
+    initialData?.client_type || 'personal'
+  );
+
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
-      client_type: initialData.client_type || 'personal',
-      first_name: initialData.first_name || '',
-      last_name: initialData.last_name || '',
-      email: initialData.email || '',
-      phone: initialData.phone || '',
-      company_name: initialData.company_name || '',
-      address: initialData.address || '',
-      notes: initialData.notes || '',
-    }
+      client_type: clientType,
+      ...(initialData as any),
+    },
   });
 
-  const clientType = form.watch('client_type');
+  // Handle type change and reset form with new type
+  const handleClientTypeChange = (type: ClientType) => {
+    setClientType(type);
+    form.reset({
+      client_type: type,
+      // Preserve common fields if they exist
+      first_name: form.getValues().first_name,
+      last_name: form.getValues().last_name,
+      email: form.getValues().email,
+      phone: form.getValues().phone,
+      address: form.getValues().address,
+      comments: form.getValues().comments,
+    });
+  };
 
   const onSubmit = async (data: ClientFormValues) => {
     try {
-      // Handle submission
-      onSuccess();
+      // Make sure we have all required fields based on client type
+      if (clientType === 'personal') {
+        const personalData = data as typeof personalClientSchema._type;
+        await addClient.mutateAsync({
+          client_type: 'personal',
+          gender: personalData.gender,
+          first_name: personalData.first_name,
+          last_name: personalData.last_name,
+          email: personalData.email,
+          phone: personalData.phone,
+          address: personalData.address,
+          comments: personalData.comments,
+          birth_date: personalData.birth_date,
+        });
+      } else {
+        const companyData = data as typeof companyClientSchema._type;
+        await addClient.mutateAsync({
+          client_type: 'company',
+          company_name: companyData.company_name,
+          first_name: companyData.first_name,
+          last_name: companyData.last_name,
+          email: companyData.email,
+          phone: companyData.phone,
+          address: companyData.address,
+          siret: companyData.siret,
+          vat_number: companyData.vat_number,
+          website: companyData.website,
+          business_type: companyData.business_type,
+          client_code: companyData.client_code,
+          comments: companyData.comments,
+        });
+      }
+      
+      toast({
+        title: 'Client ajouté',
+        description: 'Le client a été ajouté avec succès',
+      });
+      
+      if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Error submitting client form:', error);
+      toast({
+        title: 'Erreur',
+        description: `Erreur lors de l'ajout du client: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
+        variant: 'destructive',
+      });
     }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Client type selector */}
         <ClientTypeSelector 
           clientType={clientType} 
-          onClientTypeChange={(type) => form.setValue('client_type', type)} 
+          onClientTypeChange={handleClientTypeChange} 
         />
-        
-        {clientType === 'personal' ? (
-          <PersonalClientForm form={form} />
-        ) : (
-          <CompanyClientForm form={form} />
-        )}
-        
-        <ClientFormFooter form={form} />
-        
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Annuler
-          </Button>
-          <Button type="submit">
-            {initialData.id ? 'Mettre à jour' : 'Ajouter le client'}
-          </Button>
+
+        <div className="grid gap-6">
+          {/* Render either personal or company form based on client type */}
+          {clientType === 'personal' ? (
+            <PersonalClientForm form={form} />
+          ) : (
+            <CompanyClientForm form={form} />
+          )}
         </div>
+
+        {/* Form footer with action buttons */}
+        <ClientFormFooter 
+          onCancel={onCancel} 
+          isSubmitting={addClient.isPending} 
+        />
       </form>
     </Form>
   );

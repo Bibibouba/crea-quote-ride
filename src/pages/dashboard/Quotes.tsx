@@ -1,19 +1,43 @@
 
 import React from 'react';
+import { useSearchParams } from 'react-router-dom';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import QuotesList from '@/components/quotes/QuotesList';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const QuotesPage = () => {
+const Quotes = () => {
+  const [searchParams] = useSearchParams();
+  const clientId = searchParams.get('client');
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Devis</h1>
-        <p className="text-muted-foreground">
-          Gérez les demandes de devis de vos clients
-        </p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Historique des devis</h1>
+            <p className="text-muted-foreground">
+              {clientId 
+                ? "Consultez les devis pour ce client spécifique." 
+                : "Consultez et gérez tous vos devis envoyés."}
+            </p>
+          </div>
+          
+          {clientId && (
+            <Button variant="outline" asChild>
+              <Link to="/dashboard/clients">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Retour aux clients
+              </Link>
+            </Button>
+          )}
+        </div>
+
+        <QuotesList clientId={clientId || undefined} />
       </div>
-      <QuotesList />
-    </div>
+    </DashboardLayout>
   );
 };
 
-export default QuotesPage;
+export default Quotes;

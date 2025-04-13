@@ -28,7 +28,7 @@ interface DistanceTiersListProps {
   onAddTier: () => void;
   onEditTier: (tier: DistanceTier) => void;
   onDeleteTier: (id: string) => void;
-  onVehicleSelect: (id: string | null) => void;
+  onVehicleSelect: (id: string) => void;
 }
 
 const DistanceTiersList = ({
@@ -63,13 +63,6 @@ const DistanceTiersList = ({
   return (
     <>
       <div className="flex flex-wrap gap-2 mb-4">
-        <Button
-          variant={selectedVehicleId === null ? "default" : "outline"}
-          onClick={() => onVehicleSelect(null)}
-        >
-          Tous les véhicules
-        </Button>
-        
         {vehicles.map((vehicle) => (
           <Button
             key={vehicle.id}
@@ -94,7 +87,7 @@ const DistanceTiersList = ({
         {filteredTiers.length === 0 ? (
           <div className="p-8 text-center">
             <p className="text-sm text-muted-foreground mb-4">
-              Aucun palier de tarification défini{selectedVehicleId ? " pour ce véhicule" : ""}.
+              Aucun palier de tarification défini pour ce véhicule.
             </p>
           </div>
         ) : (
