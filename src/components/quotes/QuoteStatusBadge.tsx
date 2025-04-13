@@ -2,9 +2,10 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Check, Ban, Clock, CalendarCheck, X } from 'lucide-react';
+import { QuoteStatus } from '@/types/quote';
 
 interface QuoteStatusBadgeProps {
-  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled' | 'declined';
+  status: QuoteStatus;
 }
 
 const QuoteStatusBadge = ({ status }: QuoteStatusBadgeProps) => {

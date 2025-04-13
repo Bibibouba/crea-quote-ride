@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Client, ClientType } from '@/types/client';
+import { Client, ClientType, Gender } from '@/types/client';
 import { Form } from '@/components/ui/form';
 import { useClients } from '@/hooks/useClients';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +12,7 @@ import ClientTypeSelector from './client-form/ClientTypeSelector';
 import PersonalClientForm from './client-form/PersonalClientForm';
 import CompanyClientForm from './client-form/CompanyClientForm';
 import ClientFormFooter from './client-form/ClientFormFooter';
-import { clientSchema, ClientFormValues, personalClientSchema, companyClientSchema } from './client-form/ClientFormSchema';
+import { clientSchema, ClientFormValues } from './client-form/ClientFormSchema';
 
 interface ClientFormProps {
   onSuccess?: () => void;
@@ -29,36 +30,6 @@ const ClientForm: React.FC<ClientFormProps> = ({
   const [clientType, setClientType] = useState<ClientType>(
     initialData?.client_type || 'personal'
   );
-
-  const defaultValues: ClientFormValues = {
-    first_name: '',
-    last_name: '',
-    email: '',
-    client_type: 'personal' as ClientType,
-    gender: 'prefer_not_to_say' as Gender,
-    company_name: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    zip_code: '',
-    country: '',
-    notes: '',
-    client_code: '',
-  };
-
-  const genderOptions = [
-    { value: 'male' as Gender, label: 'Monsieur' },
-    { value: 'female' as Gender, label: 'Madame' },
-    { value: 'other' as Gender, label: 'Autre' },
-    { value: 'prefer_not_to_say' as Gender, label: 'Ne pas préciser' },
-  ];
-
-  const formOptionsByType = {
-    'personal': PersonalClientForm,
-    'business': CompanyClientForm,
-    'corporate': CompanyClientForm
-  };
 
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
@@ -79,44 +50,16 @@ const ClientForm: React.FC<ClientFormProps> = ({
       email: form.getValues().email,
       phone: form.getValues().phone,
       address: form.getValues().address,
-      comments: form.getValues().comments,
+      notes: form.getValues().notes,
     });
   };
 
   const onSubmit = async (data: ClientFormValues) => {
     try {
-      // Make sure we have all required fields based on client type
-      if (clientType === 'personal') {
-        const personalData = data as typeof personalClientSchema._type;
-        await addClient.mutateAsync({
-          client_type: 'personal',
-          gender: personalData.gender,
-          first_name: personalData.first_name,
-          last_name: personalData.last_name,
-          email: personalData.email,
-          phone: personalData.phone,
-          address: personalData.address,
-          comments: personalData.comments,
-          birth_date: personalData.birth_date,
-        });
-      } else {
-        const companyData = data as typeof companyClientSchema._type;
-        await addClient.mutateAsync({
-          client_type: 'company',
-          company_name: companyData.company_name,
-          first_name: companyData.first_name,
-          last_name: companyData.last_name,
-          email: companyData.email,
-          phone: companyData.phone,
-          address: companyData.address,
-          siret: companyData.siret,
-          vat_number: companyData.vat_number,
-          website: companyData.website,
-          business_type: companyData.business_type,
-          client_code: companyData.client_code,
-          comments: companyData.comments,
-        });
-      }
+      await addClient.mutateAsync({
+        ...data,
+        client_type: clientType,
+      });
       
       toast({
         title: 'Client ajouté',
@@ -134,30 +77,32 @@ const ClientForm: React.FC<ClientFormProps> = ({
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Client type selector */}
-        <ClientTypeSelector 
-          clientType={clientType} 
-          onClientTypeChange={handleClientTypeChange} 
-        />
+    <FormProvider {...form}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Client type selector */}
+          <ClientTypeSelector 
+            clientType={clientType} 
+            onClientTypeChange={handleClientTypeChange} 
+          />
 
-        <div className="grid gap-6">
-          {/* Render either personal or company form based on client type */}
-          {clientType === 'personal' ? (
-            <PersonalClientForm form={form} />
-          ) : (
-            <CompanyClientForm form={form} />
-          )}
-        </div>
+          <div className="grid gap-6">
+            {/* Render either personal or company form based on client type */}
+            {clientType === 'personal' ? (
+              <PersonalClientForm />
+            ) : (
+              <CompanyClientForm />
+            )}
+          </div>
 
-        {/* Form footer with action buttons */}
-        <ClientFormFooter 
-          onCancel={onCancel} 
-          isSubmitting={addClient.isPending} 
-        />
-      </form>
-    </Form>
+          {/* Form footer with action buttons */}
+          <ClientFormFooter 
+            onCancel={onCancel} 
+            isSubmitting={addClient.isPending} 
+          />
+        </form>
+      </Form>
+    </FormProvider>
   );
 };
 

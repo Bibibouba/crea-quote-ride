@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { ClientsList } from '@/components/clients/ClientsList';
-import { useClientsFilterStore } from '@/hooks/useClientsFilterStore';
+import ClientsList from '@/components/clients/ClientsList';
 
 const ClientsPage = () => {
   return (

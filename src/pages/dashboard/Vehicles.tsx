@@ -1,123 +1,78 @@
 
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle } from 'lucide-react';
-import { Vehicle } from '@/types/vehicle';
-import VehicleCard from '@/components/vehicles/VehicleCard';
+import { Plus } from 'lucide-react';
 import VehicleDialog from '@/components/vehicles/VehicleDialog';
-import EmptyVehicleState from '@/components/vehicles/EmptyVehicleState';
 import { useVehicles } from '@/hooks/useVehicles';
-import { VehicleFormValues } from '@/components/vehicles/VehicleForm';
+import VehicleCard from '@/components/vehicles/VehicleCard';
+import EmptyVehicleState from '@/components/vehicles/EmptyVehicleState';
+import { Card } from '@/components/ui/card';
 
-const Vehicles = () => {
-  const { 
-    vehicles, 
-    vehicleTypes, 
-    loading, 
-    typesLoading, 
-    submitting, 
-    handleSaveVehicle, 
-    handleDeleteVehicle,
-    getVehicleTypeName
-  } = useVehicles();
-  
-  const [open, setOpen] = useState(false);
-  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+// Wrapper component to fix type issues
+const TabWrapper: React.FC<{children: React.ReactNode}> = ({ children }) => (
+  <div>{children}</div>
+);
 
-  const getDefaultFormValues = (): VehicleFormValues => {
-    if (editingVehicle) {
-      return {
-        name: editingVehicle.name,
-        model: editingVehicle.model,
-        capacity: editingVehicle.capacity,
-        image_url: editingVehicle.image_url || "",
-        is_luxury: editingVehicle.is_luxury,
-        is_active: editingVehicle.is_active,
-        vehicle_type_id: editingVehicle.vehicle_type_id || "",
-        vehicle_type_name: editingVehicle.vehicle_type_name || "",
-      };
-    }
-    
-    return {
-      name: "",
-      model: "",
-      capacity: 4,
-      image_url: "",
-      is_luxury: false,
-      is_active: true,
-      vehicle_type_id: vehicleTypes.length > 0 ? vehicleTypes[0].id : "",
-      vehicle_type_name: "",
-    };
-  };
+const VehiclesPage = () => {
+  const { vehicles, isLoading, updateVehicle } = useVehicles();
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
-  const handleAddNew = () => {
-    setEditingVehicle(null);
-    setOpen(true);
-  };
-
-  const handleEdit = (vehicle: Vehicle) => {
-    setEditingVehicle(vehicle);
-    setOpen(true);
-  };
-
-  const onSubmit = async (values: VehicleFormValues) => {
-    const success = await handleSaveVehicle(values, editingVehicle);
-    if (success) {
-      setOpen(false);
-      setEditingVehicle(null);
+  const handleActivationChange = async (id: string, isActive: boolean) => {
+    try {
+      await updateVehicle.mutateAsync({
+        id,
+        is_active: isActive,
+      });
+    } catch (error) {
+      console.error('Error updating vehicle status:', error);
     }
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Vos véhicules</h1>
-            <p className="text-muted-foreground">
-              Gérez les véhicules que vous proposez à vos clients
-            </p>
-          </div>
-          <Button onClick={handleAddNew}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Ajouter un véhicule
-          </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Véhicules</h1>
+          <p className="text-muted-foreground">
+            Gérez votre flotte de véhicules disponibles pour les transferts
+          </p>
         </div>
+        <Button onClick={() => setShowAddDialog(true)} className="shrink-0">
+          <Plus className="h-4 w-4 mr-2" />
+          <span>Ajouter un véhicule</span>
+        </Button>
+      </div>
 
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : vehicles.length === 0 ? (
-          <EmptyVehicleState onAddNew={handleAddNew} />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Vehicles List */}
+      {isLoading ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          Chargement de vos véhicules...
+        </Card>
+      ) : vehicles.length === 0 ? (
+        <EmptyVehicleState onAddClick={() => setShowAddDialog(true)} />
+      ) : (
+        <TabWrapper>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {vehicles.map((vehicle) => (
-              <VehicleCard 
-                key={vehicle.id} 
-                vehicle={vehicle} 
-                onEdit={handleEdit} 
-                onDelete={handleDeleteVehicle} 
+              <VehicleCard
+                key={vehicle.id}
+                vehicle={vehicle}
+                onActivationChange={handleActivationChange}
               />
             ))}
           </div>
-        )}
+        </TabWrapper>
+      )}
 
-        <VehicleDialog
-          open={open}
-          onOpenChange={setOpen}
-          title={editingVehicle ? "Modifier le véhicule" : "Ajouter un véhicule"}
-          description="Renseignez les informations de votre véhicule ci-dessous"
-          defaultValues={getDefaultFormValues()}
-          vehicleTypes={vehicleTypes}
-          typesLoading={typesLoading}
-          submitting={submitting}
-          onSubmit={onSubmit}
-        />
-      </div>
-    </DashboardLayout>
+      {/* Add Vehicle Dialog */}
+      <VehicleDialog
+        isOpen={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        mode="add"
+      />
+    </div>
   );
 };
 
-export default Vehicles;
+export default VehiclesPage;

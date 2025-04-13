@@ -5,13 +5,12 @@ import { ClientType } from '@/types/client';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-type ClientTypeOption = {
-  value: ClientType;
-  label: string;
-  description: string;
-};
+interface ClientTypeSelectorProps {
+  clientType: ClientType;
+  onClientTypeChange: (type: ClientType) => void;
+}
 
-const clientTypes: ClientTypeOption[] = [
+const clientTypes: Array<{value: ClientType; label: string; description: string}> = [
   {
     value: 'personal',
     label: 'Particulier',
@@ -29,10 +28,7 @@ const clientTypes: ClientTypeOption[] = [
   }
 ];
 
-const ClientTypeSelector = () => {
-  const { watch, setValue } = useFormContext();
-  const currentType = watch('client_type') as ClientType;
-
+const ClientTypeSelector = ({ clientType, onClientTypeChange }: ClientTypeSelectorProps) => {
   return (
     <div className="space-y-3">
       <Label>Type de client</Label>
@@ -42,11 +38,11 @@ const ClientTypeSelector = () => {
             key={type.value}
             className={cn(
               "border rounded-lg p-4 cursor-pointer transition-colors",
-              currentType === type.value
+              clientType === type.value
                 ? "border-primary bg-primary/5"
                 : "border-border hover:border-primary/50"
             )}
-            onClick={() => setValue('client_type', type.value)}
+            onClick={() => onClientTypeChange(type.value)}
           >
             <h3 className="font-medium">{type.label}</h3>
             <p className="text-sm text-muted-foreground mt-1">{type.description}</p>

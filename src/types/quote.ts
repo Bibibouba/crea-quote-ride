@@ -1,4 +1,6 @@
 
+export type QuoteStatus = 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled' | 'declined';
+
 export interface Quote {
   id: string;
   client_id: string;
@@ -12,7 +14,7 @@ export interface Quote {
   duration_minutes: number;
   ride_date: string;
   amount: number;
-  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled' | 'declined';
+  status: QuoteStatus;
   has_return_trip: boolean;
   has_waiting_time: boolean;
   waiting_time_minutes: number | null;

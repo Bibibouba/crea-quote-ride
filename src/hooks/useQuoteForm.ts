@@ -7,6 +7,12 @@ import { toast } from 'sonner';
 import { Quote } from '@/types/quote';
 import { ClientType } from '@/types/client';
 
+export interface WaitingTimeOption {
+  value: number;
+  label: string;
+  price: number;
+}
+
 const quoteFormSchema = z.object({
   client_id: z.string().uuid().optional(),
   first_name: z.string().min(2, {
