@@ -166,7 +166,7 @@ export const useVehicles = () => {
   return {
     vehicles,
     vehicleTypes,
-    loading,
+    loading, // This is what the components expect
     typesLoading,
     submitting,
     handleSaveVehicle,

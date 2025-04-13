@@ -10,6 +10,8 @@ import DistanceTiersList from '@/components/pricing/DistanceTiersList';
 import NightRatesForm from '@/components/pricing/NightRatesForm';
 import WaitingRatesForm from '@/components/pricing/WaitingRatesForm';
 import { CalendarClock, Hourglass, Landmark, Moon, Ruler } from 'lucide-react';
+import { useState as useLocalState } from 'react';
+import DistanceTierDialog from '@/components/pricing/DistanceTierDialog';
 
 // Wrapper component for TabsContent
 const TabWrapper: React.FC<{children: React.ReactNode}> = ({ children }) => (
@@ -18,8 +20,21 @@ const TabWrapper: React.FC<{children: React.ReactNode}> = ({ children }) => (
 
 const PricingPage = () => {
   const [activeTab, setActiveTab] = useState<string>('base');
-  const { vehicles, isLoading: vehiclesLoading } = useVehicles();
-  const { pricingSettings, distanceTiers, isLoading: pricingLoading } = usePricing();
+  const { vehicles, loading: vehiclesLoading } = useVehicles();
+  const { 
+    pricingSettings, 
+    distanceTiers, 
+    loading: pricingLoading, 
+    saveSettings,
+    saveTier,
+    deleteTier,
+    savingSettings 
+  } = usePricing();
+
+  // Distance tiers state
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTier, setEditingTier] = useState<any>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
   useEffect(() => {
     // Auto-switch to distance tab when base pricing is ready
@@ -30,6 +45,28 @@ const PricingPage = () => {
       }
     }
   }, [pricingSettings, distanceTiers, activeTab]);
+
+  const handleAddTier = () => {
+    setEditingTier(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditTier = (tier: any) => {
+    setEditingTier(tier);
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveTier = async (values: any) => {
+    await saveTier(
+      {
+        ...values,
+        id: editingTier?.id,
+        driver_id: editingTier?.driver_id || pricingSettings?.driver_id
+      },
+      !editingTier
+    );
+    setIsDialogOpen(false);
+  };
 
   if (vehiclesLoading || pricingLoading) {
     return (
@@ -98,7 +135,15 @@ const PricingPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <DistanceTiersList vehicles={vehicles} />
+                <DistanceTiersList 
+                  vehicles={vehicles} 
+                  distanceTiers={distanceTiers}
+                  selectedVehicleId={selectedVehicleId}
+                  onAddTier={handleAddTier}
+                  onEditTier={handleEditTier}
+                  onDeleteTier={deleteTier}
+                  onVehicleSelect={setSelectedVehicleId}
+                />
               </CardContent>
             </Card>
           </TabWrapper>
@@ -114,7 +159,11 @@ const PricingPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <NightRatesForm />
+                <NightRatesForm 
+                  settings={pricingSettings}
+                  onSave={saveSettings}
+                  saving={savingSettings}
+                />
               </CardContent>
             </Card>
           </TabWrapper>
@@ -130,7 +179,11 @@ const PricingPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <WaitingRatesForm />
+                <WaitingRatesForm 
+                  settings={pricingSettings}
+                  onSave={saveSettings}
+                  saving={savingSettings}
+                />
               </CardContent>
             </Card>
           </TabWrapper>
@@ -146,12 +199,25 @@ const PricingPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <AdditionalOptionsForm />
+                <AdditionalOptionsForm 
+                  settings={pricingSettings}
+                  onSave={saveSettings}
+                  saving={savingSettings}
+                />
               </CardContent>
             </Card>
           </TabWrapper>
         </TabsContent>
       </Tabs>
+      
+      <DistanceTierDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSave={handleSaveTier}
+        editingTier={editingTier}
+        vehicles={vehicles}
+        saving={savingSettings}
+      />
     </div>
   );
 };

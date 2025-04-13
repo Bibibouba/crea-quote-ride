@@ -1,75 +1,83 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import VehicleDialog from '@/components/vehicles/VehicleDialog';
+import { Button } from "@/components/ui/button";
 import { useVehicles } from '@/hooks/useVehicles';
+import VehicleDialog from '@/components/vehicles/VehicleDialog';
 import VehicleCard from '@/components/vehicles/VehicleCard';
 import EmptyVehicleState from '@/components/vehicles/EmptyVehicleState';
-import { Card } from '@/components/ui/card';
-
-// Wrapper component to fix type issues
-const TabWrapper: React.FC<{children: React.ReactNode}> = ({ children }) => (
-  <div>{children}</div>
-);
+import { PlusCircle } from 'lucide-react';
 
 const VehiclesPage = () => {
-  const { vehicles, isLoading, updateVehicle } = useVehicles();
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState(null);
+  const { vehicles, loading, handleDeleteVehicle, handleSaveVehicle } = useVehicles();
 
-  const handleActivationChange = async (id: string, isActive: boolean) => {
-    try {
-      await updateVehicle.mutateAsync({
-        id,
-        is_active: isActive,
-      });
-    } catch (error) {
-      console.error('Error updating vehicle status:', error);
-    }
+  const openAddDialog = () => {
+    setEditingVehicle(null);
+    setDialogOpen(true);
   };
+
+  const openEditDialog = (vehicle) => {
+    setEditingVehicle(vehicle);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
+
+  const handleActivationChange = async (id, isActive) => {
+    // Find the vehicle
+    const vehicle = vehicles.find(v => v.id === id);
+    if (!vehicle) return;
+    
+    // Update with new active status
+    await handleSaveVehicle({
+      ...vehicle,
+      is_active: isActive
+    }, vehicle);
+  };
+
+  if (loading) {
+    return <div>Chargement des véhicules...</div>;
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Véhicules</h1>
           <p className="text-muted-foreground">
-            Gérez votre flotte de véhicules disponibles pour les transferts
+            Gérez vos véhicules disponibles pour les courses
           </p>
         </div>
-        <Button onClick={() => setShowAddDialog(true)} className="shrink-0">
-          <Plus className="h-4 w-4 mr-2" />
-          <span>Ajouter un véhicule</span>
+        <Button onClick={openAddDialog}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Ajouter un véhicule
         </Button>
       </div>
 
-      {/* Vehicles List */}
-      {isLoading ? (
-        <Card className="p-8 text-center text-muted-foreground">
-          Chargement de vos véhicules...
-        </Card>
-      ) : vehicles.length === 0 ? (
-        <EmptyVehicleState onAddClick={() => setShowAddDialog(true)} />
+      {vehicles.length === 0 ? (
+        <EmptyVehicleState onAddClick={openAddDialog} />
       ) : (
-        <TabWrapper>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vehicles.map((vehicle) => (
-              <VehicleCard
-                key={vehicle.id}
-                vehicle={vehicle}
-                onActivationChange={handleActivationChange}
-              />
-            ))}
-          </div>
-        </TabWrapper>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {vehicles.map((vehicle) => (
+            <VehicleCard
+              key={vehicle.id}
+              vehicle={vehicle}
+              onEdit={() => openEditDialog(vehicle)}
+              onDelete={() => handleDeleteVehicle(vehicle.id)}
+              onActivationChange={(isActive) => handleActivationChange(vehicle.id, isActive)}
+            />
+          ))}
+        </div>
       )}
 
-      {/* Add Vehicle Dialog */}
       <VehicleDialog
-        isOpen={showAddDialog}
-        onClose={() => setShowAddDialog(false)}
-        mode="add"
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        vehicle={editingVehicle}
+        onSave={handleSaveVehicle}
       />
     </div>
   );
