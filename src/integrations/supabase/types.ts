@@ -81,6 +81,7 @@ export type Database = {
         Row: {
           date_inscription: string
           email: string
+          entreprise: string | null
           id: string
           mot_de_passe_hash: string | null
           nom: string
@@ -88,6 +89,7 @@ export type Database = {
         Insert: {
           date_inscription?: string
           email: string
+          entreprise?: string | null
           id?: string
           mot_de_passe_hash?: string | null
           nom: string
@@ -95,6 +97,7 @@ export type Database = {
         Update: {
           date_inscription?: string
           email?: string
+          entreprise?: string | null
           id?: string
           mot_de_passe_hash?: string | null
           nom?: string
@@ -221,7 +224,7 @@ export type Database = {
     }
     Enums: {
       periode_paiement_type: "mensuel" | "annuel"
-      statut_essai_type: "en_cours" | "expiré" | "converti"
+      statut_essai_type: "en_cours" | "expiré" | "converti" | "actif"
       statut_paiement_type: "payé" | "échoué" | "en_attente"
       type_paiement_type: "Stripe" | "PayPal" | "CB"
     }
@@ -340,7 +343,7 @@ export const Constants = {
   public: {
     Enums: {
       periode_paiement_type: ["mensuel", "annuel"],
-      statut_essai_type: ["en_cours", "expiré", "converti"],
+      statut_essai_type: ["en_cours", "expiré", "converti", "actif"],
       statut_paiement_type: ["payé", "échoué", "en_attente"],
       type_paiement_type: ["Stripe", "PayPal", "CB"],
     },
