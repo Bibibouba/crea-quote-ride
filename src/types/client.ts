@@ -1,37 +1,27 @@
 
-export type ClientType = 'personal' | 'company';
-export type Gender = 'Madame' | 'Mademoiselle' | 'Monsieur';
+export type ClientType = 'personal' | 'business' | 'corporate';
+export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say';
 
-export type Client = {
+export interface Client {
   id: string;
   driver_id: string;
-  client_type: ClientType;
-  // Personal information
-  gender?: Gender;
   first_name: string;
   last_name: string;
+  full_name?: string;
   email: string;
-  // Company information
   company_name?: string;
-  // Optional fields
   phone?: string;
   address?: string;
-  comments?: string;
-  birth_date?: string;
-  // Company additional fields
-  siret?: string;
-  vat_number?: string;
-  website?: string;
-  business_type?: string;
-  client_code?: string;
-  created_at: string;
-  updated_at: string;
-};
-
-// Type for client creation that makes required fields explicit
-export type ClientCreate = Omit<Client, "id" | "created_at" | "updated_at"> & {
-  first_name: string;
-  last_name: string;
-  email: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  country?: string;
+  notes?: string;
   client_type: ClientType;
-};
+  gender?: Gender;
+  client_code?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type ClientCreate = Omit<Client, 'id' | 'created_at' | 'updated_at'>;

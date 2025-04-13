@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import VehicleForm, { VehicleFormValues } from './VehicleForm';
-import { VehicleType } from '@/integrations/supabase/client';
+import { Vehicle, VehicleType } from '@/types/vehicle';
 
 interface VehicleDialogProps {
   open: boolean;
@@ -19,11 +19,11 @@ interface VehicleDialogProps {
   vehicleTypes: VehicleType[];
   typesLoading: boolean;
   submitting: boolean;
-  onSubmit: (values: VehicleFormValues) => void;
+  onSubmit: (values: VehicleFormValues) => Promise<void>;
 }
 
 const VehicleDialog = ({ 
-  open, 
+  open,
   onOpenChange,
   title,
   description,
@@ -35,13 +35,14 @@ const VehicleDialog = ({
 }: VehicleDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <VehicleForm
-          defaultValues={defaultValues}
+        
+        <VehicleForm 
+          defaultValues={defaultValues} 
           vehicleTypes={vehicleTypes}
           typesLoading={typesLoading}
           submitting={submitting}

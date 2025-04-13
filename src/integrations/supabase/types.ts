@@ -79,28 +79,109 @@ export type Database = {
       }
       clients: {
         Row: {
+          client_type: string | null
           date_inscription: string
+          driver_id: string | null
           email: string
           entreprise: string | null
+          first_name: string | null
+          full_name: string
           id: string
+          last_name: string | null
           mot_de_passe_hash: string | null
-          nom: string
         }
         Insert: {
+          client_type?: string | null
           date_inscription?: string
+          driver_id?: string | null
           email: string
           entreprise?: string | null
+          first_name?: string | null
+          full_name: string
           id?: string
+          last_name?: string | null
           mot_de_passe_hash?: string | null
-          nom: string
         }
         Update: {
+          client_type?: string | null
           date_inscription?: string
+          driver_id?: string | null
           email?: string
           entreprise?: string | null
+          first_name?: string | null
+          full_name?: string
           id?: string
+          last_name?: string | null
           mot_de_passe_hash?: string | null
-          nom?: string
+        }
+        Relationships: []
+      }
+      company_settings: {
+        Row: {
+          banner_url: string | null
+          created_at: string | null
+          driver_id: string | null
+          font_family: string | null
+          id: string
+          logo_url: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string | null
+          driver_id?: string | null
+          font_family?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string | null
+          driver_id?: string | null
+          font_family?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      distance_pricing_tiers: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          max_km: number | null
+          min_km: number
+          price_per_km: number
+          updated_at: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          max_km?: number | null
+          min_km: number
+          price_per_km: number
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          max_km?: number | null
+          min_km?: number
+          price_per_km?: number
+          updated_at?: string | null
+          vehicle_id?: string | null
         }
         Relationships: []
       }
@@ -170,6 +251,182 @@ export type Database = {
           },
         ]
       }
+      pricing: {
+        Row: {
+          base_fare: number | null
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          min_fare: number | null
+          night_rate_enabled: boolean | null
+          night_rate_end: string | null
+          night_rate_percentage: number | null
+          night_rate_start: string | null
+          price_per_km: number | null
+          updated_at: string | null
+          wait_night_enabled: boolean | null
+          wait_night_end: string | null
+          wait_night_percentage: number | null
+          wait_night_start: string | null
+          wait_price_per_15min: number | null
+          waiting_fee_per_minute: number | null
+        }
+        Insert: {
+          base_fare?: number | null
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          min_fare?: number | null
+          night_rate_enabled?: boolean | null
+          night_rate_end?: string | null
+          night_rate_percentage?: number | null
+          night_rate_start?: string | null
+          price_per_km?: number | null
+          updated_at?: string | null
+          wait_night_enabled?: boolean | null
+          wait_night_end?: string | null
+          wait_night_percentage?: number | null
+          wait_night_start?: string | null
+          wait_price_per_15min?: number | null
+          waiting_fee_per_minute?: number | null
+        }
+        Update: {
+          base_fare?: number | null
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          min_fare?: number | null
+          night_rate_enabled?: boolean | null
+          night_rate_end?: string | null
+          night_rate_percentage?: number | null
+          night_rate_start?: string | null
+          price_per_km?: number | null
+          updated_at?: string | null
+          wait_night_enabled?: boolean | null
+          wait_night_end?: string | null
+          wait_night_percentage?: number | null
+          wait_night_start?: string | null
+          wait_price_per_15min?: number | null
+          waiting_fee_per_minute?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          company_name: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          email?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+        }
+        Relationships: []
+      }
+      quotes: {
+        Row: {
+          amount: number
+          arrival_coordinates: number[]
+          arrival_location: string
+          client_id: string | null
+          created_at: string | null
+          custom_return_address: string | null
+          departure_coordinates: number[]
+          departure_location: string
+          distance_km: number
+          driver_id: string | null
+          duration_minutes: number
+          has_return_trip: boolean | null
+          has_waiting_time: boolean | null
+          id: string
+          quote_pdf: string | null
+          return_coordinates: number[] | null
+          return_distance_km: number | null
+          return_duration_minutes: number | null
+          return_to_same_address: boolean | null
+          ride_date: string
+          status: string | null
+          updated_at: string | null
+          vehicle_id: string | null
+          waiting_time_minutes: number | null
+          waiting_time_price: number | null
+        }
+        Insert: {
+          amount: number
+          arrival_coordinates: number[]
+          arrival_location: string
+          client_id?: string | null
+          created_at?: string | null
+          custom_return_address?: string | null
+          departure_coordinates: number[]
+          departure_location: string
+          distance_km: number
+          driver_id?: string | null
+          duration_minutes: number
+          has_return_trip?: boolean | null
+          has_waiting_time?: boolean | null
+          id?: string
+          quote_pdf?: string | null
+          return_coordinates?: number[] | null
+          return_distance_km?: number | null
+          return_duration_minutes?: number | null
+          return_to_same_address?: boolean | null
+          ride_date: string
+          status?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+          waiting_time_minutes?: number | null
+          waiting_time_price?: number | null
+        }
+        Update: {
+          amount?: number
+          arrival_coordinates?: number[]
+          arrival_location?: string
+          client_id?: string | null
+          created_at?: string | null
+          custom_return_address?: string | null
+          departure_coordinates?: number[]
+          departure_location?: string
+          distance_km?: number
+          driver_id?: string | null
+          duration_minutes?: number
+          has_return_trip?: boolean | null
+          has_waiting_time?: boolean | null
+          id?: string
+          quote_pdf?: string | null
+          return_coordinates?: number[] | null
+          return_distance_km?: number | null
+          return_duration_minutes?: number | null
+          return_to_same_address?: boolean | null
+          ride_date?: string
+          status?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+          waiting_time_minutes?: number | null
+          waiting_time_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       utilisations: {
         Row: {
           application_id: string
@@ -214,6 +471,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vehicle_types: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          icon: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          capacity: number
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_luxury: boolean | null
+          model: string
+          name: string
+          updated_at: string | null
+          vehicle_type_id: string | null
+          vehicle_type_name: string | null
+        }
+        Insert: {
+          capacity: number
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_luxury?: boolean | null
+          model: string
+          name: string
+          updated_at?: string | null
+          vehicle_type_id?: string | null
+          vehicle_type_name?: string | null
+        }
+        Update: {
+          capacity?: number
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_luxury?: boolean | null
+          model?: string
+          name?: string
+          updated_at?: string | null
+          vehicle_type_id?: string | null
+          vehicle_type_name?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

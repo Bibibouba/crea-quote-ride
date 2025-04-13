@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -182,13 +181,21 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
     if (user && !clientId) {
       const fetchUserInfo = async () => {
         try {
+          // Try to fetch user profile from profiles table
           const { data, error } = await supabase
             .from('profiles')
             .select('first_name, last_name, email')
             .eq('id', user.id)
             .single();
           
-          if (error) throw error;
+          if (error) {
+            console.log('Profile not found, using auth metadata');
+            // Fallback to auth metadata
+            setFirstName(user.user_metadata?.first_name || '');
+            setLastName(user.user_metadata?.last_name || '');
+            setEmail(user.email || '');
+            return;
+          }
           
           if (data) {
             setFirstName(data.first_name || '');
@@ -202,8 +209,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
       
       fetchUserInfo();
     }
-  }, [user]);
-  
+  }, [user, clientId]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -265,28 +272,28 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
       
       let finalClientId = selectedClient;
       
-      if (!selectedClient && firstName && lastName && email) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id;
-        
-        if (!userId) {
-          throw new Error("Utilisateur non authentifié");
+      if (!selectedClient && firstName && lastName && email && user) {
+        try {
+          // Create a new client
+          const { data, error } = await supabase
+            .from('clients')
+            .insert({
+              driver_id: user.id,
+              first_name: firstName,
+              last_name: lastName,
+              full_name: `${firstName} ${lastName}`,
+              email: email,
+              client_type: 'personal'
+            })
+            .select()
+            .single();
+          
+          if (error) throw error;
+          finalClientId = data.id;
+        } catch (error) {
+          console.error('Error creating client:', error);
+          throw new Error("Erreur lors de la création du client");
         }
-        
-        const { data, error } = await supabase
-          .from('clients')
-          .insert({
-            driver_id: userId,
-            first_name: firstName,
-            last_name: lastName,
-            email: email,
-            client_type: 'personal'
-          })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        finalClientId = data.id;
       }
       
       if (!finalClientId) {
@@ -309,6 +316,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
       
       const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
         client_id: finalClientId,
+        driver_id: user?.id || '',
         vehicle_id: null,
         departure_location: departureAddress,
         arrival_location: destinationAddress,
@@ -319,16 +327,15 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         ride_date: dateTime.toISOString(),
         amount: totalPrice,
         status: 'pending',
-        driver_id: '',
         has_return_trip: hasReturnTrip,
         has_waiting_time: hasWaitingTime,
-        waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
-        waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
+        waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : null,
+        waiting_time_price: hasWaitingTime ? waitingTimePrice : null,
         return_to_same_address: returnToSameAddress,
         custom_return_address: customReturnAddress,
         return_coordinates: customReturnCoordinates,
-        return_distance_km: returnDistance,
-        return_duration_minutes: returnDuration
+        return_distance_km: returnDistance || null,
+        return_duration_minutes: returnDuration || null
       };
       
       await addQuote.mutateAsync(quoteData);

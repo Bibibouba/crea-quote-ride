@@ -23,7 +23,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { VehicleType } from '@/integrations/supabase/client';
+import { VehicleType } from '@/types/vehicle';
 
 export const vehicleSchema = z.object({
   name: z.string().min(1, "Le nom du véhicule est requis"),

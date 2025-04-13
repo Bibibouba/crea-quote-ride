@@ -18,7 +18,7 @@ export const useVehicleTypes = () => {
         const { data, error } = await supabase
           .from('vehicle_types')
           .select('*')
-          .eq('driver_id', user.id) // Assurez-vous de ne récupérer que les types de véhicules du chauffeur connecté
+          .eq('driver_id', user.id)
           .order('name', { ascending: true });
           
         if (error) throw error;
