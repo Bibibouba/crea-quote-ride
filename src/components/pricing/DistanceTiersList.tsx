@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Table,
@@ -69,7 +70,7 @@ const DistanceTiersList: React.FC<DistanceTiersListProps> = ({
         <TableBody>
           {filteredTiers.map((tier) => (
             <TableRow key={tier.id}>
-              <TableCell className="font-medium">{tier.max_distance_km}</TableCell>
+              <TableCell className="font-medium">{tier.max_km}</TableCell>
               <TableCell>{tier.price_per_km}</TableCell>
               <TableCell>
                 <Button variant="secondary" size="sm" onClick={() => onEditTier(tier)}>

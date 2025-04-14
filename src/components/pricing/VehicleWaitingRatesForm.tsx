@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -92,7 +91,6 @@ const VehicleWaitingRatesForm = ({ vehicleId, defaultSettings }: VehicleWaitingR
     }
   });
 
-  // Mettre à jour les valeurs du formulaire lorsque les paramètres du véhicule sont chargés
   useEffect(() => {
     if (vehicleSettings) {
       form.reset({
@@ -108,15 +106,17 @@ const VehicleWaitingRatesForm = ({ vehicleId, defaultSettings }: VehicleWaitingR
   const onSubmit = async (values: z.infer<typeof waitingRatesSchema>) => {
     setSaving(true);
     try {
+      const updateData = {
+        wait_price_per_15min: values.wait_price_per_15min,
+        wait_night_enabled: values.wait_night_enabled,
+        wait_night_start: values.wait_night_start,
+        wait_night_end: values.wait_night_end,
+        wait_night_percentage: values.wait_night_percentage,
+      };
+      
       const { error } = await supabase
         .from('vehicles')
-        .update({
-          wait_price_per_15min: values.wait_price_per_15min,
-          wait_night_enabled: values.wait_night_enabled,
-          wait_night_start: values.wait_night_start,
-          wait_night_end: values.wait_night_end,
-          wait_night_percentage: values.wait_night_percentage,
-        })
+        .update(updateData)
         .eq('id', vehicleId);
         
       if (error) throw error;
@@ -128,11 +128,7 @@ const VehicleWaitingRatesForm = ({ vehicleId, defaultSettings }: VehicleWaitingR
       
       setVehicleSettings({
         ...vehicleSettings,
-        wait_price_per_15min: values.wait_price_per_15min,
-        wait_night_enabled: values.wait_night_enabled,
-        wait_night_start: values.wait_night_start,
-        wait_night_end: values.wait_night_end,
-        wait_night_percentage: values.wait_night_percentage,
+        ...updateData
       });
     } catch (error) {
       console.error('Error saving waiting rate settings:', error);

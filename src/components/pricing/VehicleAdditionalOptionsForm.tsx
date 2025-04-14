@@ -96,13 +96,16 @@ const VehicleAdditionalOptionsForm = ({ vehicleId, defaultSettings }: VehicleAdd
   const onSubmit = async (values: z.infer<typeof additionalOptionsSchema>) => {
     setSaving(true);
     try {
+      // Only update fields that exist in the Vehicle type
+      const updateData = {
+        minimum_trip_fare: values.minimum_trip_fare,
+        min_trip_distance: values.min_trip_distance,
+        holiday_sunday_percentage: values.holiday_sunday_percentage,
+      };
+      
       const { error } = await supabase
         .from('vehicles')
-        .update({
-          minimum_trip_fare: values.minimum_trip_fare,
-          min_trip_distance: values.min_trip_distance,
-          holiday_sunday_percentage: values.holiday_sunday_percentage,
-        })
+        .update(updateData)
         .eq('id', vehicleId);
         
       if (error) throw error;
@@ -114,9 +117,7 @@ const VehicleAdditionalOptionsForm = ({ vehicleId, defaultSettings }: VehicleAdd
       
       setVehicleSettings({
         ...vehicleSettings,
-        minimum_trip_fare: values.minimum_trip_fare,
-        min_trip_distance: values.min_trip_distance,
-        holiday_sunday_percentage: values.holiday_sunday_percentage,
+        ...updateData
       });
     } catch (error) {
       console.error('Error saving additional options:', error);
