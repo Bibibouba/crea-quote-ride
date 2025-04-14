@@ -72,12 +72,12 @@ export const useQuotes = (clientId?: string) => {
             clients: quote.clients || undefined,
             // Explicitly cast status to the union type
             status: quote.status as 'pending' | 'accepted' | 'declined',
-            // Safely handle vehicles data
+            // Safely handle vehicles data with proper null checking
             vehicles: quote.vehicles && typeof quote.vehicles === 'object' && !('error' in quote.vehicles)
               ? {
-                  name: quote.vehicles?.name || 'Véhicule inconnu',
-                  model: quote.vehicles?.model || '?',
-                  basePrice: quote.vehicles?.basePrice || 0
+                  name: quote.vehicles.name || 'Véhicule inconnu',
+                  model: quote.vehicles.model || '?',
+                  basePrice: quote.vehicles.basePrice || 0
                 }
               : null
           };

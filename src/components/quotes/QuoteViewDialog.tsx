@@ -35,11 +35,14 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
   // Find the selected vehicle
   const selectedVehicle = vehicles.find(v => v.id === quote.vehicle_id);
   
+  // Get basePrice either from vehicles data or selectedVehicle
+  const basePrice = quote.vehicles?.basePrice || selectedVehicle?.basePrice || 0;
+  
   // Prepare data for QuoteSummary
   const quoteDetails = {
     oneWayPrice: quote.amount,
     totalPrice: quote.amount,
-    basePrice: selectedVehicle?.basePrice || 0,
+    basePrice: basePrice,
     returnPrice: quote.has_return_trip ? (quote.amount / 2) : 0,
     waitingTimePrice: quote.waiting_time_price || 0
   };
@@ -82,7 +85,7 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
             estimatedDuration={quote.duration_minutes || 0}
             selectedVehicle={quote.vehicle_id || ''}
             passengers="4" // Default value as it might not be stored
-            basePrice={selectedVehicle?.basePrice || 0}
+            basePrice={basePrice}
             estimatedPrice={quote.amount}
             isSubmitting={false}
             onSaveQuote={() => {}}
