@@ -23,24 +23,65 @@ export const fetchVehicles = async (
   setPricingCallback: (vehicles: Vehicle[], selectedVehicle?: string) => void
 ) => {
   try {
-    const { data, error } = await supabase
+    // Fetch vehicles with their pricing settings
+    const { data: vehiclesData, error: vehiclesError } = await supabase
       .from('vehicles')
       .select('*')
-      .eq('is_active', true);
-      
-    if (error) throw error;
+      .eq('is_active', true)
+      .eq('driver_id', userId);
     
-    if (data && data.length > 0) {
-      const mappedVehicles = data.map(vehicle => ({
-        id: vehicle.id,
-        name: vehicle.name,
-        basePrice: getPriceForVehicle(vehicle.id, null, vehicleTypes),
-        capacity: vehicle.capacity,
-        description: vehicle.model
-      }));
+    if (vehiclesError) throw vehiclesError;
+    
+    if (vehiclesData && vehiclesData.length > 0) {
+      // Fetch pricing settings for these vehicles
+      const vehicleIds = vehiclesData.map(v => v.id);
+      const { data: pricingData, error: pricingError } = await supabase
+        .from('vehicle_pricing_settings')
+        .select('*')
+        .in('vehicle_id', vehicleIds);
+        
+      if (pricingError) throw pricingError;
+      
+      // Get driver's global pricing settings
+      const { data: globalPricing, error: globalPricingError } = await supabase
+        .from('pricing')
+        .select('*')
+        .eq('driver_id', userId)
+        .single();
+        
+      if (globalPricingError && globalPricingError.code !== 'PGRST116') {
+        throw globalPricingError;
+      }
+      
+      // Map vehicles with their pricing settings
+      const mappedVehicles = vehiclesData.map(vehicle => {
+        const vehiclePricing = pricingData?.find(p => p.vehicle_id === vehicle.id) || {};
+        
+        return {
+          id: vehicle.id,
+          name: vehicle.name,
+          basePrice: getPriceForVehicle(vehicle.id, globalPricing, vehicleTypes),
+          capacity: vehicle.capacity,
+          description: vehicle.model,
+          // Add vehicle-specific pricing settings
+          min_trip_distance: vehiclePricing.min_trip_distance,
+          night_rate_enabled: vehiclePricing.night_rate_enabled || false,
+          night_rate_start: vehiclePricing.night_rate_start,
+          night_rate_end: vehiclePricing.night_rate_end,
+          night_rate_percentage: vehiclePricing.night_rate_percentage,
+          wait_price_per_15min: vehiclePricing.wait_price_per_15min,
+          wait_night_enabled: vehiclePricing.wait_night_enabled || false,
+          wait_night_start: vehiclePricing.wait_night_start,
+          wait_night_end: vehiclePricing.wait_night_end,
+          wait_night_percentage: vehiclePricing.wait_night_percentage,
+          minimum_trip_fare: vehiclePricing.minimum_trip_fare,
+          holiday_sunday_percentage: vehiclePricing.holiday_sunday_percentage
+        };
+      });
       
       setPricingCallback(mappedVehicles, selectedVehicle || (mappedVehicles.length > 0 ? mappedVehicles[0].id : ''));
     } else {
+      // Use default vehicles if no vehicles found
       const defaultVehicles = vehicleTypes.map((type, index) => ({
         id: type.id,
         name: type.name,

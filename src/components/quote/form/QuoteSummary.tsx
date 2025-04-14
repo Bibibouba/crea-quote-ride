@@ -136,65 +136,65 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
     const tripDurationMinutes = estimatedDuration;
     const tripEndMinutes = (tripStartMinutes + tripDurationMinutes) % (24 * 60);
     
-    const nightStartMinutes = nightStartHours * 60 + nightStartMinutes;
-    const nightEndMinutes = nightEndHours * 60 + nightEndMinutes;
+    const nightStartTotalMinutes = nightStartHours * 60 + nightStartMinutes;
+    const nightEndTotalMinutes = nightEndHours * 60 + nightEndMinutes;
     
     // Night spans across midnight
-    if (nightStartMinutes > nightEndMinutes) {
+    if (nightStartTotalMinutes > nightEndTotalMinutes) {
       // Trip starts before midnight
-      if (tripStartMinutes >= nightStartMinutes) {
-        if (tripEndMinutes <= nightEndMinutes) {
+      if (tripStartMinutes >= nightStartTotalMinutes) {
+        if (tripEndMinutes <= nightEndTotalMinutes) {
           // Trip entirely at night
           nightHours = tripDurationMinutes / 60;
           isNightRateApplied = true;
-        } else if (tripEndMinutes > nightEndMinutes && tripEndMinutes < nightStartMinutes) {
+        } else if (tripEndMinutes > nightEndTotalMinutes && tripEndMinutes < nightStartTotalMinutes) {
           // Trip starts at night, ends during day
-          const nightMinutes = (24 * 60 - tripStartMinutes) + nightEndMinutes;
+          const nightMinutes = (24 * 60 - tripStartMinutes) + nightEndTotalMinutes;
           nightHours = nightMinutes / 60;
           dayHours = (tripDurationMinutes - nightMinutes) / 60;
           isNightRateApplied = true;
         } else {
           // Trip starts at night, crosses day, ends at night
-          const dayMinutes = nightStartMinutes - nightEndMinutes;
+          const dayMinutes = nightStartTotalMinutes - nightEndTotalMinutes;
           dayHours = dayMinutes / 60;
           nightHours = (tripDurationMinutes - dayMinutes) / 60;
           isNightRateApplied = true;
         }
       } 
       // Trip starts after midnight, before night end
-      else if (tripStartMinutes < nightEndMinutes) {
-        if (tripEndMinutes <= nightEndMinutes) {
+      else if (tripStartMinutes < nightEndTotalMinutes) {
+        if (tripEndMinutes <= nightEndTotalMinutes) {
           // Trip entirely at night
           nightHours = tripDurationMinutes / 60;
           isNightRateApplied = true;
-        } else if (tripEndMinutes < nightStartMinutes) {
+        } else if (tripEndMinutes < nightStartTotalMinutes) {
           // Trip starts at night, ends during day
-          const nightMinutes = nightEndMinutes - tripStartMinutes;
+          const nightMinutes = nightEndTotalMinutes - tripStartMinutes;
           nightHours = nightMinutes / 60;
           dayHours = (tripDurationMinutes - nightMinutes) / 60;
           isNightRateApplied = true;
         } else {
           // Trip starts at night, crosses day, ends at night
-          const dayMinutes = nightStartMinutes - nightEndMinutes;
+          const dayMinutes = nightStartTotalMinutes - nightEndTotalMinutes;
           dayHours = dayMinutes / 60;
           nightHours = (tripDurationMinutes - dayMinutes) / 60;
           isNightRateApplied = true;
         }
       }
       // Trip starts during day
-      else if (tripStartMinutes < nightStartMinutes) {
-        if (tripEndMinutes >= nightStartMinutes) {
+      else if (tripStartMinutes < nightStartTotalMinutes) {
+        if (tripEndMinutes >= nightStartTotalMinutes) {
           if (tripEndMinutes <= (24 * 60)) {
             // Trip starts during day, ends at night before midnight
-            const dayMinutes = nightStartMinutes - tripStartMinutes;
+            const dayMinutes = nightStartTotalMinutes - tripStartMinutes;
             dayHours = dayMinutes / 60;
             nightHours = (tripDurationMinutes - dayMinutes) / 60;
             isNightRateApplied = true;
           } else {
             // Trip starts during day, crosses midnight, ends at night
-            const dayMinutes1 = nightStartMinutes - tripStartMinutes;
-            const nightMinutes1 = (24 * 60) - nightStartMinutes;
-            const nightMinutes2 = tripEndMinutes > nightEndMinutes ? nightEndMinutes : tripEndMinutes;
+            const dayMinutes1 = nightStartTotalMinutes - tripStartMinutes;
+            const nightMinutes1 = (24 * 60) - nightStartTotalMinutes;
+            const nightMinutes2 = tripEndMinutes > nightEndTotalMinutes ? nightEndTotalMinutes : tripEndMinutes;
             dayHours = dayMinutes1 / 60;
             nightHours = (nightMinutes1 + nightMinutes2) / 60;
             isNightRateApplied = true;
@@ -208,31 +208,31 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
       const tripEndMinutesActual = tripStartMinutes + tripDurationMinutes;
       
       // No overlap with night
-      if (tripEndMinutesActual <= nightStartMinutes || tripStartMinutes >= nightEndMinutes) {
+      if (tripEndMinutesActual <= nightStartTotalMinutes || tripStartMinutes >= nightEndTotalMinutes) {
         isNightRateApplied = false;
       }
       // Trip entirely at night
-      else if (tripStartMinutes >= nightStartMinutes && tripEndMinutesActual <= nightEndMinutes) {
+      else if (tripStartMinutes >= nightStartTotalMinutes && tripEndMinutesActual <= nightEndTotalMinutes) {
         nightHours = tripDurationMinutes / 60;
         isNightRateApplied = true;
       }
       // Trip starts during day, ends at night
-      else if (tripStartMinutes < nightStartMinutes && tripEndMinutesActual <= nightEndMinutes) {
-        const dayMinutes = nightStartMinutes - tripStartMinutes;
+      else if (tripStartMinutes < nightStartTotalMinutes && tripEndMinutesActual <= nightEndTotalMinutes) {
+        const dayMinutes = nightStartTotalMinutes - tripStartMinutes;
         dayHours = dayMinutes / 60;
         nightHours = (tripDurationMinutes - dayMinutes) / 60;
         isNightRateApplied = true;
       }
       // Trip starts at night, ends during day
-      else if (tripStartMinutes >= nightStartMinutes && tripEndMinutesActual > nightEndMinutes) {
-        const nightMinutes = nightEndMinutes - tripStartMinutes;
+      else if (tripStartMinutes >= nightStartTotalMinutes && tripEndMinutesActual > nightEndTotalMinutes) {
+        const nightMinutes = nightEndTotalMinutes - tripStartMinutes;
         nightHours = nightMinutes / 60;
         dayHours = (tripDurationMinutes - nightMinutes) / 60;
         isNightRateApplied = true;
       }
       // Trip starts during day, crosses night, ends during day
-      else if (tripStartMinutes < nightStartMinutes && tripEndMinutesActual > nightEndMinutes) {
-        const nightMinutes = nightEndMinutes - nightStartMinutes;
+      else if (tripStartMinutes < nightStartTotalMinutes && tripEndMinutesActual > nightEndTotalMinutes) {
+        const nightMinutes = nightEndTotalMinutes - nightStartTotalMinutes;
         nightHours = nightMinutes / 60;
         dayHours = (tripDurationMinutes - nightMinutes) / 60;
         isNightRateApplied = true;

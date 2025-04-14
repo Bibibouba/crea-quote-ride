@@ -69,6 +69,10 @@ const SimulatorContainer = () => {
   };
 
   const handleSubmit = async () => {
+    // Use the calculated quote details for more precise pricing
+    const totalAmount = quoteFormState.quoteDetails?.totalPrice || 
+                       quoteFormState.estimatedDistance * quoteFormState.basePrice;
+    
     // Préparer les données du devis
     const quoteData = {
       departure_location: quoteFormState.departureAddress,
@@ -78,7 +82,7 @@ const SimulatorContainer = () => {
       distance_km: quoteFormState.estimatedDistance,
       duration_minutes: quoteFormState.estimatedDuration,
       ride_date: new Date(quoteFormState.date).toISOString(),
-      amount: quoteFormState.quoteDetails?.totalPrice || 0,
+      amount: totalAmount,
       vehicle_id: quoteFormState.selectedVehicle,
       has_return_trip: quoteFormState.hasReturnTrip,
       has_waiting_time: quoteFormState.hasWaitingTime,

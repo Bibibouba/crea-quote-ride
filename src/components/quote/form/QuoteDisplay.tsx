@@ -45,6 +45,7 @@ interface QuoteDisplayProps {
   returnDistance: number;
   returnDuration: number;
   returnCoordinates?: [number, number];
+  quoteDetails?: any;
 }
 
 const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
@@ -81,8 +82,29 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
   customReturnAddress,
   returnDistance,
   returnDuration,
-  returnCoordinates
+  returnCoordinates,
+  quoteDetails
 }) => {
+  const { pricingSettings } = usePricing();
+  
+  // Use quoteDetails if provided, otherwise calculate on the fly
+  const displayDetails = quoteDetails || calculateQuoteDetails(
+    selectedVehicle,
+    estimatedDistance,
+    returnToSameAddress ? estimatedDistance : returnDistance,
+    hasReturnTrip,
+    returnToSameAddress,
+    vehicles,
+    hasWaitingTime,
+    waitingTimePrice,
+    time,
+    date,
+    pricingSettings
+  );
+  
+  // Use precise pricing from quoteDetails if available
+  const displayEstimatedPrice = displayDetails?.oneWayPrice || estimatedPrice;
+  
   return (
     <Card>
       <CardHeader>
@@ -104,7 +126,7 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
           selectedVehicle={selectedVehicle}
           passengers={passengers}
           basePrice={basePrice}
-          estimatedPrice={estimatedPrice}
+          estimatedPrice={displayEstimatedPrice}
           isSubmitting={isSubmitting}
           onSaveQuote={onSaveQuote}
           onEditQuote={onEditQuote}

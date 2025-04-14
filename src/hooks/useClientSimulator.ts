@@ -1,79 +1,109 @@
 
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuotes } from '@/hooks/useQuotes';
-import { useClients } from '@/hooks/useClients';
-import { Quote } from '@/types/quote';
+import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useQuoteForm } from '@/hooks/useQuoteForm';
 
 export const useClientSimulator = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
   const { toast } = useToast();
-  const { addQuote } = useQuotes();
-  const { addClient } = useClients();
   const navigate = useNavigate();
-  
-  // Fonction pour soumettre un devis dans le simulateur client
-  const submitQuote = async (quoteData: Partial<Quote>, clientData: { firstName: string; lastName: string; email: string; phone?: string }) => {
-    if (!quoteData.departure_location || !quoteData.arrival_location) {
-      toast({
-        title: 'Données incomplètes',
-        description: 'Veuillez remplir les adresses de départ et d\'arrivée',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
+  const resetQuoteForm = useQuoteForm().resetForm;
+
+  const submitQuote = async (quoteData: any, clientData: any) => {
     setIsSubmitting(true);
-    
     try {
-      // Vérifier l'authentification
+      // Get current authenticated driver
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('User not authenticated');
+      const driverId = session?.user?.id;
+      
+      if (!driverId) {
+        throw new Error("Utilisateur non authentifié");
       }
       
-      console.log('Creating client and quote for driver:', session.user.id);
+      // Check if client exists or create new client
+      let clientId = '';
       
-      // 1. Créer d'abord le client
-      const newClientResult = await addClient.mutateAsync({
-        first_name: clientData.firstName,
-        last_name: clientData.lastName,
-        email: clientData.email,
-        phone: clientData.phone || '',
-        client_type: 'personal'
-      });
+      if (clientData.firstName && clientData.lastName) {
+        const { data: existingClients, error: searchError } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('driver_id', driverId)
+          .eq('email', clientData.email)
+          .eq('first_name', clientData.firstName)
+          .eq('last_name', clientData.lastName)
+          .limit(1);
+          
+        if (searchError) throw searchError;
+        
+        if (existingClients && existingClients.length > 0) {
+          clientId = existingClients[0].id;
+        } else {
+          // Create new client
+          const { data: newClient, error: createError } = await supabase
+            .from('clients')
+            .insert({
+              driver_id: driverId,
+              first_name: clientData.firstName,
+              last_name: clientData.lastName,
+              email: clientData.email,
+              phone: clientData.phone || '',
+              client_type: 'personal'
+            })
+            .select('id')
+            .single();
+            
+          if (createError) throw createError;
+          if (newClient) clientId = newClient.id;
+        }
+      }
       
-      console.log('Client created successfully:', newClientResult);
+      if (!clientId) {
+        throw new Error("Impossible de créer ou retrouver le client");
+      }
       
-      // 2. Puis créer le devis associé à ce client
-      if (newClientResult && newClientResult.id) {
-        const completeQuoteData = {
-          ...quoteData,
-          client_id: newClientResult.id,
-          status: 'pending' as const
-        };
-        
-        console.log('Creating quote with data:', completeQuoteData);
-        
-        const newQuoteResult = await addQuote.mutateAsync(completeQuoteData as any);
-        
-        console.log('Quote created successfully:', newQuoteResult);
-        
-        toast({
-          title: 'Devis envoyé',
-          description: 'Votre devis a été envoyé avec succès',
+      // Create the quote
+      const { error: quoteError } = await supabase
+        .from('quotes')
+        .insert({
+          driver_id: driverId,
+          client_id: clientId,
+          vehicle_id: quoteData.vehicle_id,
+          departure_location: quoteData.departure_location,
+          arrival_location: quoteData.arrival_location,
+          departure_coordinates: quoteData.departure_coordinates,
+          arrival_coordinates: quoteData.arrival_coordinates,
+          distance_km: quoteData.distance_km,
+          duration_minutes: quoteData.duration_minutes,
+          ride_date: quoteData.ride_date,
+          amount: quoteData.amount,
+          status: "pending",
+          has_return_trip: quoteData.has_return_trip,
+          has_waiting_time: quoteData.has_waiting_time,
+          waiting_time_minutes: quoteData.waiting_time_minutes,
+          waiting_time_price: quoteData.waiting_time_price,
+          return_to_same_address: quoteData.return_to_same_address,
+          custom_return_address: quoteData.custom_return_address,
+          return_coordinates: quoteData.return_coordinates,
+          return_distance_km: quoteData.return_distance_km,
+          return_duration_minutes: quoteData.return_duration_minutes
         });
         
-        setIsQuoteSent(true);
-      }
-    } catch (error) {
-      console.error('Error in submitQuote:', error);
+      if (quoteError) throw quoteError;
+      
+      toast({
+        title: 'Devis envoyé',
+        description: "Votre demande de devis a été envoyée avec succès",
+      });
+      
+      setIsQuoteSent(true);
+    } catch (error: any) {
+      console.error('Error submitting quote:', error);
       toast({
         title: 'Erreur',
-        description: `Erreur lors de l'envoi du devis: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
+        description: `Une erreur est survenue: ${error.message}`,
         variant: 'destructive',
       });
     } finally {
@@ -83,10 +113,11 @@ export const useClientSimulator = () => {
   
   const resetForm = () => {
     setIsQuoteSent(false);
+    resetQuoteForm();
   };
   
   const navigateToDashboard = () => {
-    navigate('/dashboard/quotes');
+    navigate('/dashboard');
   };
   
   return {
