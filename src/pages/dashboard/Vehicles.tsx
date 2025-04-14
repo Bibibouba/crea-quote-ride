@@ -93,6 +93,7 @@ const Vehicles = () => {
         onSubmit={handleVehicleSubmit}
         isSubmitting={isSubmitting}
         vehicleTypes={vehicleTypes}
+        onDelete={handleDeleteClick}
       />
     </DashboardLayout>
   );

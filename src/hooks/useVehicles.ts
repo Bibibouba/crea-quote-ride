@@ -127,8 +127,6 @@ export const useVehicles = () => {
       return false;
     }
     
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) return false;
-    
     try {
       // Suppression du véhicule
       const { error } = await supabase
