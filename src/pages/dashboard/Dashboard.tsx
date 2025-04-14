@@ -122,7 +122,9 @@ const Dashboard = () => {
               <div>
                 <div className="mb-2 flex items-center justify-between text-sm">
                   <span>Progression</span>
-                  <span className="font-medium">{trialDaysRemaining} {trialDaysRemaining > 1 ? 'jours' : 'jour'} restants</span>
+                  <span className="font-medium">
+                    <span className="font-bold text-green-600">{trialDaysRemaining}</span> {trialDaysRemaining > 1 ? 'jours' : 'jour'} restants
+                  </span>
                 </div>
                 <Progress className="h-2" value={trialProgressPercent} />
               </div>

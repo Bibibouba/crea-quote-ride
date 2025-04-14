@@ -1,14 +1,15 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, PaypalIcon, Lock, Check, ChevronRight } from 'lucide-react';
+import { CreditCard, Lock, Check, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 // Custom PayPal icon since it's not in Lucide
 const PaypalLogo = () => (
@@ -36,15 +37,104 @@ const PricingFeature = ({ included, text }: { included: boolean; text: string })
   </div>
 );
 
+type PlanInfo = {
+  name: string;
+  monthlyPrice: number;
+  yearlyPrice: number;
+  description: string;
+  features: { included: boolean; text: string }[];
+  additionalDriverInfo?: string;
+};
+
 const Subscription = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'stripe'>('card');
+  const [selectedPlanInfo, setSelectedPlanInfo] = useState<PlanInfo | null>(null);
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('pricing');
+  
+  // Parse the URL parameters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tab = searchParams.get('tab');
+    const plan = searchParams.get('plan');
+    
+    if (tab === 'payment') {
+      setActiveTab('payment');
+      // Find the plan info based on the URL parameter
+      if (plan) {
+        const planInfo = plans.find(p => p.name.toLowerCase() === plan);
+        if (planInfo) {
+          setSelectedPlanInfo(planInfo);
+        }
+      }
+    }
+  }, [location]);
+
+  const plans: PlanInfo[] = [
+    {
+      name: "Essentiel",
+      monthlyPrice: 9.99,
+      yearlyPrice: 9.99 * 12 * 0.8, // 20% discount
+      description: "Idéal pour les chauffeurs individuels",
+      features: [
+        { included: true, text: "Jusqu'à 3 véhicules" },
+        { included: true, text: "50 devis par mois" },
+        { included: true, text: "Support email" },
+        { included: false, text: "Personnalisation complète" },
+        { included: false, text: "Facturation automatique" }
+      ]
+    },
+    {
+      name: "Professionnel",
+      monthlyPrice: 19.99,
+      yearlyPrice: 19.99 * 12 * 0.8, // 20% discount
+      description: "Parfait pour les petites entreprises (2-9 chauffeurs)",
+      features: [
+        { included: true, text: "Jusqu'à 10 véhicules" },
+        { included: true, text: "Devis illimités" },
+        { included: true, text: "Support email et téléphone" },
+        { included: true, text: "Personnalisation complète" },
+        { included: false, text: "Facturation automatique" }
+      ],
+      additionalDriverInfo: "5€ HT par chauffeur supplémentaire"
+    },
+    {
+      name: "Entreprise",
+      monthlyPrice: 49.99,
+      yearlyPrice: 49.99 * 12 * 0.8, // 20% discount
+      description: "Adapté aux sociétés de transport (10+ chauffeurs)",
+      features: [
+        { included: true, text: "Véhicules illimités" },
+        { included: true, text: "Devis illimités" },
+        { included: true, text: "Support prioritaire 24/7" },
+        { included: true, text: "Personnalisation complète" },
+        { included: true, text: "Facturation automatique" }
+      ],
+      additionalDriverInfo: "5€ HT par chauffeur supplémentaire"
+    }
+  ];
+  
+  const handleSelectPlan = (plan: PlanInfo) => {
+    setSelectedPlanInfo(plan);
+    setActiveTab('payment');
+    // Update the URL without page reload
+    navigate(`/dashboard/subscription?tab=payment&plan=${plan.name.toLowerCase()}`, { replace: true });
+  };
   
   const handlePayment = () => {
     // This would be replaced with actual payment handling logic
-    alert(`Le paiement via ${paymentMethod} sera implémenté prochainement.`);
+    toast({
+      title: "Paiement",
+      description: `Le paiement via ${paymentMethod} sera implémenté prochainement.`,
+    });
+  };
+  
+  const formattedPrice = (price: number) => {
+    return price.toFixed(2).replace('.', ',');
   };
   
   return (
@@ -57,7 +147,7 @@ const Subscription = () => {
           </p>
         </div>
         
-        <Tabs defaultValue="pricing" className="space-y-6">
+        <Tabs defaultValue="pricing" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="pricing">Plans</TabsTrigger>
             <TabsTrigger value="payment">Paiement</TabsTrigger>
@@ -84,95 +174,46 @@ const Subscription = () => {
             </div>
             
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="border-primary">
-                <CardHeader>
-                  <CardTitle>Essentiel</CardTitle>
-                  <CardDescription>
-                    Idéal pour les chauffeurs individuels
-                  </CardDescription>
-                  <div className="mt-4">
-                    <span className="text-3xl font-bold">
-                      {selectedPlan === 'monthly' ? '19,99€' : '191,90€'}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {selectedPlan === 'monthly' ? '/mois' : '/an'}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <PricingFeature included={true} text="Jusqu'à 3 véhicules" />
-                  <PricingFeature included={true} text="50 devis par mois" />
-                  <PricingFeature included={true} text="Support email" />
-                  <PricingFeature included={false} text="Personnalisation complète" />
-                  <PricingFeature included={false} text="Facturation automatique" />
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full" onClick={() => navigate('/dashboard/subscription?tab=payment&plan=essential')}>
-                    Choisir <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="border-2 border-primary relative overflow-hidden">
-                <div className="absolute -right-12 top-7 rotate-45 bg-primary text-white text-xs py-1 px-12">
-                  Populaire
-                </div>
-                <CardHeader>
-                  <CardTitle>Professionnel</CardTitle>
-                  <CardDescription>
-                    Parfait pour les petites entreprises
-                  </CardDescription>
-                  <div className="mt-4">
-                    <span className="text-3xl font-bold">
-                      {selectedPlan === 'monthly' ? '39,99€' : '383,90€'}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {selectedPlan === 'monthly' ? '/mois' : '/an'}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <PricingFeature included={true} text="Jusqu'à 10 véhicules" />
-                  <PricingFeature included={true} text="Devis illimités" />
-                  <PricingFeature included={true} text="Support email et téléphone" />
-                  <PricingFeature included={true} text="Personnalisation complète" />
-                  <PricingFeature included={false} text="Facturation automatique" />
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full" onClick={() => navigate('/dashboard/subscription?tab=payment&plan=professional')}>
-                    Choisir <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Entreprise</CardTitle>
-                  <CardDescription>
-                    Adapté aux sociétés de transport
-                  </CardDescription>
-                  <div className="mt-4">
-                    <span className="text-3xl font-bold">
-                      {selectedPlan === 'monthly' ? '89,99€' : '863,90€'}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {selectedPlan === 'monthly' ? '/mois' : '/an'}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <PricingFeature included={true} text="Véhicules illimités" />
-                  <PricingFeature included={true} text="Devis illimités" />
-                  <PricingFeature included={true} text="Support prioritaire 24/7" />
-                  <PricingFeature included={true} text="Personnalisation complète" />
-                  <PricingFeature included={true} text="Facturation automatique" />
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full" onClick={() => navigate('/dashboard/subscription?tab=payment&plan=enterprise')}>
-                    Choisir <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
+              {plans.map((plan, index) => (
+                <Card key={index} className={index === 1 ? "border-2 border-primary relative overflow-hidden" : (index === 0 ? "border-primary" : "")}>
+                  {index === 1 && (
+                    <div className="absolute -right-12 top-7 rotate-45 bg-primary text-white text-xs py-1 px-12">
+                      Populaire
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle>{plan.name}</CardTitle>
+                    <CardDescription>
+                      {plan.description}
+                    </CardDescription>
+                    <div className="mt-4">
+                      <span className="text-3xl font-bold">
+                        {formattedPrice(selectedPlan === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice)}€
+                      </span>
+                      <span className="text-muted-foreground">
+                        {selectedPlan === 'monthly' ? '/mois' : '/an'}
+                      </span>
+                      <span className="block text-xs text-muted-foreground mt-1">HT</span>
+                      
+                      {plan.additionalDriverInfo && (
+                        <span className="block text-xs text-muted-foreground mt-1">
+                          {plan.additionalDriverInfo}
+                        </span>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {plan.features.map((feature, i) => (
+                      <PricingFeature key={i} included={feature.included} text={feature.text} />
+                    ))}
+                  </CardContent>
+                  <CardFooter>
+                    <Button className="w-full" onClick={() => handleSelectPlan(plan)}>
+                      Choisir <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
           </TabsContent>
           
@@ -254,13 +295,22 @@ const Subscription = () => {
               </CardContent>
               <CardFooter className="flex-col space-y-4">
                 <Separator />
-                <div className="flex items-center justify-between w-full">
-                  <div>
-                    <p className="font-medium">Total</p>
-                    <p className="text-sm text-muted-foreground">Plan Professionnel (Mensuel)</p>
+                {selectedPlanInfo && (
+                  <div className="flex items-center justify-between w-full">
+                    <div>
+                      <p className="font-medium">Total</p>
+                      <p className="text-sm text-muted-foreground">
+                        Plan {selectedPlanInfo.name} ({selectedPlan === 'monthly' ? 'Mensuel' : 'Annuel'})
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-bold">
+                        {formattedPrice(selectedPlan === 'monthly' ? selectedPlanInfo.monthlyPrice : selectedPlanInfo.yearlyPrice)} €
+                      </p>
+                      <p className="text-xs text-muted-foreground">HT</p>
+                    </div>
                   </div>
-                  <p className="text-xl font-bold">39,99 €</p>
-                </div>
+                )}
                 <Button className="w-full" onClick={handlePayment}>
                   Procéder au paiement
                 </Button>
