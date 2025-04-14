@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -45,13 +44,10 @@ const companySettingsSchema = z.object({
   font_family: z.string().optional().nullable(),
   
   // Company Information
-  company_type: z.string().optional(),
-  company_address: z.string().optional(),
-  siret: z.string().optional(),
-  vat_number: z.string().optional(),
-  registration_city: z.string().optional(),
-  rcs_number: z.string().optional(),
-  is_vat_exempt: z.boolean().optional(),
+  company_name: z.string().optional().nullable(),
+  contact_first_name: z.string().optional().nullable(),
+  contact_last_name: z.string().optional().nullable(),
+  contact_email: z.string().email().optional().nullable(),
   
   // Invoice Settings
   invoice_prefix: z.string().optional(),
@@ -85,13 +81,10 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
       font_family: companySettings?.font_family || "Inter",
       
       // Company Information
-      company_type: companySettings?.company_type || "micro-entreprise",
-      company_address: companySettings?.company_address || "",
-      siret: companySettings?.siret || "",
-      vat_number: companySettings?.vat_number || "",
-      registration_city: companySettings?.registration_city || "",
-      rcs_number: companySettings?.rcs_number || "",
-      is_vat_exempt: companySettings?.is_vat_exempt || false,
+      company_name: companySettings?.company_name || "",
+      contact_first_name: companySettings?.contact_first_name || "",
+      contact_last_name: companySettings?.contact_last_name || "",
+      contact_email: companySettings?.contact_email || "",
       
       // Invoice Settings
       invoice_prefix: companySettings?.invoice_prefix || "FACT-",
@@ -138,6 +131,77 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
           
           <TabsContent value="company" className="space-y-4">
             <div className="space-y-4 pt-2">
+              <FormField
+                control={form.control}
+                name="company_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nom de l'entreprise</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nom de votre entreprise" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Le nom officiel de votre entreprise
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h3 className="font-medium mb-3">Contact principal</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="contact_first_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prénom du contact</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Prénom" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="contact_last_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nom du contact</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nom" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="contact_email"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>Email du contact</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="Email de contact" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Email de la personne à contacter pour cette entreprise
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
               <FormField
                 control={form.control}
                 name="company_type"

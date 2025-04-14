@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -14,25 +13,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import CompanySettingsForm, { CompanySettingsFormValues } from './CompanySettingsForm';
 
-// Create a custom type that extends the company_settings table Row type
-// and explicitly adds the new fields we've added to the database
 type CompanySettings = Database['public']['Tables']['company_settings']['Row'] & {
   banner_url?: string | null;
-  // Added fields
-  siret?: string | null;
-  company_address?: string | null;
-  vat_number?: string | null;
-  company_type?: string | null;
-  registration_city?: string | null;
-  rcs_number?: string | null;
-  invoice_prefix?: string | null;
-  next_invoice_number?: number | null;
-  payment_delay_days?: number | null;
-  late_payment_rate?: number | null;
-  discount_conditions?: string | null;
-  bank_details?: string | null;
-  legal_notices?: string | null;
-  is_vat_exempt?: boolean | null;
+  // Added new fields
+  company_name?: string | null;
+  contact_first_name?: string | null;
+  contact_last_name?: string | null;
+  contact_email?: string | null;
 };
 
 const CompanySettingsManager = () => {
@@ -121,6 +108,12 @@ const CompanySettingsManager = () => {
           bank_details: values.bank_details,
           legal_notices: values.legal_notices,
           
+          // Add new fields
+          company_name: values.company_name,
+          contact_first_name: values.contact_first_name,
+          contact_last_name: values.contact_last_name,
+          contact_email: values.contact_email,
+          
           updated_at: new Date().toISOString(),
         })
         .eq('id', companySettings.id);
@@ -156,6 +149,12 @@ const CompanySettingsManager = () => {
         discount_conditions: values.discount_conditions,
         bank_details: values.bank_details,
         legal_notices: values.legal_notices,
+        
+        // Add new fields
+        company_name: values.company_name,
+        contact_first_name: values.contact_first_name,
+        contact_last_name: values.contact_last_name,
+        contact_email: values.contact_email,
         
         updated_at: new Date().toISOString(),
       });
