@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -5,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMapbox, Address } from '@/hooks/useMapbox';
 import { useQuotes, QuoteWithCoordinates } from '@/hooks/useQuotes';
 import { usePricing } from '@/hooks/use-pricing';
-import { useVehicles } from '@/hooks/useVehicles';
+import { useVehicleTypes } from '@/hooks/useVehicleTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useClients } from '@/hooks/useClients';
@@ -20,11 +21,11 @@ export interface WaitingTimeOption {
 export function useQuoteForm(clientId?: string) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { vehicles, loading: vehiclesLoading } = useVehicles();
+  const { toast } = useToast();
+  const { vehicleTypes } = useVehicleTypes();
   const { clients } = useClients();
   const { addQuote } = useQuotes();
   const { getRoute } = useMapbox();
-  const { toast } = useToast();
   const { 
     pricingSettings, 
     loading: pricingLoading,
@@ -61,6 +62,53 @@ export function useQuoteForm(clientId?: string) {
   const [quoteDetails, setQuoteDetails] = useState<any>(null);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
   const [calculatedPrice, setCalculatedPrice] = useState(0);
+  const [vehiclesLoading, setVehiclesLoading] = useState(true);
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  
+  // Charger les types de véhicules disponibles depuis Supabase
+  useEffect(() => {
+    const loadVehiclesFromTypes = async () => {
+      try {
+        setVehiclesLoading(true);
+        if (vehicleTypes.length > 0) {
+          // Créer une liste de véhicules basée sur les types disponibles
+          const vehiclesList = vehicleTypes.map(type => ({
+            id: type.id,
+            name: type.name,
+            basePrice: 1.8, // prix par défaut, peut être modifié
+            description: `Type de véhicule avec chauffeur`,
+            capacity: 4, // capacité par défaut, peut être modifiée
+            icon: type.icon
+          }));
+          
+          setVehicles(vehiclesList);
+          
+          // Si aucun véhicule n'est sélectionné et qu'il y a des véhicules disponibles
+          if (!selectedVehicle && vehiclesList.length > 0) {
+            setSelectedVehicle(vehiclesList[0].id);
+          }
+        } else {
+          // Véhicules par défaut si aucun type n'est disponible
+          setVehicles([
+            { id: "sedan", name: "Berline", basePrice: 1.8, description: "Mercedes Classe E ou équivalent", capacity: 4 },
+            { id: "van", name: "Van", basePrice: 2.2, description: "Mercedes Classe V ou équivalent", capacity: 7 },
+            { id: "luxury", name: "Luxe", basePrice: 2.5, description: "Mercedes Classe S ou équivalent", capacity: 3 }
+          ]);
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des véhicules:", error);
+        toast({
+          title: "Erreur de chargement",
+          description: "Impossible de charger les types de véhicules",
+          variant: "destructive"
+        });
+      } finally {
+        setVehiclesLoading(false);
+      }
+    };
+
+    loadVehiclesFromTypes();
+  }, [vehicleTypes, toast, selectedVehicle]);
   
   useEffect(() => {
     if (clientId && clients.length > 0) {
@@ -99,6 +147,7 @@ export function useQuoteForm(clientId?: string) {
     }
   }, [user, clientId]);
   
+  // Calculer le prix du temps d'attente
   useEffect(() => {
     if (!hasWaitingTime || !pricingSettings) return;
     
@@ -137,6 +186,7 @@ export function useQuoteForm(clientId?: string) {
     setWaitingTimePrice(Math.round(price));
   }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
   
+  // Calculer l'itinéraire de retour
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -156,6 +206,39 @@ export function useQuoteForm(clientId?: string) {
     
     calculateReturnRoute();
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
+  
+  // Calculer le prix du trajet
+  useEffect(() => {
+    if (!estimatedDistance || !selectedVehicle) return;
+    
+    const calculatePrice = () => {
+      const selectedVehicleData = vehicles.find(v => v.id === selectedVehicle);
+      if (!selectedVehicleData) return;
+      
+      const basePrice = selectedVehicleData.basePrice || 1.8;
+      
+      const oneWayPrice = Math.round(estimatedDistance * basePrice);
+      const returnPrice = hasReturnTrip 
+        ? (returnToSameAddress ? oneWayPrice : Math.round(returnDistance * basePrice)) 
+        : 0;
+      const waitingTimeCost = hasWaitingTime ? waitingTimePrice : 0;
+      const totalPrice = oneWayPrice + waitingTimeCost + returnPrice;
+      
+      setCalculatedPrice(totalPrice);
+      setQuoteDetails({
+        oneWayPrice,
+        returnPrice,
+        waitingTimePrice: waitingTimeCost,
+        totalPrice,
+        basePrice,
+        isNightRate: false,
+        isSunday: false
+      });
+    };
+    
+    calculatePrice();
+  }, [estimatedDistance, selectedVehicle, hasReturnTrip, returnToSameAddress, 
+      returnDistance, hasWaitingTime, waitingTimePrice, vehicles]);
   
   const handleDepartureSelect = useCallback((address: Address) => {
     setDepartureAddress(address.fullAddress);
@@ -197,12 +280,6 @@ export function useQuoteForm(clientId?: string) {
       label
     };
   });
-
-  const vehiclesList = [
-    { id: "sedan", name: "Berline", basePrice: 1.8, description: "Mercedes Classe E ou équivalent", capacity: 4 },
-    { id: "van", name: "Van", basePrice: 2.2, description: "Mercedes Classe V ou équivalent", capacity: 7 },
-    { id: "luxury", name: "Luxe", basePrice: 2.5, description: "Mercedes Classe S ou équivalent", capacity: 3 }
-  ];
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) {
@@ -273,7 +350,7 @@ export function useQuoteForm(clientId?: string) {
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
-      const selectedVehicleData = vehiclesList.find(v => v.id === selectedVehicle);
+      const selectedVehicleData = vehicles.find(v => v.id === selectedVehicle);
       const basePrice = selectedVehicleData?.basePrice || 1.8;
       
       const oneWayPrice = Math.round(estimatedDistance * basePrice);
@@ -417,7 +494,7 @@ export function useQuoteForm(clientId?: string) {
     
     vehiclesLoading,
     pricingLoading,
-    vehicles: vehiclesList,
+    vehicles,
     
     handleNextStep,
     handlePreviousStep,

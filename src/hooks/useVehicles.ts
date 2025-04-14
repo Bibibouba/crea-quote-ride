@@ -5,7 +5,16 @@ import { VehicleType } from '@/types/vehicleType';
 import { Vehicle } from '@/types/vehicle';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { VehicleFormValues } from '@/components/vehicles/VehicleForm';
+
+export interface VehicleFormValues {
+  name: string;
+  model: string;
+  capacity: number;
+  image_url?: string;
+  is_luxury: boolean;
+  is_active: boolean;
+  vehicle_type_id?: string;
+}
 
 export const useVehicles = () => {
   const { user } = useAuth();
