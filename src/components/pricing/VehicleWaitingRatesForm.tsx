@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -106,17 +107,16 @@ const VehicleWaitingRatesForm = ({ vehicleId, defaultSettings }: VehicleWaitingR
   const onSubmit = async (values: z.infer<typeof waitingRatesSchema>) => {
     setSaving(true);
     try {
-      const updateData = {
-        wait_price_per_15min: values.wait_price_per_15min,
-        wait_night_enabled: values.wait_night_enabled,
-        wait_night_start: values.wait_night_start,
-        wait_night_end: values.wait_night_end,
-        wait_night_percentage: values.wait_night_percentage,
-      };
-      
+      // Update the vehicle fields with waiting rates information
       const { error } = await supabase
         .from('vehicles')
-        .update(updateData)
+        .update({
+          wait_price_per_15min: values.wait_price_per_15min,
+          wait_night_enabled: values.wait_night_enabled,
+          wait_night_start: values.wait_night_start,
+          wait_night_end: values.wait_night_end,
+          wait_night_percentage: values.wait_night_percentage,
+        })
         .eq('id', vehicleId);
         
       if (error) throw error;
@@ -128,7 +128,11 @@ const VehicleWaitingRatesForm = ({ vehicleId, defaultSettings }: VehicleWaitingR
       
       setVehicleSettings({
         ...vehicleSettings,
-        ...updateData
+        wait_price_per_15min: values.wait_price_per_15min,
+        wait_night_enabled: values.wait_night_enabled,
+        wait_night_start: values.wait_night_start,
+        wait_night_end: values.wait_night_end,
+        wait_night_percentage: values.wait_night_percentage
       });
     } catch (error) {
       console.error('Error saving waiting rate settings:', error);
