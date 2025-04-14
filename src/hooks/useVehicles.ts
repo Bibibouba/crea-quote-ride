@@ -1,52 +1,15 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { VehicleType } from '@/types/vehicleType';
-import { Vehicle } from '@/types/vehicle';
+import { Vehicle, VehicleFormValues } from '@/types/vehicle';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-
-export interface VehicleFormValues {
-  name: string;
-  model: string;
-  capacity: number;
-  image_url?: string;
-  is_luxury: boolean;
-  is_active: boolean;
-  vehicle_type_id?: string;
-}
 
 export const useVehicles = () => {
   const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [typesLoading, setTypesLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
-  // Load vehicle types
-  useEffect(() => {
-    if (!user) return;
-    
-    const fetchVehicleTypes = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('vehicle_types')
-          .select('*')
-          .order('name', { ascending: true });
-          
-        if (error) throw error;
-        setVehicleTypes(data || []);
-      } catch (error) {
-        console.error('Error fetching vehicle types:', error);
-        toast.error('Erreur lors du chargement des types de véhicules');
-      } finally {
-        setTypesLoading(false);
-      }
-    };
-    
-    fetchVehicleTypes();
-  }, [user]);
 
   // Load vehicles
   useEffect(() => {
@@ -57,9 +20,11 @@ export const useVehicles = () => {
         const { data, error } = await supabase
           .from('vehicles')
           .select('*')
+          .eq('driver_id', user.id)
           .order('created_at', { ascending: false });
           
         if (error) throw error;
+        console.log('Fetched vehicles:', data);
         setVehicles(data || []);
       } catch (error) {
         console.error('Error fetching vehicles:', error);
@@ -74,20 +39,22 @@ export const useVehicles = () => {
 
   const getVehicleTypeName = (typeId: string | undefined) => {
     if (!typeId) return "";
-    const type = vehicleTypes.find(t => t.id === typeId);
+    const type = vehicles.find(t => t.id === typeId);
     return type ? type.name : "";
   };
 
-  const handleSaveVehicle = async (values: VehicleFormValues, editingVehicle: Vehicle | null) => {
-    if (!user) return false;
+  const handleSaveVehicle = async (values: VehicleFormValues, editingVehicle: Partial<Vehicle> | null) => {
+    if (!user) {
+      toast.error('Vous devez être connecté pour enregistrer un véhicule');
+      return false;
+    }
     
     setSubmitting(true);
-    
-    // Get vehicle type name from selected ID
-    const vehicleTypeName = getVehicleTypeName(values.vehicle_type_id);
+    console.log('Saving vehicle with values:', values);
+    console.log('Editing vehicle:', editingVehicle);
     
     try {
-      if (editingVehicle) {
+      if (editingVehicle?.id) {
         // Update existing vehicle
         const { error } = await supabase
           .from('vehicles')
@@ -99,7 +66,8 @@ export const useVehicles = () => {
             is_luxury: values.is_luxury,
             is_active: values.is_active,
             vehicle_type_id: values.vehicle_type_id,
-            vehicle_type_name: vehicleTypeName,
+            vehicle_type_name: values.vehicle_type_name,
+            updated_at: new Date().toISOString()
           })
           .eq('id', editingVehicle.id);
           
@@ -110,7 +78,7 @@ export const useVehicles = () => {
           v.id === editingVehicle.id ? { 
             ...v, 
             ...values,
-            vehicle_type_name: vehicleTypeName
+            updated_at: new Date().toISOString()
           } : v
         ));
         toast.success('Véhicule mis à jour avec succès');
@@ -127,18 +95,23 @@ export const useVehicles = () => {
             is_luxury: values.is_luxury,
             is_active: values.is_active,
             vehicle_type_id: values.vehicle_type_id,
-            vehicle_type_name: vehicleTypeName,
+            vehicle_type_name: values.vehicle_type_name,
             driver_id: user.id
           })
           .select();
           
         if (error) throw error;
         
+        console.log('New vehicle created:', data);
+        
         // Update local state
-        setVehicles([data[0], ...vehicles]);
-        toast.success('Véhicule ajouté avec succès');
-        return true;
+        if (data && data.length > 0) {
+          setVehicles([data[0], ...vehicles]);
+          toast.success('Véhicule ajouté avec succès');
+          return true;
+        }
       }
+      return false;
     } catch (error: any) {
       console.error('Error saving vehicle:', error);
       toast.error(`Erreur: ${error.message}`);
@@ -149,13 +122,19 @@ export const useVehicles = () => {
   };
 
   const handleDeleteVehicle = async (id: string) => {
+    if (!user) {
+      toast.error('Vous devez être connecté pour supprimer un véhicule');
+      return false;
+    }
+    
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) return false;
     
     try {
       const { error } = await supabase
         .from('vehicles')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('driver_id', user.id);
         
       if (error) throw error;
       
@@ -172,12 +151,9 @@ export const useVehicles = () => {
 
   return {
     vehicles,
-    vehicleTypes,
     loading,
-    typesLoading,
     submitting,
     handleSaveVehicle,
-    handleDeleteVehicle,
-    getVehicleTypeName
+    handleDeleteVehicle
   };
 };

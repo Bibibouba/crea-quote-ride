@@ -8,7 +8,7 @@ import { VehicleType } from '@/types/vehicle';
 interface VehicleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialValues?: Partial<VehicleFormValues>;
+  initialValues?: Partial<Vehicle>;
   vehicleTypes: VehicleType[];
   onSubmit: (data: VehicleFormValues) => void;
   isSubmitting: boolean;
@@ -28,7 +28,7 @@ const VehicleDialog: React.FC<VehicleDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

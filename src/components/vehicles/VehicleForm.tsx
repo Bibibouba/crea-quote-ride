@@ -16,9 +16,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useForm } from 'react-hook-form';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, ImageIcon } from 'lucide-react';
 import { VehicleFormValues } from '@/types/vehicle';
-import { VehicleType } from '@/types/vehicleType';
+import { VehicleType } from '@/types/vehicle';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
@@ -45,6 +48,7 @@ const VehicleForm: React.FC<VehicleFormProps> = ({
   isSubmitting 
 }) => {
   const [imageUploading, setImageUploading] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(formSchema),
@@ -68,6 +72,73 @@ const VehicleForm: React.FC<VehicleFormProps> = ({
     }
     
     onSubmit(data);
+  };
+
+  const uploadVehicleImage = async (file: File) => {
+    if (!user) return null;
+    
+    if (!file || !(file instanceof File)) {
+      toast.error('Fichier invalide');
+      return null;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+      toast.error('Seules les images sont acceptées');
+      return null;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La taille du fichier doit être inférieure à 5 Mo');
+      return null;
+    }
+    
+    setImageUploading(true);
+    
+    try {
+      // Check if vehicles bucket exists, create if not
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const vehiclesBucketExists = buckets?.some(bucket => bucket.name === 'vehicles');
+      
+      if (!vehiclesBucketExists) {
+        const { error: createBucketError } = await supabase.storage.createBucket('vehicles', {
+          public: true
+        });
+        
+        if (createBucketError) {
+          console.error('Error creating vehicles bucket:', createBucketError);
+          throw createBucketError;
+        }
+      }
+      
+      // Generate file path
+      const fileExt = file.name.split('.').pop();
+      const fileName = `vehicle-${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      
+      // Upload file
+      const { error: uploadError } = await supabase.storage
+        .from('vehicles')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data } = supabase.storage
+        .from('vehicles')
+        .getPublicUrl(filePath);
+        
+      toast.success('Image téléchargée avec succès');
+      return data.publicUrl;
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      toast.error(`Erreur lors du téléchargement: ${error.message}`);
+      return null;
+    } finally {
+      setImageUploading(false);
+    }
   };
 
   return (
@@ -213,36 +284,74 @@ const VehicleForm: React.FC<VehicleFormProps> = ({
               <FormLabel>Image du véhicule</FormLabel>
               <FormControl>
                 <div className="flex flex-col gap-2">
-                  {field.value && (
-                    <div className="relative w-full h-40 rounded-md overflow-hidden">
+                  {field.value ? (
+                    <div className="relative w-full h-40 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
                       <img 
                         src={field.value} 
                         alt="Véhicule" 
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '';
+                          e.currentTarget.classList.add('hidden');
+                          e.currentTarget.parentElement?.classList.add('border-dashed', 'border-2');
+                        }}
                       />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/50">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="bg-white"
+                          onClick={() => field.onChange(null)}
+                        >
+                          Supprimer l'image
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-40 border-2 border-dashed rounded-md flex items-center justify-center bg-gray-50">
+                      <ImageIcon className="h-10 w-10 text-gray-300" />
                     </div>
                   )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={imageUploading}
-                    onClick={() => {
-                      // Placeholder for image upload functionality
-                      console.log("Image upload not implemented yet");
-                    }}
-                  >
-                    {imageUploading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Téléchargement...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="mr-2 h-4 w-4" />
-                        {field.value ? "Modifier l'image" : "Ajouter une image"}
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex">
+                    <Input
+                      type="file"
+                      id="vehicle-image-upload"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const publicUrl = await uploadVehicleImage(file);
+                          if (publicUrl) {
+                            field.onChange(publicUrl);
+                          }
+                        }
+                      }}
+                      disabled={imageUploading}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      disabled={imageUploading}
+                      onClick={() => {
+                        document.getElementById('vehicle-image-upload')?.click();
+                      }}
+                    >
+                      {imageUploading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Téléchargement...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          {field.value ? "Changer l'image" : "Ajouter une image"}
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </FormControl>
               <FormDescription>
@@ -253,7 +362,7 @@ const VehicleForm: React.FC<VehicleFormProps> = ({
           )}
         />
         
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting || imageUploading}>
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

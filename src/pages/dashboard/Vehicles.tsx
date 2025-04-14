@@ -8,13 +8,13 @@ import VehicleCard from '@/components/vehicles/VehicleCard';
 import VehicleDialog from '@/components/vehicles/VehicleDialog';
 import EmptyVehicleState from '@/components/vehicles/EmptyVehicleState';
 import { PlusIcon, Loader2 } from 'lucide-react';
-import { VehicleFormValues } from '@/types/vehicle';
+import { Vehicle, VehicleFormValues } from '@/types/vehicle';
 
 const Vehicles = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { vehicles, loading, handleSaveVehicle, handleDeleteVehicle: deleteVehicle } = useVehicles();
+  const { vehicles, loading, handleSaveVehicle, handleDeleteVehicle } = useVehicles();
   const { vehicleTypes, loading: typesLoading } = useVehicleTypes();
-  const [editingVehicle, setEditingVehicle] = useState<VehicleFormValues | null>(null);
+  const [editingVehicle, setEditingVehicle] = useState<Partial<Vehicle> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNewVehicle = () => {
@@ -22,31 +22,15 @@ const Vehicles = () => {
     setIsDialogOpen(true);
   };
 
-  const handleEditVehicle = (vehicle: any) => {
-    const vehicleFormValues: VehicleFormValues = {
-      name: vehicle.name,
-      model: vehicle.model,
-      capacity: vehicle.capacity,
-      vehicle_type_id: vehicle.vehicle_type_id || '',
-      is_active: vehicle.is_active || true,
-      is_luxury: vehicle.is_luxury || false,
-      image_url: vehicle.image_url,
-      vehicle_type_name: vehicle.vehicle_type_name,
-      id: vehicle.id
-    };
-    
-    setEditingVehicle(vehicleFormValues);
+  const handleEditVehicle = (vehicle: Vehicle) => {
+    setEditingVehicle(vehicle);
     setIsDialogOpen(true);
   };
 
   const handleVehicleSubmit = async (data: VehicleFormValues) => {
     setIsSubmitting(true);
     try {
-      if (editingVehicle?.id) {
-        await handleSaveVehicle(data, { id: editingVehicle.id } as any);
-      } else {
-        await handleSaveVehicle(data, {} as any);
-      }
+      await handleSaveVehicle(data, editingVehicle);
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Error submitting vehicle:", error);
@@ -57,7 +41,7 @@ const Vehicles = () => {
 
   const handleDeleteClick = async (id: string) => {
     try {
-      await deleteVehicle(id);
+      await handleDeleteVehicle(id);
     } catch (error) {
       console.error("Error deleting vehicle:", error);
     }
