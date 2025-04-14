@@ -1,3 +1,4 @@
+
 import { useQuoteForm } from "@/hooks/useQuoteForm";
 
 export interface Vehicle {
@@ -9,14 +10,26 @@ export interface Vehicle {
 }
 
 export interface PricingSettings {
-  base_price_per_km: number;
-  night_percentage: number;
-  night_start: string;
-  night_end: string;
-  waiting_fee_per_minute: number;
-  wait_night_enabled: boolean;
-  wait_night_percentage: number;
-  wait_price_per_15min: number;
+  id?: string;
+  base_fare?: number;
+  price_per_km?: number;
+  waiting_fee_per_minute?: number;
+  min_fare?: number;
+  night_rate_enabled?: boolean;
+  night_rate_start?: string;
+  night_rate_end?: string;
+  night_rate_percentage?: number;
+  wait_price_per_15min?: number;
+  wait_night_enabled?: boolean;
+  wait_night_start?: string;
+  wait_night_end?: string;
+  wait_night_percentage?: number;
+  minimum_trip_fare?: number;
+  holiday_sunday_percentage?: number;
+  minimum_trip_minutes?: number;
+  service_area?: string;
+  ride_vat_rate?: number;
+  waiting_vat_rate?: number;
 }
 
 export interface QuoteDetails {
@@ -25,6 +38,18 @@ export interface QuoteDetails {
   waitingTimePrice: number;
   totalPrice: number;
   nightSurcharge: number;
+  // Additional fields needed for calculation and display
+  basePrice?: number;
+  isNightRate?: boolean;
+  isSunday?: boolean;
+  oneWayPriceHT?: number;
+  returnPriceHT?: number;
+  waitingTimePriceHT?: number;
+  totalPriceHT?: number;
+  totalVAT?: number;
+  sundaySurcharge?: number;
+  rideVatRate?: number;
+  waitingVatRate?: number;
 }
 
 export interface WaitingTimeOption {
