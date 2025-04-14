@@ -89,6 +89,7 @@ const ClientsList: React.FC = () => {
       toast.success(`Client supprimé avec succès`);
       setDeleteDialogOpen(false);
     } catch (error) {
+      toast.error(`Erreur lors de la suppression: ${error instanceof Error ? error.message : 'Une erreur est survenue'}`);
       setDeleteDialogOpen(false);
     }
   };
@@ -262,7 +263,7 @@ const ClientsList: React.FC = () => {
               Cette action ne peut pas être annulée. Cela supprimera définitivement le client
               <span className="font-semibold"> {clientToDelete?.name}</span>.
               <br /><br />
-              <span className="text-amber-500 font-medium">Note:</span> Si ce client a des devis associés, vous devrez d'abord supprimer ces devis avant de pouvoir supprimer le client.
+              <span className="text-amber-500 font-medium">Note:</span> Si ce client a des devis associés, ces devis seront conservés dans le système mais ne seront plus liés à un client existant.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
