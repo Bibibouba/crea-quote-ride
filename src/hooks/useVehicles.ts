@@ -1,9 +1,9 @@
-
-import { useState, useEffect } from 'react';
-import { supabase, VehicleType } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { VehicleType } from '@/types/vehicleType';
+import { Vehicle } from '@/types/vehicle';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Vehicle } from '@/types/vehicle';
 import { VehicleFormValues } from '@/components/vehicles/VehicleForm';
 
 export const useVehicles = () => {

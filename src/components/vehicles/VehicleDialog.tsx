@@ -1,51 +1,29 @@
-
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import VehicleForm, { VehicleFormValues } from './VehicleForm';
-import { VehicleType } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import VehicleForm from './VehicleForm';
+import { Vehicle } from '@/types/vehicle';
+import { VehicleType } from '@/types/vehicleType';
 
 interface VehicleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
-  description: string;
-  defaultValues: VehicleFormValues;
+  vehicle?: Vehicle | null;
   vehicleTypes: VehicleType[];
-  typesLoading: boolean;
-  submitting: boolean;
-  onSubmit: (values: VehicleFormValues) => void;
+  onSave: () => void;
 }
 
-const VehicleDialog = ({ 
-  open, 
-  onOpenChange,
-  title,
-  description,
-  defaultValues,
-  vehicleTypes,
-  typesLoading,
-  submitting,
-  onSubmit
-}: VehicleDialogProps) => {
+const VehicleDialog: React.FC<VehicleDialogProps> = ({ open, onOpenChange, vehicle, vehicleTypes, onSave }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle>{vehicle ? 'Modifier le véhicule' : 'Ajouter un véhicule'}</DialogTitle>
         </DialogHeader>
-        <VehicleForm
-          defaultValues={defaultValues}
-          vehicleTypes={vehicleTypes}
-          typesLoading={typesLoading}
-          submitting={submitting}
-          onSubmit={onSubmit}
+        <VehicleForm 
+          vehicle={vehicle} 
+          vehicleTypes={vehicleTypes} 
+          onSuccess={onSave} 
+          onCancel={() => onOpenChange(false)}
         />
       </DialogContent>
     </Dialog>

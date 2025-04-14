@@ -25,14 +25,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
+        console.log('Auth event:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (event === 'SIGNED_IN') {
           toast.success('Connexion réussie');
+          navigate('/dashboard');
         } else if (event === 'SIGNED_OUT') {
           toast.info('Déconnexion réussie');
+          navigate('/');
+        } else if (event === 'USER_UPDATED') {
+          console.log('User updated:', currentSession?.user);
+          if (currentSession?.user?.email_confirmed_at) {
+            toast.success('Email confirmé avec succès');
+          }
         }
       }
     );
@@ -47,20 +55,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        if (error.message === 'Email not confirmed') {
+        if (error.message.includes('Email not confirmed')) {
           toast.error("Votre email n'a pas été confirmé. Veuillez vérifier votre boîte de réception et cliquer sur le lien de confirmation.");
         } else {
           toast.error(`Erreur de connexion: ${error.message}`);
         }
         throw error;
       }
-      navigate('/dashboard');
     } catch (error: any) {
       console.error(error);
       throw error;
@@ -77,7 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             first_name: userData.firstName,
             last_name: userData.lastName,
             company_name: userData.companyName
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/connexion`
         }
       });
       
@@ -88,7 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (data.user) {
         toast.success("Inscription réussie! Veuillez vérifier votre email pour confirmer votre compte.");
-        return { success: true, message: "Veuillez vérifier votre email pour confirmer votre compte" };
+        return { 
+          success: true, 
+          message: "Veuillez vérifier votre email pour confirmer votre compte. Une fois confirmé, vous pourrez vous connecter." 
+        };
       }
 
       return { success: false, message: "Une erreur inconnue s'est produite" };
@@ -101,7 +112,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      navigate('/');
     } catch (error: any) {
       toast.error(`Erreur de déconnexion: ${error.message}`);
     }
