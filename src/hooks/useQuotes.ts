@@ -70,6 +70,8 @@ export const useQuotes = (clientId?: string) => {
             return_coordinates: quote.return_coordinates || undefined,
             // Handle potentially missing related data
             clients: quote.clients || undefined,
+            // Explicitly cast status to the union type
+            status: quote.status as 'pending' | 'accepted' | 'declined',
             // Check if vehicles is a valid object or an error object
             vehicles: (typeof quote.vehicles === 'object' && quote.vehicles !== null && !('error' in quote.vehicles)) 
               ? quote.vehicles 
