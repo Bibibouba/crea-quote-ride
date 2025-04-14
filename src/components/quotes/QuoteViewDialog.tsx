@@ -35,8 +35,8 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
   // Find the selected vehicle
   const selectedVehicle = vehicles.find(v => v.id === quote.vehicle_id);
   
-  // Get basePrice either from vehicles data or selectedVehicle
-  const basePrice = quote.vehicles?.basePrice || selectedVehicle?.basePrice || 0;
+  // Get basePrice, prioritizing data from the selected vehicle since vehicles table doesn't have basePrice
+  const basePrice = selectedVehicle?.basePrice || 0;
   
   // Prepare data for QuoteSummary
   const quoteDetails = {
@@ -66,6 +66,8 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
       undefined) : 
     undefined;
 
+  const vehicleName = quote.vehicles?.name || selectedVehicle?.name || 'Véhicule inconnu';
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">

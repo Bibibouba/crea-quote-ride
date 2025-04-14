@@ -40,7 +40,7 @@ export const useQuotes = (clientId?: string) => {
           .select(`
             *,
             clients(first_name, last_name, email, phone),
-            vehicles(name, model, basePrice)
+            vehicles(name, model)
           `)
           .eq('driver_id', userId)
           .order('created_at', { ascending: false });
@@ -73,11 +73,11 @@ export const useQuotes = (clientId?: string) => {
             // Explicitly cast status to the union type
             status: quote.status as 'pending' | 'accepted' | 'declined',
             // Safely handle vehicles data with proper null checking
-            vehicles: quote.vehicles && typeof quote.vehicles === 'object' && !('error' in quote.vehicles)
+            vehicles: quote.vehicles && typeof quote.vehicles === 'object' 
               ? {
                   name: quote.vehicles.name || 'Véhicule inconnu',
                   model: quote.vehicles.model || '?',
-                  basePrice: quote.vehicles.basePrice || 0
+                  basePrice: 0 // Note: basePrice isn't available in vehicles table, we'll handle it elsewhere
                 }
               : null
           };
