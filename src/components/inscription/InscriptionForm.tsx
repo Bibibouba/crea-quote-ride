@@ -11,10 +11,16 @@ import PasswordFields from './PasswordFields';
 import CompanyNameField from './CompanyNameField';
 import TermsField from './TermsField';
 import SubmitButton from './SubmitButton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const InscriptionForm = () => {
   const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const form = useForm<InscriptionFormValues>({
     resolver: zodResolver(inscriptionFormSchema),
@@ -31,14 +37,28 @@ const InscriptionForm = () => {
 
   const onSubmit = async (data: InscriptionFormValues) => {
     setIsLoading(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    
     try {
-      await signUp(data.email, data.password, {
+      const result = await signUp(data.email, data.password, {
         firstName: data.firstName,
         lastName: data.lastName,
         companyName: data.companyName
       });
+      
+      if (result.success) {
+        setSuccessMessage(result.message);
+        // Redirigeons vers la page de connexion après 3 secondes
+        setTimeout(() => {
+          navigate('/connexion');
+        }, 3000);
+      } else {
+        setErrorMessage(result.message);
+      }
     } catch (error) {
       console.error(error);
+      setErrorMessage("Une erreur s'est produite lors de l'inscription");
     } finally {
       setIsLoading(false);
     }
@@ -47,6 +67,26 @@ const InscriptionForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {successMessage && (
+          <Alert className="bg-green-50 border-green-200">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertTitle className="text-green-800">Inscription réussie!</AlertTitle>
+            <AlertDescription className="text-green-700">
+              {successMessage}
+              <br />
+              Vous allez être redirigé vers la page de connexion...
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {errorMessage && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erreur</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
+
         <PersonalInfoFields control={form.control} />
         <EmailField control={form.control} />
         <PasswordFields control={form.control} />

@@ -10,7 +10,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData: any) => Promise<void>;
+  signUp: (email: string, password: string, userData: any) => Promise<{ success: boolean; message: string }>;
   signOut: () => Promise<void>;
 };
 
@@ -53,11 +53,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
+        if (error.message === 'Email not confirmed') {
+          toast.error("Votre email n'a pas été confirmé. Veuillez vérifier votre boîte de réception et cliquer sur le lien de confirmation.");
+        } else {
+          toast.error(`Erreur de connexion: ${error.message}`);
+        }
         throw error;
       }
       navigate('/dashboard');
     } catch (error: any) {
-      toast.error(`Erreur de connexion: ${error.message}`);
+      console.error(error);
       throw error;
     }
   };
@@ -77,16 +82,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       if (error) {
-        throw error;
+        toast.error(`Erreur d'inscription: ${error.message}`);
+        return { success: false, message: error.message };
       }
       
       if (data.user) {
-        toast.success('Inscription réussie! Vous pouvez maintenant vous connecter.');
-        navigate('/connexion');
+        toast.success("Inscription réussie! Veuillez vérifier votre email pour confirmer votre compte.");
+        return { success: true, message: "Veuillez vérifier votre email pour confirmer votre compte" };
       }
+
+      return { success: false, message: "Une erreur inconnue s'est produite" };
     } catch (error: any) {
       toast.error(`Erreur d'inscription: ${error.message}`);
-      throw error;
+      return { success: false, message: error.message };
     }
   };
 
