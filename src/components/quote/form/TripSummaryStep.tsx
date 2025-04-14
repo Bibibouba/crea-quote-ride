@@ -217,7 +217,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                         </p>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="text-xs">TVA 10% sur le transport</p>
+                        <p className="text-xs">TVA {quoteDetails?.rideVatRate || 10}% sur le transport</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -238,7 +238,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                           </p>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="text-xs">TVA 20% sur le temps d'attente</p>
+                          <p className="text-xs">TVA {quoteDetails?.waitingVatRate || 20}% sur le temps d'attente</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -270,7 +270,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                           </p>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="text-xs">TVA 10% sur le transport</p>
+                          <p className="text-xs">TVA {quoteDetails?.rideVatRate || 10}% sur le transport</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -282,15 +282,21 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
               {(isNightRate || isSunday) && (
                 <div className="bg-secondary/20 p-2 rounded-md mt-2 text-sm">
                   {isNightRate && (
-                    <div className="flex items-center mb-1">
-                      <Moon className="h-4 w-4 mr-1" />
-                      <span>Tarif de nuit appliqué</span>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center">
+                        <Moon className="h-4 w-4 mr-1" />
+                        <span>Majoration tarif de nuit</span>
+                      </div>
+                      <span className="font-medium">{formatPrice(quoteDetails?.nightSurcharge)}€</span>
                     </div>
                   )}
                   {isSunday && (
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      <span>Majoration dimanche/jour férié</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        <span>Majoration dimanche/jour férié</span>
+                      </div>
+                      <span className="font-medium">{formatPrice(quoteDetails?.sundaySurcharge)}€</span>
                     </div>
                   )}
                 </div>

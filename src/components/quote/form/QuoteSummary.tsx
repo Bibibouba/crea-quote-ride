@@ -88,6 +88,11 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
       return `${minutes} minute${minutes > 1 ? 's' : ''}`;
     }
   };
+
+  // Format price with one decimal
+  const formatPrice = (price: number) => {
+    return price.toFixed(1);
+  };
   
   return (
     <div className="space-y-6">
@@ -144,7 +149,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
                   <ArrowRight className="h-4 w-4 mr-2 flex-shrink-0" />
                   <p className="font-medium">Trajet aller</p>
                 </div>
-                <p>{estimatedPrice}€</p>
+                <p>{formatPrice(estimatedPrice)}€</p>
               </div>
               
               {/* Display waiting time information */}
@@ -152,9 +157,9 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
                 <div className="flex justify-between">
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
+                    <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes || 0)})</p>
                   </div>
-                  <p>{waitingTimePrice}€</p>
+                  <p>{formatPrice(waitingTimePrice || 0)}€</p>
                 </div>
               )}
               
@@ -167,7 +172,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
                       Trajet retour {returnToSameAddress ? '(même adresse)' : ''}
                     </p>
                   </div>
-                  <p>{returnPrice}€</p>
+                  <p>{formatPrice(returnPrice)}€</p>
                 </div>
               )}
               
@@ -176,7 +181,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
                 <div className="text-sm text-muted-foreground">
                   <p className="break-words">Adresse de retour : {customReturnAddress}</p>
                   {returnDistance > 0 && (
-                    <p className="mt-1">Distance : {returnDistance} km | Durée : {formatDuration(returnDuration)}</p>
+                    <p className="mt-1">Distance : {returnDistance} km | Durée : {formatDuration(returnDuration || 0)}</p>
                   )}
                 </div>
               )}
@@ -185,7 +190,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
               
               <div className="flex justify-between border-t border-border/60 pt-4">
                 <p className="font-medium">Montant total</p>
-                <p className="text-xl font-bold">{totalPrice}€</p>
+                <p className="text-xl font-bold">{formatPrice(totalPrice)}€</p>
               </div>
             </div>
           </div>

@@ -21,7 +21,7 @@ interface PricingSettings {
   waiting_vat_rate?: number;
 }
 
-interface WaitingTimeOption {
+export interface WaitingTimeOption {
   value: number;
   label: string;
 }
@@ -266,14 +266,19 @@ export const useQuoteForm = () => {
     let oneWayPriceHT = estimatedDistance * basePrice;
     let returnPriceHT = hasReturnTrip ? (returnToSameAddress ? estimatedDistance * basePrice : returnDistance * basePrice) : 0;
     
+    let nightSurcharge = 0;
+    let sundaySurcharge = 0;
+    
     if (isNightRate && pricingSettings && pricingSettings.night_rate_percentage) {
       const nightPercentage = pricingSettings.night_rate_percentage / 100;
+      nightSurcharge = (oneWayPriceHT + returnPriceHT) * nightPercentage;
       oneWayPriceHT += oneWayPriceHT * nightPercentage;
       returnPriceHT += returnPriceHT * nightPercentage;
     }
     
     if (isSunday && pricingSettings && pricingSettings.holiday_sunday_percentage) {
       const sundayPercentage = pricingSettings.holiday_sunday_percentage / 100;
+      sundaySurcharge = (oneWayPriceHT + returnPriceHT) * sundayPercentage;
       oneWayPriceHT += oneWayPriceHT * sundayPercentage;
       returnPriceHT += returnPriceHT * sundayPercentage;
     }
@@ -308,6 +313,8 @@ export const useQuoteForm = () => {
       totalPriceHT: totalPriceHT,
       totalVAT: totalVAT,
       totalPrice: totalPrice,
+      nightSurcharge: nightSurcharge,
+      sundaySurcharge: sundaySurcharge,
       rideVatRate,
       waitingVatRate
     });

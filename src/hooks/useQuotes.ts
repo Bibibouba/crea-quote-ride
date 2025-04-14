@@ -22,7 +22,7 @@ export const useQuotes = (clientId?: string) => {
   } = useQuery({
     queryKey,
     queryFn: async () => {
-      // Récupérons l'ID de l'utilisateur connecté
+      // Get the current user's ID from Supabase
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
       
@@ -33,18 +33,18 @@ export const useQuotes = (clientId?: string) => {
       
       console.log('Fetching quotes for driver:', userId);
       
-      // Construisons notre requête en filtrant par driver_id
+      // Build the query filtering by driver_id
       let query = supabase
         .from('quotes')
         .select(`
           *,
-          clients(first_name, last_name, email),
+          clients(first_name, last_name, email, phone),
           vehicles(name, model)
         `)
         .eq('driver_id', userId)
         .order('created_at', { ascending: false });
 
-      // Si un clientId est fourni, filtrons également par client
+      // If a clientId is provided, also filter by client
       if (clientId) {
         query = query.eq('client_id', clientId);
       }
@@ -58,7 +58,7 @@ export const useQuotes = (clientId?: string) => {
       
       console.log(`Fetched ${data?.length || 0} quotes for driver ${userId}`);
       return data as (Quote & {
-        clients: { first_name: string; last_name: string; email: string };
+        clients: { first_name: string; last_name: string; email: string; phone: string };
         vehicles: { name: string; model: string } | null;
       })[];
     }
@@ -99,7 +99,7 @@ export const useQuotes = (clientId?: string) => {
     },
   });
 
-  // Ajouter un nouveau devis
+  // Add a new quote - ensure we set the driver_id
   const addQuote = useMutation({
     mutationFn: async (newQuote: Omit<QuoteWithCoordinates, "id" | "created_at" | "updated_at" | "quote_pdf">) => {
       // Get the current user's ID from Supabase
@@ -110,7 +110,7 @@ export const useQuotes = (clientId?: string) => {
         throw new Error("User not authenticated");
       }
       
-      // Assurons-nous d'utiliser le bon driver_id
+      // Ensure we use the correct driver_id
       const quoteWithDriverId = {
         ...newQuote,
         driver_id: userId,

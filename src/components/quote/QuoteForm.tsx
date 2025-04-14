@@ -58,6 +58,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
@@ -169,6 +170,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         setFirstName(client.first_name);
         setLastName(client.last_name);
         setEmail(client.email);
+        setPhone(client.phone);
       }
     }
   }, [clientId, clients]);
@@ -179,7 +181,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         try {
           const { data, error } = await supabase
             .from('profiles')
-            .select('first_name, last_name, email')
+            .select('first_name, last_name, email, phone')
             .eq('id', user.id)
             .single();
           
@@ -189,6 +191,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
             setFirstName(data.first_name || '');
             setLastName(data.last_name || '');
             setEmail(data.email || user.email || '');
+            setPhone(data.phone || user.email || '');
           }
         } catch (error) {
           console.error('Erreur lors du chargement des informations utilisateur:', error);
@@ -258,30 +261,43 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
       const [hours, minutes] = time.split(':');
       dateTime.setHours(parseInt(hours), parseInt(minutes));
       
+      const { data: { session } } = await supabase.auth.getSession();
+      const driverId = session?.user?.id;
+      
+      if (!driverId) {
+        throw new Error("Utilisateur non authentifié");
+      }
+      
       let finalClientId = selectedClient;
       
-      if (!selectedClient && firstName && lastName && email) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id;
-        
-        if (!userId) {
-          throw new Error("Utilisateur non authentifié");
-        }
+      if ((!selectedClient || selectedClient === '') && firstName && lastName) {
+        console.log("Creating new client with driver_id:", driverId);
         
         const { data, error } = await supabase
           .from('clients')
           .insert({
-            driver_id: userId,
+            driver_id: driverId,
             first_name: firstName,
             last_name: lastName,
-            email: email,
+            email: email || '',
+            phone: phone || '',
             client_type: 'personal'
           })
           .select()
           .single();
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error creating client:", error);
+          throw error;
+        }
+        
+        console.log("Created new client:", data);
         finalClientId = data.id;
+        
+        toast({
+          title: 'Client créé',
+          description: `${firstName} ${lastName} a été ajouté à votre liste de clients`,
+        });
       }
       
       if (!finalClientId) {
@@ -302,14 +318,10 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         totalPriceCalculated += returnPrice;
       }
       
-      const { data: { session } } = await supabase.auth.getSession();
-      const driverId = session?.user?.id;
-      
-      if (!driverId) {
-        throw new Error("Utilisateur non authentifié");
-      }
+      console.log("Creating quote for driver_id:", driverId);
       
       const quoteData: Omit<Quote, "id" | "created_at" | "updated_at" | "quote_pdf"> = {
+        driver_id: driverId,
         client_id: finalClientId,
         vehicle_id: selectedVehicle,
         departure_location: departureAddress,
@@ -321,7 +333,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         ride_date: dateTime.toISOString(),
         amount: totalPriceCalculated,
         status: "pending",
-        driver_id: driverId,
         has_return_trip: hasReturnTrip,
         has_waiting_time: hasWaitingTime,
         waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
@@ -333,7 +344,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         return_duration_minutes: returnDuration
       };
       
-      console.log("Enregistrement du devis avec driver_id:", driverId);
       await addQuote.mutateAsync(quoteData);
       
       toast({
@@ -542,6 +552,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
                     setLastName={setLastName}
                     email={email}
                     setEmail={setEmail}
+                    phone={phone}
+                    setPhone={setPhone}
                   />
                 ) : undefined
               }
