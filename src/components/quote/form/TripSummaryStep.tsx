@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -74,6 +73,10 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
   const isSunday = quoteDetails?.isSunday;
   const hasMinDistanceWarning = quoteDetails?.hasMinDistanceWarning;
   const minDistance = quoteDetails?.minDistance || 0;
+  const nightHours = quoteDetails?.nightHours || 0;
+  const nightRatePercentage = quoteDetails?.nightRatePercentage || 0;
+  const nightStartDisplay = quoteDetails?.nightStartDisplay || '';
+  const nightEndDisplay = quoteDetails?.nightEndDisplay || '';
 
   // Formatter pour afficher un chiffre après la virgule
   const formatPrice = (price?: number) => {
@@ -159,8 +162,21 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
           <AlertTitle className="text-indigo-800">Tarif de nuit applicable</AlertTitle>
           <AlertDescription className="text-indigo-700">
             Ce trajet inclut {Math.round((quoteDetails.nightMinutes / quoteDetails.totalMinutes) * 100)}% de 
-            parcours en horaires de nuit ({quoteDetails.nightMinutes} minutes).
-            Une majoration de {quoteDetails.nightRatePercentage}% sera appliquée sur cette portion.
+            parcours en horaires de nuit ({Math.round(nightHours * 10) / 10} heures).
+            {nightStartDisplay && nightEndDisplay && (
+              <span> La majoration de {nightRatePercentage}% s'applique entre {nightStartDisplay} et {nightEndDisplay}.</span>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {isSunday && quoteDetails?.sundaySurcharge && quoteDetails.sundaySurcharge > 0 && (
+        <Alert variant="default" className="bg-orange-50 border-orange-200">
+          <Calendar className="h-4 w-4 text-orange-600" />
+          <AlertTitle className="text-orange-800">Majoration dimanche/jour férié</AlertTitle>
+          <AlertDescription className="text-orange-700">
+            Une majoration de {selectedVehicleInfo?.holiday_sunday_percentage || 0}% s'applique à l'ensemble du trajet 
+            (dimanche ou jour férié).
           </AlertDescription>
         </Alert>
       )}
@@ -334,16 +350,16 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
               {/* Afficher les conditions tarifaires spéciales si présentes */}
               {(isNightRate || isSunday) && (
                 <div className="bg-secondary/20 p-2 rounded-md mt-2 text-sm">
-                  {isNightRate && (
+                  {isNightRate && quoteDetails?.nightSurcharge && quoteDetails.nightSurcharge > 0 && (
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center">
                         <Moon className="h-4 w-4 mr-1" />
-                        <span>Majoration tarif de nuit</span>
+                        <span>Majoration tarif de nuit ({Math.round(nightHours * 10) / 10}h)</span>
                       </div>
                       <span className="font-medium">{formatPrice(quoteDetails?.nightSurcharge)}€</span>
                     </div>
                   )}
-                  {isSunday && (
+                  {isSunday && quoteDetails?.sundaySurcharge && quoteDetails.sundaySurcharge > 0 && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />

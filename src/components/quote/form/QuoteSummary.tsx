@@ -103,7 +103,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   const nightRateStart = selectedVehicleObj?.night_rate_start || '20:00';
   const nightRateEnd = selectedVehicleObj?.night_rate_end || '06:00';
   
-  // Determine if the ride has a night portion based on time
+  // Determine if the trip has a night portion based on time and duration
   const [hours, minutes] = time.split(':').map(Number);
   const rideTime = new Date(date);
   rideTime.setHours(hours, minutes);
@@ -116,11 +116,133 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   const [nightEndHours, nightEndMinutes] = nightRateEnd?.split(':').map(Number) || [0, 0];
   nightEndTime.setHours(nightEndHours, nightEndMinutes);
   
-  // Check if the ride has a night portion
-  const isNightRateApplied = hasNightRate && (
-    (nightStartTime > nightEndTime && (rideTime >= nightStartTime || rideTime <= nightEndTime)) ||
-    (nightStartTime < nightEndTime && rideTime >= nightStartTime && rideTime <= nightEndTime)
-  );
+  // Calculate end time of the trip
+  const tripEndTime = new Date(rideTime);
+  tripEndTime.setMinutes(tripEndTime.getMinutes() + estimatedDuration);
+  
+  // Function to format time as HH:MM
+  const formatTimeDisplay = (date: Date) => {
+    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  };
+  
+  // Check if trip spans into night hours
+  let isNightRateApplied = false;
+  let nightHours = 0;
+  let dayHours = 0;
+  
+  if (hasNightRate) {
+    // Calculate if any part of the trip occurs during night rate hours
+    const tripStartMinutes = hours * 60 + minutes;
+    const tripDurationMinutes = estimatedDuration;
+    const tripEndMinutes = (tripStartMinutes + tripDurationMinutes) % (24 * 60);
+    
+    const nightStartMinutes = nightStartHours * 60 + nightStartMinutes;
+    const nightEndMinutes = nightEndHours * 60 + nightEndMinutes;
+    
+    // Night spans across midnight
+    if (nightStartMinutes > nightEndMinutes) {
+      // Trip starts before midnight
+      if (tripStartMinutes >= nightStartMinutes) {
+        if (tripEndMinutes <= nightEndMinutes) {
+          // Trip entirely at night
+          nightHours = tripDurationMinutes / 60;
+          isNightRateApplied = true;
+        } else if (tripEndMinutes > nightEndMinutes && tripEndMinutes < nightStartMinutes) {
+          // Trip starts at night, ends during day
+          const nightMinutes = (24 * 60 - tripStartMinutes) + nightEndMinutes;
+          nightHours = nightMinutes / 60;
+          dayHours = (tripDurationMinutes - nightMinutes) / 60;
+          isNightRateApplied = true;
+        } else {
+          // Trip starts at night, crosses day, ends at night
+          const dayMinutes = nightStartMinutes - nightEndMinutes;
+          dayHours = dayMinutes / 60;
+          nightHours = (tripDurationMinutes - dayMinutes) / 60;
+          isNightRateApplied = true;
+        }
+      } 
+      // Trip starts after midnight, before night end
+      else if (tripStartMinutes < nightEndMinutes) {
+        if (tripEndMinutes <= nightEndMinutes) {
+          // Trip entirely at night
+          nightHours = tripDurationMinutes / 60;
+          isNightRateApplied = true;
+        } else if (tripEndMinutes < nightStartMinutes) {
+          // Trip starts at night, ends during day
+          const nightMinutes = nightEndMinutes - tripStartMinutes;
+          nightHours = nightMinutes / 60;
+          dayHours = (tripDurationMinutes - nightMinutes) / 60;
+          isNightRateApplied = true;
+        } else {
+          // Trip starts at night, crosses day, ends at night
+          const dayMinutes = nightStartMinutes - nightEndMinutes;
+          dayHours = dayMinutes / 60;
+          nightHours = (tripDurationMinutes - dayMinutes) / 60;
+          isNightRateApplied = true;
+        }
+      }
+      // Trip starts during day
+      else if (tripStartMinutes < nightStartMinutes) {
+        if (tripEndMinutes >= nightStartMinutes) {
+          if (tripEndMinutes <= (24 * 60)) {
+            // Trip starts during day, ends at night before midnight
+            const dayMinutes = nightStartMinutes - tripStartMinutes;
+            dayHours = dayMinutes / 60;
+            nightHours = (tripDurationMinutes - dayMinutes) / 60;
+            isNightRateApplied = true;
+          } else {
+            // Trip starts during day, crosses midnight, ends at night
+            const dayMinutes1 = nightStartMinutes - tripStartMinutes;
+            const nightMinutes1 = (24 * 60) - nightStartMinutes;
+            const nightMinutes2 = tripEndMinutes > nightEndMinutes ? nightEndMinutes : tripEndMinutes;
+            dayHours = dayMinutes1 / 60;
+            nightHours = (nightMinutes1 + nightMinutes2) / 60;
+            isNightRateApplied = true;
+          }
+        }
+      }
+    } 
+    // Standard night hours (night start < night end)
+    else {
+      // Check if trip overlaps with night hours
+      const tripEndMinutesActual = tripStartMinutes + tripDurationMinutes;
+      
+      // No overlap with night
+      if (tripEndMinutesActual <= nightStartMinutes || tripStartMinutes >= nightEndMinutes) {
+        isNightRateApplied = false;
+      }
+      // Trip entirely at night
+      else if (tripStartMinutes >= nightStartMinutes && tripEndMinutesActual <= nightEndMinutes) {
+        nightHours = tripDurationMinutes / 60;
+        isNightRateApplied = true;
+      }
+      // Trip starts during day, ends at night
+      else if (tripStartMinutes < nightStartMinutes && tripEndMinutesActual <= nightEndMinutes) {
+        const dayMinutes = nightStartMinutes - tripStartMinutes;
+        dayHours = dayMinutes / 60;
+        nightHours = (tripDurationMinutes - dayMinutes) / 60;
+        isNightRateApplied = true;
+      }
+      // Trip starts at night, ends during day
+      else if (tripStartMinutes >= nightStartMinutes && tripEndMinutesActual > nightEndMinutes) {
+        const nightMinutes = nightEndMinutes - tripStartMinutes;
+        nightHours = nightMinutes / 60;
+        dayHours = (tripDurationMinutes - nightMinutes) / 60;
+        isNightRateApplied = true;
+      }
+      // Trip starts during day, crosses night, ends during day
+      else if (tripStartMinutes < nightStartMinutes && tripEndMinutesActual > nightEndMinutes) {
+        const nightMinutes = nightEndMinutes - nightStartMinutes;
+        nightHours = nightMinutes / 60;
+        dayHours = (tripDurationMinutes - nightMinutes) / 60;
+        isNightRateApplied = true;
+      }
+    }
+  }
+  
+  // Check if the trip is on a Sunday
+  const isSunday = date.getDay() === 0;
+  const sundayRate = selectedVehicleObj?.holiday_sunday_percentage || 0;
   
   return (
     <div className="space-y-6">
@@ -185,14 +307,31 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
                 <div className="ml-6 bg-muted/40 p-2 rounded-md">
                   <div className="flex items-center mb-1">
                     <Moon className="h-3 w-3 mr-1 text-amber-500" />
-                    <p className="text-xs font-medium">Tarif de nuit ({nightRatePercentage}% de majoration)</p>
+                    <p className="text-xs font-medium">
+                      Tarif de nuit ({nightRatePercentage}% de majoration)
+                    </p>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Cette course débute à {time} et peut inclure une portion en tarif de nuit 
+                    Ce trajet débute à {time} et se termine à {formatTimeDisplay(tripEndTime)}.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <strong>{Math.round(nightHours * 10) / 10}h</strong> du trajet sont en horaire de nuit 
                     (entre {nightRateStart} et {nightRateEnd}).
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    La majoration s'applique uniquement à la portion du trajet effectuée pendant ces horaires.
+                    La majoration s'applique uniquement à cette portion du trajet.
+                  </p>
+                </div>
+              )}
+              
+              {/* Afficher les infos de tarif dimanche/férié si applicable */}
+              {isSunday && sundayRate > 0 && (
+                <div className="ml-6 bg-muted/40 p-2 rounded-md mt-2">
+                  <div className="flex items-center mb-1">
+                    <Badge variant="outline" className="h-5 text-xs">Dimanche</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Majoration dimanche/jour férié de {sundayRate}% appliquée sur l'ensemble du trajet.
                   </p>
                 </div>
               )}

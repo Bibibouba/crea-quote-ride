@@ -1,3 +1,4 @@
+
 import { PricingSettings, QuoteDetails } from '@/types/quoteForm';
 
 export const calculateWaitingTimePrice = (
@@ -118,9 +119,14 @@ export const calculateNightDuration = (
   durationMinutes: number,
   vehicleSettings: any,
   globalSettings: PricingSettings | null
-): { nightMinutes: number, totalMinutes: number } => {
+): { nightMinutes: number, totalMinutes: number, nightStartDisplay: string, nightEndDisplay: string } => {
   if ((!vehicleSettings?.night_rate_enabled && !globalSettings?.night_rate_enabled) || durationMinutes <= 0) {
-    return { nightMinutes: 0, totalMinutes: durationMinutes };
+    return { 
+      nightMinutes: 0, 
+      totalMinutes: durationMinutes,
+      nightStartDisplay: '',
+      nightEndDisplay: ''
+    };
   }
   
   const nightStart = vehicleSettings?.night_rate_enabled ? 
@@ -132,7 +138,12 @@ export const calculateNightDuration = (
     globalSettings?.night_rate_end;
   
   if (!nightStart || !nightEnd) {
-    return { nightMinutes: 0, totalMinutes: durationMinutes };
+    return { 
+      nightMinutes: 0, 
+      totalMinutes: durationMinutes,
+      nightStartDisplay: '',
+      nightEndDisplay: ''
+    };
   }
   
   const [startHours, startMinutes] = startTime.split(':').map(Number);
@@ -146,38 +157,81 @@ export const calculateNightDuration = (
   
   const arrivalMinutes = (departureMinutes + durationMinutes) % 1440;
   
+  // Format time displays
+  const formatTimeDisplay = (minutes: number) => {
+    const hours = Math.floor(minutes / 60) % 24;
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  };
+  
+  const tripStartTimeDisplay = formatTimeDisplay(departureMinutes);
+  const tripEndTimeDisplay = formatTimeDisplay(departureMinutes + durationMinutes);
+  
+  let effectiveNightStartDisplay = formatTimeDisplay(nightStartMinutes);
+  let effectiveNightEndDisplay = formatTimeDisplay(nightEndMinutes);
+  
   if (nightStartMinutes > nightEndMinutes) {
     if (departureMinutes >= nightStartMinutes) {
       if (arrivalMinutes <= nightEndMinutes) {
-        return { nightMinutes: durationMinutes, totalMinutes: durationMinutes };
+        return { 
+          nightMinutes: durationMinutes, 
+          totalMinutes: durationMinutes,
+          nightStartDisplay: tripStartTimeDisplay,
+          nightEndDisplay: tripEndTimeDisplay
+        };
       }
       else {
         const nightPortionMinutes = (1440 - departureMinutes) + nightEndMinutes;
+        const nightEndTime = Math.min(departureMinutes + durationMinutes, 1440) % 1440;
+        if (nightEndTime <= nightEndMinutes) {
+          effectiveNightEndDisplay = formatTimeDisplay(nightEndTime);
+        } else {
+          effectiveNightEndDisplay = formatTimeDisplay(nightEndMinutes);
+        }
         return { 
           nightMinutes: Math.min(nightPortionMinutes, durationMinutes), 
-          totalMinutes: durationMinutes 
+          totalMinutes: durationMinutes,
+          nightStartDisplay: tripStartTimeDisplay,
+          nightEndDisplay: effectiveNightEndDisplay
         };
       }
     }
     else if (departureMinutes < nightEndMinutes) {
       if (arrivalMinutes <= nightEndMinutes) {
-        return { nightMinutes: durationMinutes, totalMinutes: durationMinutes };
+        return { 
+          nightMinutes: durationMinutes, 
+          totalMinutes: durationMinutes,
+          nightStartDisplay: tripStartTimeDisplay,
+          nightEndDisplay: tripEndTimeDisplay
+        };
       }
       else {
         return { 
           nightMinutes: nightEndMinutes - departureMinutes, 
-          totalMinutes: durationMinutes 
+          totalMinutes: durationMinutes,
+          nightStartDisplay: tripStartTimeDisplay,
+          nightEndDisplay: effectiveNightEndDisplay
         };
       }
     }
     else {
       if (arrivalMinutes < nightStartMinutes) {
-        return { nightMinutes: 0, totalMinutes: durationMinutes };
+        return { 
+          nightMinutes: 0, 
+          totalMinutes: durationMinutes,
+          nightStartDisplay: '',
+          nightEndDisplay: ''
+        };
       }
       else {
+        const nightPortion = arrivalMinutes < 1440 ? 
+          arrivalMinutes - nightStartMinutes : 
+          1440 - nightStartMinutes;
         return { 
-          nightMinutes: arrivalMinutes - nightStartMinutes, 
-          totalMinutes: durationMinutes 
+          nightMinutes: nightPortion, 
+          totalMinutes: durationMinutes,
+          nightStartDisplay: formatTimeDisplay(nightStartMinutes),
+          nightEndDisplay: tripEndTimeDisplay
         };
       }
     }
@@ -187,30 +241,46 @@ export const calculateNightDuration = (
     const courseEnd = departureMinutes + durationMinutes;
     
     if (courseEnd <= nightStartMinutes || courseStart >= nightEndMinutes) {
-      return { nightMinutes: 0, totalMinutes: durationMinutes };
+      return { 
+        nightMinutes: 0, 
+        totalMinutes: durationMinutes,
+        nightStartDisplay: '',
+        nightEndDisplay: ''
+      };
     }
     
     if (courseStart >= nightStartMinutes && courseEnd <= nightEndMinutes) {
-      return { nightMinutes: durationMinutes, totalMinutes: durationMinutes };
+      return { 
+        nightMinutes: durationMinutes, 
+        totalMinutes: durationMinutes,
+        nightStartDisplay: tripStartTimeDisplay,
+        nightEndDisplay: tripEndTimeDisplay
+      };
     }
     
     if (courseStart < nightStartMinutes && courseEnd <= nightEndMinutes) {
       return { 
         nightMinutes: courseEnd - nightStartMinutes, 
-        totalMinutes: durationMinutes 
+        totalMinutes: durationMinutes,
+        nightStartDisplay: formatTimeDisplay(nightStartMinutes),
+        nightEndDisplay: tripEndTimeDisplay
       };
     }
     
     if (courseStart >= nightStartMinutes && courseEnd > nightEndMinutes) {
       return { 
         nightMinutes: nightEndMinutes - courseStart, 
-        totalMinutes: durationMinutes 
+        totalMinutes: durationMinutes,
+        nightStartDisplay: tripStartTimeDisplay,
+        nightEndDisplay: formatTimeDisplay(nightEndMinutes)
       };
     }
     
     return { 
       nightMinutes: nightEndMinutes - nightStartMinutes, 
-      totalMinutes: durationMinutes 
+      totalMinutes: durationMinutes,
+      nightStartDisplay: formatTimeDisplay(nightStartMinutes),
+      nightEndDisplay: formatTimeDisplay(nightEndMinutes)
     };
   }
 };
@@ -256,11 +326,18 @@ export const calculateQuoteDetails = (
   const rideTime = time || "12:00";
   
   const oneWayDuration = estimatedDistance > 0 ? Math.max(10, estimatedDistance * 2) : 0;
-  const { nightMinutes: oneWayNightMinutes, totalMinutes: oneWayTotalMinutes } = 
+  const nightDurationResult = 
     calculateNightDuration(date, rideTime, oneWayDuration, selectedVehicleInfo, pricingSettings);
+  
+  const oneWayNightMinutes = nightDurationResult.nightMinutes;
+  const oneWayTotalMinutes = nightDurationResult.totalMinutes;
+  const nightStartDisplay = nightDurationResult.nightStartDisplay;
+  const nightEndDisplay = nightDurationResult.nightEndDisplay;
   
   let returnNightMinutes = 0;
   let returnTotalMinutes = 0;
+  let returnNightStartDisplay = '';
+  let returnNightEndDisplay = '';
   
   if (hasReturnTrip) {
     const returnStartTime = new Date(date);
@@ -281,6 +358,8 @@ export const calculateQuoteDetails = (
     
     returnNightMinutes = returnNightDuration.nightMinutes;
     returnTotalMinutes = returnNightDuration.totalMinutes;
+    returnNightStartDisplay = returnNightDuration.nightStartDisplay;
+    returnNightEndDisplay = returnNightDuration.nightEndDisplay;
   }
   
   const oneWayNightProportion = oneWayTotalMinutes > 0 ? oneWayNightMinutes / oneWayTotalMinutes : 0;
@@ -338,13 +417,9 @@ export const calculateQuoteDetails = (
   
   const nightHours = (oneWayNightMinutes + returnNightMinutes) / 60;
   
-  const nightStartDisplay = selectedVehicleInfo.night_rate_enabled ? 
-    selectedVehicleInfo.night_rate_start : 
-    pricingSettings?.night_rate_start || '';
-  
-  const nightEndDisplay = selectedVehicleInfo.night_rate_enabled ? 
-    selectedVehicleInfo.night_rate_end : 
-    pricingSettings?.night_rate_end || '';
+  // Create a combined night start/end display that includes both one-way and return
+  const combinedNightStartDisplay = nightStartDisplay + (returnNightStartDisplay ? ` / ${returnNightStartDisplay}` : '');
+  const combinedNightEndDisplay = nightEndDisplay + (returnNightEndDisplay ? ` / ${returnNightEndDisplay}` : '');
   
   return {
     basePrice,
@@ -369,7 +444,7 @@ export const calculateQuoteDetails = (
     totalMinutes: oneWayTotalMinutes + returnTotalMinutes,
     nightRatePercentage,
     nightHours,
-    nightStartDisplay,
-    nightEndDisplay
+    nightStartDisplay: combinedNightStartDisplay,
+    nightEndDisplay: combinedNightEndDisplay
   };
 };
