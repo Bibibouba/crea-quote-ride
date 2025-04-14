@@ -11,6 +11,8 @@ interface ClientInfoStepProps {
   setLastName: (name: string) => void;
   email: string;
   setEmail: (email: string) => void;
+  phone: string;
+  setPhone: (phone: string) => void;
   isSubmitting: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   handlePreviousStep: () => void;
@@ -23,6 +25,8 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   setLastName,
   email,
   setEmail,
+  phone,
+  setPhone,
   isSubmitting,
   handleSubmit,
   handlePreviousStep
@@ -59,6 +63,15 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="phone">Téléphone</Label>
+          <Input
+            id="phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
           />
         </div>
       </div>
