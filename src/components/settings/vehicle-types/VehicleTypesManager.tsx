@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { PlusCircle, Loader2, Car } from 'lucide-react';
 import { 
   Card, 
   CardContent, 
@@ -80,7 +80,7 @@ const VehicleTypesManager = () => {
           .insert({
             name: values.name,
             icon: values.icon || null,
-            is_default: false,
+            is_default: vehicleTypes.length === 0, // Le premier type ajouté devient le type par défaut
             driver_id: user.id,
           })
           .select();
@@ -142,11 +142,25 @@ const VehicleTypesManager = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        <VehicleTypesList 
-          vehicleTypes={vehicleTypes} 
-          setVehicleTypes={setVehicleTypes} 
-          onEditType={openEditDialog} 
-        />
+        {vehicleTypes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-8 bg-muted/10 rounded-md border border-dashed">
+            <Car className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Aucun type de véhicule défini</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              Ajoutez des types de véhicules pour organiser votre flotte et personnaliser vos tarifs
+            </p>
+            <Button onClick={openAddDialog}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Créer mon premier type de véhicule
+            </Button>
+          </div>
+        ) : (
+          <VehicleTypesList 
+            vehicleTypes={vehicleTypes} 
+            setVehicleTypes={setVehicleTypes} 
+            onEditType={openEditDialog} 
+          />
+        )}
       </CardContent>
 
       <VehicleTypeDialog 

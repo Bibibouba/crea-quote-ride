@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Settings2, Loader2 } from 'lucide-react';
+import { Settings2 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
   Tabs,
