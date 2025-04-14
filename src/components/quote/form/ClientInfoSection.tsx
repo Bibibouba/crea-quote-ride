@@ -10,6 +10,8 @@ interface ClientInfoSectionProps {
   setLastName: (lastName: string) => void;
   email: string;
   setEmail: (email: string) => void;
+  phone: string;
+  setPhone: (phone: string) => void;
 }
 
 const ClientInfoSection: React.FC<ClientInfoSectionProps> = ({
@@ -18,7 +20,9 @@ const ClientInfoSection: React.FC<ClientInfoSectionProps> = ({
   lastName,
   setLastName,
   email,
-  setEmail
+  setEmail,
+  phone,
+  setPhone
 }) => {
   return (
     <div className="border rounded-md p-4 space-y-4">
@@ -51,6 +55,15 @@ const ClientInfoSection: React.FC<ClientInfoSectionProps> = ({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="phone">Téléphone</Label>
+        <Input
+          id="phone"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
         />
       </div>
     </div>

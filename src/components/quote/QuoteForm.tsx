@@ -181,7 +181,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         try {
           const { data, error } = await supabase
             .from('profiles')
-            .select('first_name, last_name, email, phone')
+            .select('first_name, last_name, email')
             .eq('id', user.id)
             .single();
           
@@ -191,7 +191,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
             setFirstName(data.first_name || '');
             setLastName(data.last_name || '');
             setEmail(data.email || user.email || '');
-            setPhone(data.phone || user.email || '');
+            setPhone('');
           }
         } catch (error) {
           console.error('Erreur lors du chargement des informations utilisateur:', error);
