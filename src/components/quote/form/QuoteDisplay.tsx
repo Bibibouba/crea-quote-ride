@@ -6,6 +6,9 @@ import { fr } from 'date-fns/locale';
 import QuoteSummary from './QuoteSummary';
 import ClientInfoSection from './ClientInfoSection';
 import { Vehicle } from '@/types/quoteForm';
+import { useQuoteFormState } from '@/hooks/useQuoteFormState';
+import { calculateQuoteDetails } from '@/utils/pricingUtils';
+import { usePricing } from '@/hooks/use-pricing';
 
 interface QuoteDisplayProps {
   departureAddress: string;

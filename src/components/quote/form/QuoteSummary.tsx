@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { DollarSignIcon, Loader2, Clock } from 'lucide-react';
+import { DollarSignIcon, Loader2, Clock, Moon } from 'lucide-react';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import RouteMap from '@/components/map/RouteMap';
 import { format } from 'date-fns';
@@ -9,6 +9,7 @@ import { fr } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
 import { formatDuration } from '@/lib/formatDuration';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Badge } from '@/components/ui/badge';
 
 interface QuoteSummaryProps {
   departureAddress: string;
@@ -94,6 +95,32 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
     return price.toFixed(1);
   };
   
+  // Get night rate details from the selected vehicle
+  const selectedVehicleObj = vehicles.find(v => v.id === selectedVehicle);
+  const hasNightRate = selectedVehicleObj?.night_rate_enabled || false;
+  const nightRatePercentage = selectedVehicleObj?.night_rate_percentage || 0;
+  const nightRateStart = selectedVehicleObj?.night_rate_start || '20:00';
+  const nightRateEnd = selectedVehicleObj?.night_rate_end || '06:00';
+  
+  // Determine if the ride has a night portion based on time
+  const [hours, minutes] = time.split(':').map(Number);
+  const rideTime = new Date(date);
+  rideTime.setHours(hours, minutes);
+  
+  const nightStartTime = new Date(date);
+  const [nightStartHours, nightStartMinutes] = nightRateStart?.split(':').map(Number) || [0, 0];
+  nightStartTime.setHours(nightStartHours, nightStartMinutes);
+  
+  const nightEndTime = new Date(date);
+  const [nightEndHours, nightEndMinutes] = nightRateEnd?.split(':').map(Number) || [0, 0];
+  nightEndTime.setHours(nightEndHours, nightEndMinutes);
+  
+  // Check if the ride has a night portion
+  const isNightRateApplied = hasNightRate && (
+    (nightStartTime > nightEndTime && (rideTime >= nightStartTime || rideTime <= nightEndTime)) ||
+    (nightStartTime < nightEndTime && rideTime >= nightStartTime && rideTime <= nightEndTime)
+  );
+  
   return (
     <div className="space-y-6">
       <div className="bg-secondary/30 p-4 rounded-lg space-y-4">
@@ -151,6 +178,23 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
                 </div>
                 <p>{formatPrice(estimatedPrice)}€</p>
               </div>
+              
+              {/* Afficher les infos de tarif de nuit si applicable */}
+              {hasNightRate && isNightRateApplied && (
+                <div className="ml-6 bg-muted/40 p-2 rounded-md">
+                  <div className="flex items-center mb-1">
+                    <Moon className="h-3 w-3 mr-1 text-amber-500" />
+                    <p className="text-xs font-medium">Tarif de nuit ({nightRatePercentage}% de majoration)</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Cette course débute à {time} et peut inclure une portion en tarif de nuit 
+                    (entre {nightRateStart} et {nightRateEnd}).
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    La majoration s'applique uniquement à la portion du trajet effectuée pendant ces horaires.
+                  </p>
+                </div>
+              )}
               
               {/* Display waiting time information */}
               {hasWaitingTime && (

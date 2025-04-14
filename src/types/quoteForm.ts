@@ -60,6 +60,10 @@ export interface QuoteDetails {
   nightMinutes?: number;
   totalMinutes?: number;
   nightRatePercentage?: number;
+  // Nouveaux champs pour l'affichage détaillé des tarifs de nuit
+  nightHours?: number;
+  nightStartDisplay?: string;
+  nightEndDisplay?: string;
 }
 
 export interface WaitingTimeOption {
