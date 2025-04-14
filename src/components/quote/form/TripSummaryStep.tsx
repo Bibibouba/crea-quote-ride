@@ -3,9 +3,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { ArrowLeftRight, ArrowRight, ArrowLeft, Users, Moon, Calendar } from 'lucide-react';
+import { ArrowLeftRight, ArrowRight, ArrowLeft, Users, Moon, Calendar, InfoIcon } from 'lucide-react';
 import RouteMap from '@/components/map/RouteMap';
 import { formatDuration } from '@/lib/formatDuration';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 
 interface TripSummaryStepProps {
   departureAddress: string;
@@ -61,6 +62,11 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
   const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
   const isNightRate = quoteDetails?.isNightRate;
   const isSunday = quoteDetails?.isSunday;
+  
+  // Fonction pour formater le prix avec 2 décimales
+  const formatPrice = (price: number) => {
+    return price.toFixed(2);
+  };
   
   return (
     <div className="space-y-6">
@@ -195,17 +201,47 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                   </div>
                   {quoteDetails?.basePrice && (
                     <p className="text-xs text-muted-foreground ml-6 mt-0.5">
-                      {estimatedDistance} km × {quoteDetails.basePrice.toFixed(2)}€/km
+                      {estimatedDistance} km × {quoteDetails.basePrice.toFixed(2)}€/km HT
                     </p>
                   )}
                 </div>
-                <p className="text-sm font-medium">{quoteDetails?.oneWayPrice}€</p>
+                <div className="text-right">
+                  <p className="text-sm font-medium">{quoteDetails?.oneWayPriceHT}€ HT</p>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="text-xs text-muted-foreground flex items-center justify-end">
+                          {quoteDetails?.oneWayPrice}€ TTC
+                          <InfoIcon className="h-3 w-3 ml-1" />
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">TVA 10% sur le transport</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </div>
               
               {hasWaitingTime && (
                 <div className="flex justify-between">
                   <p className="text-sm">Temps d'attente ({waitingTimeMinutes} min)</p>
-                  <p className="text-sm font-medium">{quoteDetails?.waitingTimePrice}€</p>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{quoteDetails?.waitingTimePriceHT}€ HT</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-muted-foreground flex items-center justify-end">
+                            {quoteDetails?.waitingTimePrice}€ TTC
+                            <InfoIcon className="h-3 w-3 ml-1" />
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">TVA 20% sur le temps d'attente</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </div>
               )}
               
@@ -218,11 +254,26 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                     </div>
                     {quoteDetails?.basePrice && (
                       <p className="text-xs text-muted-foreground ml-6 mt-0.5">
-                        {returnToSameAddress ? estimatedDistance : returnDistance} km × {quoteDetails.basePrice.toFixed(2)}€/km
+                        {returnToSameAddress ? estimatedDistance : returnDistance} km × {quoteDetails.basePrice.toFixed(2)}€/km HT
                       </p>
                     )}
                   </div>
-                  <p className="text-sm font-medium">{quoteDetails?.returnPrice}€</p>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{quoteDetails?.returnPriceHT}€ HT</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-muted-foreground flex items-center justify-end">
+                            {quoteDetails?.returnPrice}€ TTC
+                            <InfoIcon className="h-3 w-3 ml-1" />
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">TVA 10% sur le transport</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </div>
               )}
               
@@ -247,7 +298,17 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
               <Separator className="my-2" />
               
               <div className="flex justify-between font-medium">
-                <p>Prix total</p>
+                <p>Prix total HT</p>
+                <p className="text-lg">{quoteDetails?.totalPriceHT}€</p>
+              </div>
+              
+              <div className="flex justify-between text-sm">
+                <p>TVA</p>
+                <p>{quoteDetails?.totalVAT}€</p>
+              </div>
+              
+              <div className="flex justify-between font-medium pt-2 border-t border-border/30">
+                <p>Prix total TTC</p>
                 <p className="text-lg">{quoteDetails?.totalPrice}€</p>
               </div>
             </div>

@@ -49,6 +49,11 @@ const CompanySettingsManager = () => {
               primary_color: "#3B82F6",
               secondary_color: "#10B981",
               font_family: "Inter",
+              invoice_prefix: "FACT-",
+              next_invoice_number: 1,
+              payment_delay_days: 30,
+              late_payment_rate: 10.5,
+              is_vat_exempt: false
             })
             .select();
 
@@ -76,11 +81,31 @@ const CompanySettingsManager = () => {
       const { error } = await supabase
         .from('company_settings')
         .update({
+          // Style fields
           logo_url: values.logo_url,
           banner_url: values.banner_url,
           primary_color: values.primary_color,
           secondary_color: values.secondary_color,
           font_family: values.font_family,
+          
+          // Company information fields
+          company_type: values.company_type,
+          company_address: values.company_address,
+          siret: values.siret,
+          vat_number: values.vat_number,
+          registration_city: values.registration_city,
+          rcs_number: values.rcs_number,
+          is_vat_exempt: values.is_vat_exempt,
+          
+          // Invoice settings fields
+          invoice_prefix: values.invoice_prefix,
+          next_invoice_number: values.next_invoice_number,
+          payment_delay_days: values.payment_delay_days,
+          late_payment_rate: values.late_payment_rate,
+          discount_conditions: values.discount_conditions,
+          bank_details: values.bank_details,
+          legal_notices: values.legal_notices,
+          
           updated_at: new Date().toISOString(),
         })
         .eq('id', companySettings.id);
@@ -92,11 +117,31 @@ const CompanySettingsManager = () => {
       // Update local state with the new values
       setCompanySettings({
         ...companySettings,
+        // Style fields
         logo_url: values.logo_url,
         banner_url: values.banner_url,
         primary_color: values.primary_color,
         secondary_color: values.secondary_color,
         font_family: values.font_family,
+        
+        // Company information fields
+        company_type: values.company_type,
+        company_address: values.company_address,
+        siret: values.siret,
+        vat_number: values.vat_number,
+        registration_city: values.registration_city,
+        rcs_number: values.rcs_number,
+        is_vat_exempt: values.is_vat_exempt,
+        
+        // Invoice settings fields
+        invoice_prefix: values.invoice_prefix,
+        next_invoice_number: values.next_invoice_number,
+        payment_delay_days: values.payment_delay_days,
+        late_payment_rate: values.late_payment_rate,
+        discount_conditions: values.discount_conditions,
+        bank_details: values.bank_details,
+        legal_notices: values.legal_notices,
+        
         updated_at: new Date().toISOString(),
       });
     } catch (error: any) {
@@ -120,7 +165,7 @@ const CompanySettingsManager = () => {
       <CardHeader>
         <CardTitle>Configuration de l'entreprise</CardTitle>
         <CardDescription>
-          Personnalisez votre profil d'entreprise et les informations affichées sur vos devis
+          Personnalisez votre profil d'entreprise et les informations affichées sur vos devis et factures
         </CardDescription>
       </CardHeader>
       <CardContent>

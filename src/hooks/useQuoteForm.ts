@@ -32,6 +32,10 @@ export function useQuoteForm(clientId?: string) {
     distanceTiers
   } = usePricing();
   
+  // Constantes pour la TVA
+  const RIDE_VAT_RATE = 10; // 10% pour les transports
+  const WAITING_VAT_RATE = 20; // 20% pour les temps d'attente
+  
   const [activeTab, setActiveTab] = useState<QuoteFormStep>('step1');
   
   const [departureAddress, setDepartureAddress] = useState('');
@@ -53,6 +57,7 @@ export function useQuoteForm(clientId?: string) {
   const [hasWaitingTime, setHasWaitingTime] = useState(false);
   const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
   const [waitingTimePrice, setWaitingTimePrice] = useState(0);
+  const [waitingTimePriceHT, setWaitingTimePriceHT] = useState(0);
   const [returnToSameAddress, setReturnToSameAddress] = useState(true);
   const [customReturnAddress, setCustomReturnAddress] = useState('');
   const [customReturnCoordinates, setCustomReturnCoordinates] = useState<[number, number] | undefined>(undefined);
@@ -183,7 +188,9 @@ export function useQuoteForm(clientId?: string) {
       }
     }
     
-    setWaitingTimePrice(Math.round(price));
+    setWaitingTimePriceHT(Math.round(price));
+    // Calculer le prix TTC avec TVA à 20% pour le temps d'attente
+    setWaitingTimePrice(Math.round(price * (1 + WAITING_VAT_RATE / 100)));
   }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
   
   // Calculer l'itinéraire de retour
@@ -217,18 +224,36 @@ export function useQuoteForm(clientId?: string) {
       
       const basePrice = selectedVehicleData.basePrice || 1.8;
       
-      const oneWayPrice = Math.round(estimatedDistance * basePrice);
-      const returnPrice = hasReturnTrip 
-        ? (returnToSameAddress ? oneWayPrice : Math.round(returnDistance * basePrice)) 
+      // Prix HT
+      const oneWayPriceHT = Math.round(estimatedDistance * basePrice);
+      const returnPriceHT = hasReturnTrip 
+        ? (returnToSameAddress ? oneWayPriceHT : Math.round(returnDistance * basePrice)) 
         : 0;
-      const waitingTimeCost = hasWaitingTime ? waitingTimePrice : 0;
-      const totalPrice = oneWayPrice + waitingTimeCost + returnPrice;
+      const waitingTimePriceHT = hasWaitingTime ? waitingTimePriceHT : 0;
+      const totalPriceHT = oneWayPriceHT + waitingTimePriceHT + returnPriceHT;
+      
+      // TVA
+      const oneWayVAT = Math.round(oneWayPriceHT * (RIDE_VAT_RATE / 100));
+      const returnVAT = hasReturnTrip ? Math.round(returnPriceHT * (RIDE_VAT_RATE / 100)) : 0;
+      const waitingTimeVAT = hasWaitingTime ? Math.round(waitingTimePriceHT * (WAITING_VAT_RATE / 100)) : 0;
+      const totalVAT = oneWayVAT + returnVAT + waitingTimeVAT;
+      
+      // Prix TTC
+      const oneWayPrice = oneWayPriceHT + oneWayVAT;
+      const returnPrice = returnPriceHT + returnVAT;
+      const waitingTimePrice = waitingTimePriceHT + waitingTimeVAT;
+      const totalPrice = oneWayPrice + waitingTimePrice + returnPrice;
       
       setCalculatedPrice(totalPrice);
       setQuoteDetails({
+        oneWayPriceHT,
         oneWayPrice,
+        returnPriceHT,
         returnPrice,
-        waitingTimePrice: waitingTimeCost,
+        waitingTimePriceHT,
+        waitingTimePrice,
+        totalPriceHT,
+        totalVAT,
         totalPrice,
         basePrice,
         isNightRate: false,
@@ -238,7 +263,7 @@ export function useQuoteForm(clientId?: string) {
     
     calculatePrice();
   }, [estimatedDistance, selectedVehicle, hasReturnTrip, returnToSameAddress, 
-      returnDistance, hasWaitingTime, waitingTimePrice, vehicles]);
+      returnDistance, hasWaitingTime, waitingTimePriceHT, vehicles]);
   
   const handleDepartureSelect = useCallback((address: Address) => {
     setDepartureAddress(address.fullAddress);
@@ -353,17 +378,34 @@ export function useQuoteForm(clientId?: string) {
       const selectedVehicleData = vehicles.find(v => v.id === selectedVehicle);
       const basePrice = selectedVehicleData?.basePrice || 1.8;
       
-      const oneWayPrice = Math.round(estimatedDistance * basePrice);
-      const returnPrice = hasReturnTrip 
-        ? (returnToSameAddress ? oneWayPrice : Math.round(returnDistance * basePrice)) 
+      // Prix HT
+      const oneWayPriceHT = Math.round(estimatedDistance * basePrice);
+      const returnPriceHT = hasReturnTrip 
+        ? (returnToSameAddress ? oneWayPriceHT : Math.round(returnDistance * basePrice)) 
         : 0;
-      const totalPrice = oneWayPrice + (hasWaitingTime ? waitingTimePrice : 0) + returnPrice;
+      
+      // TVA
+      const oneWayVAT = Math.round(oneWayPriceHT * (RIDE_VAT_RATE / 100));
+      const returnVAT = hasReturnTrip ? Math.round(returnPriceHT * (RIDE_VAT_RATE / 100)) : 0;
+      const waitingTimeVAT = hasWaitingTime ? Math.round(waitingTimePriceHT * (WAITING_VAT_RATE / 100)) : 0;
+      const totalVAT = oneWayVAT + returnVAT + waitingTimeVAT;
+      
+      // Prix TTC
+      const oneWayPrice = oneWayPriceHT + oneWayVAT;
+      const returnPrice = returnPriceHT + returnVAT;
+      const waitingTimePrice = waitingTimePriceHT + waitingTimeVAT;
+      const totalPrice = oneWayPrice + waitingTimePrice + returnPrice;
       
       setCalculatedPrice(totalPrice);
       setQuoteDetails({
+        oneWayPriceHT,
         oneWayPrice,
+        returnPriceHT,
         returnPrice,
-        waitingTimePrice: hasWaitingTime ? waitingTimePrice : 0,
+        waitingTimePriceHT,
+        waitingTimePrice,
+        totalPriceHT: oneWayPriceHT + waitingTimePriceHT + returnPriceHT,
+        totalVAT,
         totalPrice,
         basePrice,
         isNightRate: false,
