@@ -85,8 +85,9 @@ export const useClients = () => {
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      console.log('Client added successfully and cache updated', data);
       toast({
         title: 'Client ajouté',
         description: 'Le client a été ajouté avec succès',
@@ -117,8 +118,9 @@ export const useClients = () => {
 
       return data as Client;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      console.log('Client updated successfully and cache updated', data);
       toast({
         title: 'Client mis à jour',
         description: 'Le client a été mis à jour avec succès',
@@ -147,8 +149,9 @@ export const useClients = () => {
 
       return clientId;
     },
-    onSuccess: () => {
+    onSuccess: (clientId) => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      console.log('Client deleted successfully and cache updated', clientId);
     },
     onError: (error) => {
       toast({

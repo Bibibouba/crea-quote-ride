@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuotes } from '@/hooks/useQuotes';
 import QuoteStatusBadge from './QuoteStatusBadge';
 import QuoteStatusSelector from './QuoteStatusSelector';
 import { Button } from '@/components/ui/button';
-import { Eye, FileText } from 'lucide-react';
+import { Eye, FileText, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -30,20 +30,52 @@ interface QuotesListProps {
 }
 
 const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
-  const { quotes, isLoading, error, updateQuoteStatus } = useQuotes(clientId);
+  const { quotes, isLoading, error, updateQuoteStatus, refetch } = useQuotes(clientId);
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Force initial data fetching
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  // Helper function to handle manual refresh
+  const handleRefresh = () => {
+    setRefreshing(true);
+    refetch().finally(() => {
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 500);
+    });
+  };
 
   if (isLoading) {
     return <div className="py-10 text-center">Chargement des devis...</div>;
   }
 
   if (error) {
-    return <div className="py-10 text-center text-red-500">Erreur: {error}</div>;
+    return (
+      <div className="py-10 text-center">
+        <div className="text-red-500 mb-4">Erreur: {error}</div>
+        <Button onClick={handleRefresh} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Réessayer
+        </Button>
+      </div>
+    );
   }
 
   if (quotes.length === 0) {
-    return <div className="py-10 text-center">Aucun devis trouvé.</div>;
+    return (
+      <div className="py-10 text-center">
+        <div className="mb-4">Aucun devis trouvé.</div>
+        <Button onClick={handleRefresh} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Rafraîchir
+        </Button>
+      </div>
+    );
   }
 
   const handleStatusChange = (quoteId: string, status: Quote['status']) => {
@@ -68,7 +100,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
     }
     
     const searchLower = searchTerm.toLowerCase();
-    const clientName = `${quote.clients.first_name} ${quote.clients.last_name}`.toLowerCase();
+    const clientName = `${quote.clients?.first_name || ''} ${quote.clients?.last_name || ''}`.toLowerCase();
     const locations = `${quote.departure_location} ${quote.arrival_location}`.toLowerCase();
     
     return clientName.includes(searchLower) || locations.includes(searchLower);
@@ -85,7 +117,15 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
             className="w-full"
           />
         </div>
-        <div className="flex-none">
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={handleRefresh} 
+            variant="outline" 
+            size="icon" 
+            className={refreshing ? "animate-spin" : ""}
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
           <Select
             value={filter}
             onValueChange={setFilter}
@@ -120,7 +160,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
             {filteredQuotes.map((quote) => (
               <TableRow key={quote.id}>
                 <TableCell className="font-medium">
-                  {quote.clients.first_name} {quote.clients.last_name}
+                  {quote.clients ? `${quote.clients.first_name} ${quote.clients.last_name}` : 'Client inconnu'}
                 </TableCell>
                 <TableCell>
                   {format(new Date(quote.ride_date), 'dd/MM/yyyy HH:mm', { locale: fr })}
