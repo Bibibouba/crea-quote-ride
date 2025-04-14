@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -69,7 +70,10 @@ export const useQuotes = (clientId?: string) => {
             return_coordinates: quote.return_coordinates || undefined,
             // Handle potentially missing related data
             clients: quote.clients || undefined,
-            vehicles: quote.vehicles || null
+            // Check if vehicles is a valid object or an error object
+            vehicles: (typeof quote.vehicles === 'object' && quote.vehicles !== null && !('error' in quote.vehicles)) 
+              ? quote.vehicles 
+              : null
           };
           
           return formattedQuote;
