@@ -287,11 +287,13 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
+      const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
+      const oneWayPrice = estimatedDistance * basePrice;
       const returnPrice = hasReturnTrip 
-        ? (returnToSameAddress ? estimatedPrice : Math.round(returnDistance * basePrice)) 
+        ? (returnToSameAddress ? estimatedDistance * basePrice : returnDistance * basePrice) 
         : 0;
       
-      let totalPriceCalculated = estimatedPrice;
+      let totalPriceCalculated = oneWayPrice;
       if (hasWaitingTime) {
         totalPriceCalculated += waitingTimePrice;
       }
@@ -299,9 +301,16 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         totalPriceCalculated += returnPrice;
       }
       
-      const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
+      const { data: { session } } = await supabase.auth.getSession();
+      const driverId = session?.user?.id;
+      
+      if (!driverId) {
+        throw new Error("Utilisateur non authentifié");
+      }
+      
+      const quoteData = {
         client_id: finalClientId,
-        vehicle_id: null,
+        vehicle_id: selectedVehicle,
         departure_location: departureAddress,
         arrival_location: destinationAddress,
         departure_coordinates: departureCoordinates,
@@ -311,7 +320,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         ride_date: dateTime.toISOString(),
         amount: totalPriceCalculated,
         status: 'pending',
-        driver_id: '',
+        driver_id: driverId,
         has_return_trip: hasReturnTrip,
         has_waiting_time: hasWaitingTime,
         waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
@@ -323,6 +332,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         return_duration_minutes: returnDuration
       };
       
+      console.log("Enregistrement du devis avec driver_id:", driverId);
       await addQuote.mutateAsync(quoteData);
       
       toast({

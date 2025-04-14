@@ -22,6 +22,16 @@ export const useQuotes = (clientId?: string) => {
   } = useQuery({
     queryKey,
     queryFn: async () => {
+      // Récupérons l'ID de l'utilisateur connecté
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      if (!userId) {
+        console.error('No user session found');
+        throw new Error('User not authenticated');
+      }
+      
+      // Construisons notre requête en filtrant par driver_id
       let query = supabase
         .from('quotes')
         .select(`
@@ -29,8 +39,10 @@ export const useQuotes = (clientId?: string) => {
           clients(first_name, last_name, email),
           vehicles(name, model)
         `)
+        .eq('driver_id', userId)
         .order('created_at', { ascending: false });
 
+      // Si un clientId est fourni, filtrons également par client
       if (clientId) {
         query = query.eq('client_id', clientId);
       }
@@ -41,7 +53,8 @@ export const useQuotes = (clientId?: string) => {
         console.error('Error fetching quotes', error);
         throw error;
       }
-
+      
+      console.log(`Fetched ${data?.length || 0} quotes for driver ${userId}`);
       return data as (Quote & {
         clients: { first_name: string; last_name: string; email: string };
         vehicles: { name: string; model: string } | null;
@@ -95,7 +108,7 @@ export const useQuotes = (clientId?: string) => {
         throw new Error("User not authenticated");
       }
       
-      // Add the driver_id to the quote data
+      // Assurons-nous d'utiliser le bon driver_id
       const quoteWithDriverId = {
         ...newQuote,
         driver_id: userId,
@@ -107,7 +120,7 @@ export const useQuotes = (clientId?: string) => {
         return_duration_minutes: newQuote.return_duration_minutes || null
       };
 
-      console.log('Saving quote data:', JSON.stringify(quoteWithDriverId, null, 2));
+      console.log('Saving quote data with driver_id:', userId);
 
       // Create the quote
       const { data, error } = await supabase

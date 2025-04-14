@@ -1,11 +1,9 @@
-
 import { useEffect, useState } from 'react';
 import { useMapbox, Address } from './useMapbox';
 import { usePricing } from './use-pricing';
 import { useVehicleTypes } from './useVehicleTypes';
 import { supabase } from '@/integrations/supabase/client';
 
-// Add missing interface for PricingSettings with VAT rates
 interface PricingSettings {
   price_per_km?: number;
   waiting_fee_per_minute?: number;
@@ -28,7 +26,6 @@ export interface WaitingTimeOption {
   label: string;
 }
 
-// Define the Vehicle interface
 interface Vehicle {
   id: string;
   name: string;
@@ -42,23 +39,19 @@ export const useQuoteForm = () => {
   const { pricingSettings } = usePricing();
   const { vehicleTypes, loading: isLoadingVehicleTypes } = useVehicleTypes();
 
-  // State for addresses
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
   const [departureCoordinates, setDepartureCoordinates] = useState<[number, number] | undefined>(undefined);
   const [destinationCoordinates, setDestinationCoordinates] = useState<[number, number] | undefined>(undefined);
 
-  // State for trip details
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState('12:00');
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [passengers, setPassengers] = useState('1');
 
-  // State for route
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
-  
-  // Return options
+
   const [hasReturnTrip, setHasReturnTrip] = useState(false);
   const [hasWaitingTime, setHasWaitingTime] = useState(false);
   const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
@@ -69,28 +62,23 @@ export const useQuoteForm = () => {
   const [returnDistance, setReturnDistance] = useState(0);
   const [returnDuration, setReturnDuration] = useState(0);
 
-  // UI flow
   const [currentStep, setCurrentStep] = useState(1);
   const [showQuote, setShowQuote] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
 
-  // Client information
   const [selectedClient, setSelectedClient] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  
-  // Vehicle data
+
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
 
-  // Quote details and price calculation
   const [quoteDetails, setQuoteDetails] = useState<any>(null);
 
-  // Waiting time options
   const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
     const minutes = (i + 1) * 15;
     const hours = Math.floor(minutes / 60);
@@ -112,7 +100,6 @@ export const useQuoteForm = () => {
     };
   });
 
-  // Load vehicles from vehicle types
   useEffect(() => {
     if (vehicleTypes.length > 0) {
       const fetchVehicles = async () => {
@@ -127,7 +114,6 @@ export const useQuoteForm = () => {
           if (error) throw error;
           
           if (data && data.length > 0) {
-            // Map the data to the Vehicle interface
             const mappedVehicles = data.map(vehicle => ({
               id: vehicle.id,
               name: vehicle.name,
@@ -138,17 +124,15 @@ export const useQuoteForm = () => {
             
             setVehicles(mappedVehicles);
             
-            // If there's at least one vehicle, select it by default
             if (mappedVehicles.length > 0 && !selectedVehicle) {
               setSelectedVehicle(mappedVehicles[0].id);
             }
           } else {
-            // If no vehicles found, create default vehicles from vehicle types
             const defaultVehicles = vehicleTypes.map((type, index) => ({
               id: type.id,
               name: type.name,
-              basePrice: 1.8 + (index * 0.4), // Basic pricing scheme
-              capacity: 4 + (index * 2), // Basic capacity scheme
+              basePrice: 1.8 + (index * 0.4),
+              capacity: 4 + (index * 2),
               description: `Véhicule ${type.name}`
             }));
             
@@ -169,23 +153,19 @@ export const useQuoteForm = () => {
     }
   }, [vehicleTypes, selectedVehicle]);
 
-  // Function to get price for a vehicle based on pricing settings
   const getPriceForVehicle = (vehicleId: string): number => {
     if (pricingSettings) {
-      // Use system-wide pricing if available
       return pricingSettings.price_per_km || 1.8;
     }
     
-    // Default values based on vehicle type
     const vehicleIndex = vehicleTypes.findIndex(v => v.id === vehicleId);
     if (vehicleIndex >= 0) {
-      return 1.8 + (vehicleIndex * 0.4); // Basic pricing scheme
+      return 1.8 + (vehicleIndex * 0.4);
     }
     
-    return 1.8; // Default price
+    return 1.8;
   };
 
-  // Calculate waiting time price
   useEffect(() => {
     if (!hasWaitingTime || !pricingSettings) return;
     
@@ -225,7 +205,6 @@ export const useQuoteForm = () => {
     setWaitingTimePrice(Math.round(price));
   }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
 
-  // Calculate return route when needed
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -246,9 +225,7 @@ export const useQuoteForm = () => {
     calculateReturnRoute();
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
 
-  // Calculate quote details when relevant parameters change
   useEffect(() => {
-    // Only calculate if we have the necessary data
     if (!selectedVehicle || estimatedDistance === 0) return;
     
     const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
@@ -256,12 +233,10 @@ export const useQuoteForm = () => {
     
     const basePrice = selectedVehicleInfo.basePrice;
     
-    // Check if time is during night hours for night rate
     let isNightRate = false;
     let isSunday = false;
     
     if (date && time && pricingSettings) {
-      // Check for night rate
       if (pricingSettings.night_rate_enabled && pricingSettings.night_rate_start && pricingSettings.night_rate_end) {
         const [hours, minutes] = time.split(':').map(Number);
         const tripTime = new Date(date);
@@ -284,70 +259,55 @@ export const useQuoteForm = () => {
         );
       }
       
-      // Check if it's Sunday
       const dayOfWeek = date.getDay();
       isSunday = dayOfWeek === 0;
     }
     
-    // Calculate basic prices
     let oneWayPriceHT = estimatedDistance * basePrice;
     let returnPriceHT = hasReturnTrip ? (returnToSameAddress ? estimatedDistance * basePrice : returnDistance * basePrice) : 0;
     
-    // Apply night rate if applicable
     if (isNightRate && pricingSettings && pricingSettings.night_rate_percentage) {
       const nightPercentage = pricingSettings.night_rate_percentage / 100;
       oneWayPriceHT += oneWayPriceHT * nightPercentage;
       returnPriceHT += returnPriceHT * nightPercentage;
     }
     
-    // Apply Sunday/holiday rate if applicable
     if (isSunday && pricingSettings && pricingSettings.holiday_sunday_percentage) {
       const sundayPercentage = pricingSettings.holiday_sunday_percentage / 100;
       oneWayPriceHT += oneWayPriceHT * sundayPercentage;
       returnPriceHT += returnPriceHT * sundayPercentage;
     }
     
-    // Round prices
-    oneWayPriceHT = Math.round(oneWayPriceHT);
-    returnPriceHT = Math.round(returnPriceHT);
-    
-    // Apply waiting time price
     const waitingTimePriceHT = hasWaitingTime ? waitingTimePrice : 0;
     
-    // Apply VAT rates with safe defaults
-    const rideVatRate = pricingSettings?.ride_vat_rate !== undefined ? pricingSettings.ride_vat_rate : 10; // 10% for rides
-    const waitingVatRate = pricingSettings?.waiting_vat_rate !== undefined ? pricingSettings.waiting_vat_rate : 20; // 20% for waiting time
+    const rideVatRate = pricingSettings?.ride_vat_rate !== undefined ? pricingSettings.ride_vat_rate : 10;
+    const waitingVatRate = pricingSettings?.waiting_vat_rate !== undefined ? pricingSettings.waiting_vat_rate : 20;
     
-    // Calculate TTC prices
     const oneWayPrice = oneWayPriceHT * (1 + (rideVatRate / 100));
     const returnPrice = returnPriceHT * (1 + (rideVatRate / 100));
     const waitingTimePriceTTC = waitingTimePriceHT * (1 + (waitingVatRate / 100));
     
-    // Calculate totals
     const totalPriceHT = oneWayPriceHT + returnPriceHT + waitingTimePriceHT;
     
-    // Calculate VAT amounts
     const rideVAT = (oneWayPriceHT + returnPriceHT) * (rideVatRate / 100);
     const waitingVAT = waitingTimePriceHT * (waitingVatRate / 100);
     const totalVAT = rideVAT + waitingVAT;
     
-    // Calculate total TTC
     const totalPrice = totalPriceHT + totalVAT;
     
-    // Update quote details
     setQuoteDetails({
       basePrice,
       isNightRate,
       isSunday,
-      oneWayPriceHT: Math.round(oneWayPriceHT),
-      oneWayPrice: Math.round(oneWayPrice),
-      returnPriceHT: Math.round(returnPriceHT),
-      returnPrice: Math.round(returnPrice),
-      waitingTimePriceHT: Math.round(waitingTimePriceHT),
-      waitingTimePrice: Math.round(waitingTimePriceTTC),
-      totalPriceHT: Math.round(totalPriceHT),
-      totalVAT: Math.round(totalVAT),
-      totalPrice: Math.round(totalPrice),
+      oneWayPriceHT: oneWayPriceHT,
+      oneWayPrice: oneWayPrice,
+      returnPriceHT: returnPriceHT,
+      returnPrice: returnPrice,
+      waitingTimePriceHT: waitingTimePriceHT,
+      waitingTimePrice: waitingTimePriceTTC,
+      totalPriceHT: totalPriceHT,
+      totalVAT: totalVAT,
+      totalPrice: totalPrice,
       rideVatRate,
       waitingVatRate
     });
@@ -365,7 +325,6 @@ export const useQuoteForm = () => {
     pricingSettings
   ]);
 
-  // Helper functions for addresses
   const handleDepartureSelect = (address: Address) => {
     setDepartureAddress(address.fullAddress);
     setDepartureCoordinates(address.coordinates);
@@ -386,7 +345,6 @@ export const useQuoteForm = () => {
     setEstimatedDuration(Math.round(duration));
   };
 
-  // Navigation between steps
   const nextStep = () => setCurrentStep(prev => prev + 1);
   const prevStep = () => setCurrentStep(prev => prev - 1);
   const resetForm = () => {
@@ -396,7 +354,6 @@ export const useQuoteForm = () => {
   };
 
   return {
-    // Address state
     departureAddress,
     setDepartureAddress,
     destinationAddress,
@@ -406,7 +363,6 @@ export const useQuoteForm = () => {
     destinationCoordinates,
     setDestinationCoordinates,
     
-    // Trip details state
     date,
     setDate,
     time,
@@ -416,13 +372,11 @@ export const useQuoteForm = () => {
     passengers,
     setPassengers,
     
-    // Route state
     estimatedDistance,
     setEstimatedDistance,
     estimatedDuration,
     setEstimatedDuration,
     
-    // Return options state
     hasReturnTrip,
     setHasReturnTrip,
     hasWaitingTime,
@@ -442,7 +396,6 @@ export const useQuoteForm = () => {
     returnDuration,
     setReturnDuration,
     
-    // UI flow state
     currentStep,
     setCurrentStep,
     showQuote,
@@ -454,7 +407,6 @@ export const useQuoteForm = () => {
     isQuoteSent,
     setIsQuoteSent,
     
-    // Client information state
     selectedClient,
     setSelectedClient,
     firstName,
@@ -466,15 +418,12 @@ export const useQuoteForm = () => {
     phone,
     setPhone,
     
-    // Vehicles and options
     vehicles,
     isLoadingVehicles,
     waitingTimeOptions,
     
-    // Quote details
     quoteDetails,
     
-    // Helper functions
     handleDepartureSelect,
     handleDestinationSelect,
     handleReturnAddressSelect,

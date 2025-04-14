@@ -63,9 +63,10 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
   const isNightRate = quoteDetails?.isNightRate;
   const isSunday = quoteDetails?.isSunday;
   
-  // Fonction pour formater le prix avec 2 décimales
-  const formatPrice = (price: number) => {
-    return price.toFixed(2);
+  // Formatter pour afficher un chiffre après la virgule
+  const formatPrice = (price?: number) => {
+    if (price === undefined) return "0.0";
+    return price.toFixed(1);
   };
   
   return (
@@ -206,12 +207,12 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                   )}
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium">{quoteDetails?.oneWayPriceHT}€ HT</p>
+                  <p className="text-sm font-medium">{formatPrice(quoteDetails?.oneWayPriceHT)}€ HT</p>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <p className="text-xs text-muted-foreground flex items-center justify-end">
-                          {quoteDetails?.oneWayPrice}€ TTC
+                          {formatPrice(quoteDetails?.oneWayPrice)}€ TTC
                           <InfoIcon className="h-3 w-3 ml-1" />
                         </p>
                       </TooltipTrigger>
@@ -227,12 +228,12 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                 <div className="flex justify-between">
                   <p className="text-sm">Temps d'attente ({waitingTimeMinutes} min)</p>
                   <div className="text-right">
-                    <p className="text-sm font-medium">{quoteDetails?.waitingTimePriceHT}€ HT</p>
+                    <p className="text-sm font-medium">{formatPrice(quoteDetails?.waitingTimePriceHT)}€ HT</p>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <p className="text-xs text-muted-foreground flex items-center justify-end">
-                            {quoteDetails?.waitingTimePrice}€ TTC
+                            {formatPrice(quoteDetails?.waitingTimePrice)}€ TTC
                             <InfoIcon className="h-3 w-3 ml-1" />
                           </p>
                         </TooltipTrigger>
@@ -259,12 +260,12 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium">{quoteDetails?.returnPriceHT}€ HT</p>
+                    <p className="text-sm font-medium">{formatPrice(quoteDetails?.returnPriceHT)}€ HT</p>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <p className="text-xs text-muted-foreground flex items-center justify-end">
-                            {quoteDetails?.returnPrice}€ TTC
+                            {formatPrice(quoteDetails?.returnPrice)}€ TTC
                             <InfoIcon className="h-3 w-3 ml-1" />
                           </p>
                         </TooltipTrigger>
@@ -299,17 +300,17 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
               
               <div className="flex justify-between font-medium">
                 <p>Prix total HT</p>
-                <p className="text-lg">{quoteDetails?.totalPriceHT}€</p>
+                <p className="text-lg">{formatPrice(quoteDetails?.totalPriceHT)}€</p>
               </div>
               
               <div className="flex justify-between text-sm">
                 <p>TVA</p>
-                <p>{quoteDetails?.totalVAT}€</p>
+                <p>{formatPrice(quoteDetails?.totalVAT)}€</p>
               </div>
               
               <div className="flex justify-between font-medium pt-2 border-t border-border/30">
                 <p>Prix total TTC</p>
-                <p className="text-lg">{quoteDetails?.totalPrice}€</p>
+                <p className="text-lg">{formatPrice(quoteDetails?.totalPrice)}€</p>
               </div>
             </div>
           </div>
