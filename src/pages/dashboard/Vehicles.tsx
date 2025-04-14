@@ -12,7 +12,7 @@ import { VehicleFormValues } from '@/types/vehicle';
 
 const Vehicles = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { vehicles, loading, handleSaveVehicle, handleDeleteVehicle } = useVehicles();
+  const { vehicles, loading, handleSaveVehicle, handleDeleteVehicle: deleteVehicle } = useVehicles();
   const { vehicleTypes, loading: typesLoading } = useVehicleTypes();
   const [editingVehicle, setEditingVehicle] = useState<VehicleFormValues | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,8 +28,8 @@ const Vehicles = () => {
       model: vehicle.model,
       capacity: vehicle.capacity,
       vehicle_type_id: vehicle.vehicle_type_id || '',
-      is_active: vehicle.is_active,
-      is_luxury: vehicle.is_luxury,
+      is_active: vehicle.is_active || true,
+      is_luxury: vehicle.is_luxury || false,
       image_url: vehicle.image_url,
       vehicle_type_name: vehicle.vehicle_type_name,
       id: vehicle.id
@@ -55,9 +55,9 @@ const Vehicles = () => {
     }
   };
 
-  const handleDeleteVehicle = async (id: string) => {
+  const handleDeleteClick = async (id: string) => {
     try {
-      await handleDeleteVehicle(id);
+      await deleteVehicle(id);
     } catch (error) {
       console.error("Error deleting vehicle:", error);
     }
@@ -91,7 +91,7 @@ const Vehicles = () => {
               key={vehicle.id}
               vehicle={vehicle}
               onEdit={() => handleEditVehicle(vehicle)}
-              onDelete={() => handleDeleteVehicle(vehicle.id)}
+              onDelete={() => handleDeleteClick(vehicle.id)}
             />
           ))}
         </div>

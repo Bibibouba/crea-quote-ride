@@ -5,6 +5,24 @@ import { usePricing } from './use-pricing';
 import { useVehicleTypes } from './useVehicleTypes';
 import { supabase } from '@/integrations/supabase/client';
 
+// Add missing interface for PricingSettings with VAT rates
+interface PricingSettings {
+  price_per_km?: number;
+  waiting_fee_per_minute?: number;
+  wait_price_per_15min?: number;
+  wait_night_enabled?: boolean;
+  wait_night_percentage?: number;
+  wait_night_start?: string;
+  wait_night_end?: string;
+  night_rate_enabled?: boolean;
+  night_rate_percentage?: number;
+  night_rate_start?: string;
+  night_rate_end?: string;
+  holiday_sunday_percentage?: number;
+  ride_vat_rate?: number;
+  waiting_vat_rate?: number;
+}
+
 export interface WaitingTimeOption {
   value: number;
   label: string;

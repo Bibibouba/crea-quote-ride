@@ -18,8 +18,8 @@ export interface VehicleFormValues {
   name: string;
   model: string;
   capacity: number;
-  is_active?: boolean;
-  is_luxury?: boolean;
+  is_active: boolean;
+  is_luxury: boolean;
   image_url?: string | null;
   vehicle_type_id: string;
   vehicle_type_name?: string | null;
@@ -33,4 +33,5 @@ export interface VehicleType {
   created_at: string;
   updated_at: string;
   is_default?: boolean;
+  icon?: string; // Added icon property
 }
