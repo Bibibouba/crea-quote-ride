@@ -55,11 +55,12 @@ export const useClients = () => {
         const userId = session?.user?.id;
         
         if (!userId) {
-          console.error('No user session found');
+          console.error('No user session found when adding client');
           throw new Error("User not authenticated");
         }
         
         console.log('Creating client with driver_id:', userId);
+        console.log('Client data:', JSON.stringify(newClient));
         
         // Add the driver_id to the client data
         const clientWithDriverId = {
@@ -86,14 +87,15 @@ export const useClients = () => {
       }
     },
     onSuccess: (data) => {
+      console.log('Client added successfully, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['clients'] });
-      console.log('Client added successfully and cache updated', data);
       toast({
         title: 'Client ajouté',
         description: 'Le client a été ajouté avec succès',
       });
     },
     onError: (error) => {
+      console.error('Error in addClient onError handler:', error);
       toast({
         title: 'Erreur',
         description: `Erreur lors de l'ajout du client: ${error.message}`,

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuoteForm } from '@/hooks/useQuoteForm';
@@ -7,11 +7,23 @@ import TripInfoStep from '@/components/quote/form/TripInfoStep';
 import TripSummaryStep from '@/components/quote/form/TripSummaryStep';
 import ClientInfoStep from '@/components/quote/form/ClientInfoStep';
 import SuccessMessageStep from '@/components/quote/form/SuccessMessageStep';
-import { useNavigate } from 'react-router-dom';
+import { useClientSimulator } from '@/hooks/useClientSimulator';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const ClientSimulator = () => {
   const [activeTab, setActiveTab] = useState<'step1' | 'step2' | 'step3'>('step1');
-  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  
+  const {
+    isSubmitting,
+    isQuoteSent,
+    submitQuote,
+    resetForm,
+    navigateToDashboard
+  } = useClientSimulator();
   
   const {
     departureAddress,
@@ -19,7 +31,9 @@ const ClientSimulator = () => {
     destinationAddress,
     setDestinationAddress,
     departureCoordinates,
+    setDepartureCoordinates,
     destinationCoordinates,
+    setDestinationCoordinates,
     date,
     setDate,
     time,
@@ -34,12 +48,11 @@ const ClientSimulator = () => {
     setLastName,
     email,
     setEmail,
+    phone,
+    setPhone,
     estimatedDistance,
     estimatedDuration,
     quoteDetails,
-    isSubmitting,
-    isQuoteSent,
-    setIsQuoteSent,
     
     hasReturnTrip,
     setHasReturnTrip,
@@ -63,11 +76,36 @@ const ClientSimulator = () => {
     handleDepartureSelect,
     handleDestinationSelect,
     handleReturnAddressSelect,
-    handleRouteCalculated,
-    resetForm
+    handleRouteCalculated
   } = useQuoteForm();
   
-  // Adding necessary functions that were missing
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      setIsAuthChecking(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.log('No active session found in client simulator');
+          toast({
+            title: 'Authentification requise',
+            description: 'Vous devez être connecté pour utiliser le simulateur client',
+            variant: 'destructive',
+          });
+        } else {
+          console.log('Active session found for user:', session.user.id);
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+      } finally {
+        setIsAuthChecking(false);
+      }
+    };
+    
+    checkAuth();
+  }, [toast]);
+  
+  // Navigation functions
   const handleNextStep = () => {
     if (activeTab === 'step1') {
       setActiveTab('step2');
@@ -85,14 +123,47 @@ const ClientSimulator = () => {
   };
 
   const handleSubmit = async () => {
-    // Simulate form submission
-    setIsQuoteSent(true);
+    // Préparer les données du devis
+    const quoteData = {
+      departure_location: departureAddress,
+      arrival_location: destinationAddress,
+      departure_coordinates: departureCoordinates,
+      arrival_coordinates: destinationCoordinates,
+      distance_km: estimatedDistance,
+      duration_minutes: estimatedDuration,
+      ride_date: new Date(date).toISOString(),
+      amount: quoteDetails?.totalPrice || 0,
+      vehicle_id: selectedVehicle,
+      has_return_trip: hasReturnTrip,
+      has_waiting_time: hasWaitingTime,
+      waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
+      waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
+      return_to_same_address: returnToSameAddress,
+      custom_return_address: customReturnAddress,
+      return_coordinates: customReturnCoordinates,
+      return_distance_km: returnDistance,
+      return_duration_minutes: returnDuration
+    };
+    
+    // Préparer les données du client
+    const clientData = {
+      firstName,
+      lastName,
+      email,
+      phone
+    };
+    
+    // Soumettre le devis
+    await submitQuote(quoteData, clientData);
   };
   
-  if (isLoadingVehicles) {
+  if (isAuthChecking || isLoadingVehicles) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Chargement des données...</p>
+        <p className="flex items-center">
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          Chargement des données...
+        </p>
       </div>
     );
   }
@@ -111,7 +182,7 @@ const ClientSimulator = () => {
             <SuccessMessageStep 
               email={email}
               resetForm={resetForm}
-              navigateToDashboard={() => navigate('/dashboard/quotes')}
+              navigateToDashboard={navigateToDashboard}
             />
           ) : (
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'step1' | 'step2' | 'step3')} className="space-y-6">
@@ -213,10 +284,12 @@ const ClientSimulator = () => {
                 <ClientInfoStep
                   firstName={firstName}
                   setFirstName={setFirstName}
-                  lastName={lastName}
+                  lastName={setLastName}
                   setLastName={setLastName}
                   email={email}
                   setEmail={setEmail}
+                  phone={phone}
+                  setPhone={setPhone}
                   isSubmitting={isSubmitting}
                   handleSubmit={handleSubmit}
                   handlePreviousStep={handlePreviousStep}

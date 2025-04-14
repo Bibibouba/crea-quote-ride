@@ -113,22 +113,18 @@ export const useQuotes = (clientId?: string) => {
         const userId = session?.user?.id;
         
         if (!userId) {
+          console.error('User not authenticated when adding quote');
           throw new Error("User not authenticated");
         }
+        
+        console.log('Creating quote with driver_id:', userId);
+        console.log('Quote data:', JSON.stringify(newQuote));
         
         // Ensure we use the correct driver_id
         const quoteWithDriverId = {
           ...newQuote,
           driver_id: userId,
-          // Store coordinates as arrays for Supabase
-          departure_coordinates: newQuote.departure_coordinates || null,
-          arrival_coordinates: newQuote.arrival_coordinates || null,
-          return_coordinates: newQuote.return_coordinates || null,
-          return_distance_km: newQuote.return_distance_km || null,
-          return_duration_minutes: newQuote.return_duration_minutes || null
         };
-
-        console.log('Saving quote data with driver_id:', userId);
 
         // Create the quote
         const { data, error } = await supabase
@@ -149,7 +145,8 @@ export const useQuotes = (clientId?: string) => {
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Quote added successfully, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       if (clientId) {
         queryClient.invalidateQueries({ queryKey: ['quotes', clientId] });
@@ -160,6 +157,7 @@ export const useQuotes = (clientId?: string) => {
       });
     },
     onError: (error) => {
+      console.error('Error in addQuote onError handler:', error);
       toast({
         title: 'Erreur',
         description: `Erreur lors de la création du devis: ${error.message}`,
