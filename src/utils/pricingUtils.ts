@@ -129,11 +129,11 @@ export const calculateNightDuration = (
   const departureMinutes = startHours * 60 + startMinutes;
   
   // Convertir les heures de tarif de nuit en minutes depuis minuit
-  const [nightStartHours, nightStartMinutes] = nightStart.split(':').map(Number);
-  const nightStartMinutes = nightStartHours * 60 + nightStartMinutes;
+  const [nightStartHours, nightStartMins] = nightStart.split(':').map(Number);
+  const nightStartMinutes = nightStartHours * 60 + nightStartMins;
   
-  const [nightEndHours, nightEndMinutes] = nightEnd.split(':').map(Number);
-  const nightEndMinutes = nightEndHours * 60 + nightEndMinutes;
+  const [nightEndHours, nightEndMins] = nightEnd.split(':').map(Number);
+  const nightEndMinutes = nightEndHours * 60 + nightEndMins;
   
   // Calculer l'heure d'arrivée en minutes depuis minuit
   const arrivalMinutes = (departureMinutes + durationMinutes) % 1440; // 1440 = minutes in a day
