@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -47,7 +48,7 @@ interface QuoteSummaryProps {
   returnDistance?: number;
   returnDuration?: number;
   returnCoordinates?: [number, number] | undefined;
-  quoteDetails?: QuoteDetailsType; // Added this line
+  quoteDetails?: QuoteDetailsType;
 }
 
 const QuoteSummary: React.FC<QuoteSummaryProps> = ({
@@ -78,7 +79,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   returnDistance = 0,
   returnDuration = 0,
   returnCoordinates,
-  quoteDetails // Add this to the destructured props
+  quoteDetails
 }) => {
   const isMobile = useIsMobile();
   
@@ -250,6 +251,8 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
           <RouteMap
             departure={departureCoordinates}
             destination={destinationCoordinates}
+            returnDestination={returnToSameAddress ? undefined : returnCoordinates}
+            showReturn={hasReturnTrip}
           />
         </div>
         
@@ -280,7 +283,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
             nightRateStart={nightRateStart}
             nightRateEnd={nightRateEnd}
             sundayRate={sundayRate}
-            quoteDetails={quoteDetails} // Pass quoteDetails to TripDetailsCard
+            quoteDetails={quoteDetails}
           />
         </div>
       </div>

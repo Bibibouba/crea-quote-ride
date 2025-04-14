@@ -41,6 +41,7 @@ interface TripSummaryStepProps {
   handleRouteCalculated: (distance: number, duration: number) => void;
   handleNextStep: () => void;
   handlePreviousStep: () => void;
+  handleReturnRouteCalculated?: (distance: number, duration: number) => void;
 }
 
 const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
@@ -66,7 +67,8 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
   vehicles,
   handleRouteCalculated,
   handleNextStep,
-  handlePreviousStep
+  handlePreviousStep,
+  handleReturnRouteCalculated
 }) => {
   const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
   const isNightRate = quoteDetails?.isNightRate;
@@ -78,7 +80,6 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
   const nightStartDisplay = quoteDetails?.nightStartDisplay || '';
   const nightEndDisplay = quoteDetails?.nightEndDisplay || '';
 
-  // Formatter pour afficher un chiffre après la virgule
   const formatPrice = (price?: number) => {
     if (price === undefined) return "0.0";
     return price.toFixed(1);
@@ -188,6 +189,9 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
               departure={departureCoordinates}
               destination={destinationCoordinates}
               onRouteCalculated={handleRouteCalculated}
+              returnDestination={!returnToSameAddress ? customReturnCoordinates : undefined}
+              onReturnRouteCalculated={handleReturnRouteCalculated}
+              showReturn={hasReturnTrip}
             />
           ) : (
             <div className="flex flex-col h-full items-center justify-center p-4 bg-muted">

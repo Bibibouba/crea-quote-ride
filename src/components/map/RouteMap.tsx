@@ -10,13 +10,19 @@ interface RouteMapProps {
   destination?: [number, number];
   className?: string;
   onRouteCalculated?: (distance: number, duration: number) => void;
+  returnDestination?: [number, number]; // Nouvelle prop pour l'adresse de retour
+  onReturnRouteCalculated?: (distance: number, duration: number) => void; // Callback pour le trajet retour
+  showReturn?: boolean; // Indique si on doit afficher le trajet retour
 }
 
 const RouteMap: React.FC<RouteMapProps> = ({
   departure,
   destination,
   className,
-  onRouteCalculated
+  onRouteCalculated,
+  returnDestination,
+  onReturnRouteCalculated,
+  showReturn = false
 }) => {
   const { mapboxToken, setToken, error: mapboxError } = useMapbox();
   const { toast } = useToast();
@@ -76,6 +82,9 @@ const RouteMap: React.FC<RouteMapProps> = ({
           departure={departure}
           destination={destination}
           onRouteCalculated={onRouteCalculated}
+          returnDestination={returnDestination}
+          onReturnRouteCalculated={onReturnRouteCalculated}
+          showReturn={showReturn}
         />
       )}
     </div>
