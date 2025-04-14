@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -87,7 +86,6 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     };
   });
   
-  // Effect for return route calculation
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -108,7 +106,6 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     calculateReturnRoute();
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
   
-  // Effect for waiting time price calculation
   useEffect(() => {
     if (!hasWaitingTime || !pricingSettings) return;
     
@@ -148,7 +145,6 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     setWaitingTimePrice(Math.round(price));
   }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
   
-  // Effect for loading client info
   useEffect(() => {
     if (clientId && clients.length > 0) {
       const client = clients.find(c => c.id === clientId);
@@ -162,7 +158,6 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     }
   }, [clientId, clients]);
   
-  // Effect for loading user info
   useEffect(() => {
     if (user && !clientId) {
       const fetchUserInfo = async () => {

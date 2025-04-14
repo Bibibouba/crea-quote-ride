@@ -16,48 +16,74 @@ export const useClients = () => {
   } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .order('last_name', { ascending: true });
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        if (!userId) {
+          console.error('No user session found');
+          throw new Error('User not authenticated');
+        }
+        
+        console.log('Fetching clients for driver:', userId);
+        
+        const { data, error } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('driver_id', userId)
+          .order('last_name', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching clients', error);
+        if (error) {
+          console.error('Error fetching clients', error);
+          throw error;
+        }
+
+        console.log(`Fetched ${data?.length || 0} clients for driver ${userId}`);
+        return data as Client[];
+      } catch (error) {
+        console.error('Error in useClients query:', error);
         throw error;
       }
-
-      return data as Client[];
     }
   });
 
   const addClient = useMutation({
     mutationFn: async (newClient: Omit<ClientCreate, "driver_id">) => {
-      // Get the current user's ID from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      
-      if (!userId) {
-        throw new Error("User not authenticated");
-      }
-      
-      // Add the driver_id to the client data
-      const clientWithDriverId = {
-        ...newClient,
-        driver_id: userId
-      };
+      try {
+        // Get the current user's ID from Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        if (!userId) {
+          console.error('No user session found');
+          throw new Error("User not authenticated");
+        }
+        
+        console.log('Creating client with driver_id:', userId);
+        
+        // Add the driver_id to the client data
+        const clientWithDriverId = {
+          ...newClient,
+          driver_id: userId
+        };
 
-      const { data, error } = await supabase
-        .from('clients')
-        .insert(clientWithDriverId)
-        .select()
-        .single();
+        const { data, error } = await supabase
+          .from('clients')
+          .insert(clientWithDriverId)
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Error adding client', error);
+        if (error) {
+          console.error('Error adding client', error);
+          throw error;
+        }
+
+        console.log('Client created successfully:', data);
+        return data as Client;
+      } catch (error) {
+        console.error('Error in addClient mutation:', error);
         throw error;
       }
-
-      return data as Client;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });

@@ -22,45 +22,50 @@ export const useQuotes = (clientId?: string) => {
   } = useQuery({
     queryKey,
     queryFn: async () => {
-      // Get the current user's ID from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      
-      if (!userId) {
-        console.error('No user session found');
-        throw new Error('User not authenticated');
-      }
-      
-      console.log('Fetching quotes for driver:', userId);
-      
-      // Build the query filtering by driver_id
-      let query = supabase
-        .from('quotes')
-        .select(`
-          *,
-          clients(first_name, last_name, email, phone),
-          vehicles(name, model)
-        `)
-        .eq('driver_id', userId)
-        .order('created_at', { ascending: false });
+      try {
+        // Get the current user's ID from Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        if (!userId) {
+          console.error('No user session found');
+          throw new Error('User not authenticated');
+        }
+        
+        console.log('Fetching quotes for driver:', userId);
+        
+        // Build the query filtering by driver_id
+        let query = supabase
+          .from('quotes')
+          .select(`
+            *,
+            clients(first_name, last_name, email, phone),
+            vehicles(name, model)
+          `)
+          .eq('driver_id', userId)
+          .order('created_at', { ascending: false });
 
-      // If a clientId is provided, also filter by client
-      if (clientId) {
-        query = query.eq('client_id', clientId);
-      }
+        // If a clientId is provided, also filter by client
+        if (clientId) {
+          query = query.eq('client_id', clientId);
+        }
 
-      const { data, error } = await query;
+        const { data, error } = await query;
 
-      if (error) {
-        console.error('Error fetching quotes', error);
+        if (error) {
+          console.error('Error fetching quotes', error);
+          throw error;
+        }
+        
+        console.log(`Fetched ${data?.length || 0} quotes for driver ${userId}`);
+        return data as (Quote & {
+          clients: { first_name: string; last_name: string; email: string; phone: string };
+          vehicles: { name: string; model: string } | null;
+        })[];
+      } catch (error) {
+        console.error('Error in useQuotes query:', error);
         throw error;
       }
-      
-      console.log(`Fetched ${data?.length || 0} quotes for driver ${userId}`);
-      return data as (Quote & {
-        clients: { first_name: string; last_name: string; email: string; phone: string };
-        vehicles: { name: string; model: string } | null;
-      })[];
     }
   });
 
@@ -102,41 +107,47 @@ export const useQuotes = (clientId?: string) => {
   // Add a new quote - ensure we set the driver_id
   const addQuote = useMutation({
     mutationFn: async (newQuote: Omit<QuoteWithCoordinates, "id" | "created_at" | "updated_at" | "quote_pdf">) => {
-      // Get the current user's ID from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      
-      if (!userId) {
-        throw new Error("User not authenticated");
-      }
-      
-      // Ensure we use the correct driver_id
-      const quoteWithDriverId = {
-        ...newQuote,
-        driver_id: userId,
-        // Store coordinates as arrays for Supabase
-        departure_coordinates: newQuote.departure_coordinates || null,
-        arrival_coordinates: newQuote.arrival_coordinates || null,
-        return_coordinates: newQuote.return_coordinates || null,
-        return_distance_km: newQuote.return_distance_km || null,
-        return_duration_minutes: newQuote.return_duration_minutes || null
-      };
+      try {
+        // Get the current user's ID from Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        if (!userId) {
+          throw new Error("User not authenticated");
+        }
+        
+        // Ensure we use the correct driver_id
+        const quoteWithDriverId = {
+          ...newQuote,
+          driver_id: userId,
+          // Store coordinates as arrays for Supabase
+          departure_coordinates: newQuote.departure_coordinates || null,
+          arrival_coordinates: newQuote.arrival_coordinates || null,
+          return_coordinates: newQuote.return_coordinates || null,
+          return_distance_km: newQuote.return_distance_km || null,
+          return_duration_minutes: newQuote.return_duration_minutes || null
+        };
 
-      console.log('Saving quote data with driver_id:', userId);
+        console.log('Saving quote data with driver_id:', userId);
 
-      // Create the quote
-      const { data, error } = await supabase
-        .from('quotes')
-        .insert(quoteWithDriverId)
-        .select()
-        .single();
+        // Create the quote
+        const { data, error } = await supabase
+          .from('quotes')
+          .insert(quoteWithDriverId)
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Error adding quote', error);
+        if (error) {
+          console.error('Error adding quote', error);
+          throw error;
+        }
+
+        console.log('Quote created successfully:', data);
+        return data as Quote;
+      } catch (error) {
+        console.error('Error in addQuote mutation:', error);
         throw error;
       }
-
-      return data as Quote;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
