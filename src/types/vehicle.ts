@@ -11,12 +11,21 @@ export interface Vehicle {
   image_url?: string | null;
   basePrice?: number;
   description?: string;
-  // Nouveaux champs de tarification
+  // Paramètres de tarification
   min_trip_distance?: number;
   night_rate_enabled?: boolean;
   night_rate_start?: string;
   night_rate_end?: string;
   night_rate_percentage?: number;
+  // Paramètres de tarifs d'attente
+  wait_price_per_15min?: number;
+  wait_night_enabled?: boolean;
+  wait_night_start?: string;
+  wait_night_end?: string;
+  wait_night_percentage?: number;
+  // Paramètres additionnels
+  minimum_trip_fare?: number;
+  holiday_sunday_percentage?: number;
 }
 
 export interface VehicleType {
@@ -38,9 +47,19 @@ export type VehicleFormValues = {
   is_luxury?: boolean;
   is_active?: boolean;
   image_url?: string | null;
+  // Paramètres de tarification
   min_trip_distance?: number;
   night_rate_enabled?: boolean;
   night_rate_start?: string;
   night_rate_end?: string;
   night_rate_percentage?: number;
+  // Paramètres de tarifs d'attente
+  wait_price_per_15min?: number;
+  wait_night_enabled?: boolean;
+  wait_night_start?: string;
+  wait_night_end?: string;
+  wait_night_percentage?: number;
+  // Paramètres additionnels
+  minimum_trip_fare?: number;
+  holiday_sunday_percentage?: number;
 };

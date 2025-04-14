@@ -62,7 +62,6 @@ export const useQuoteForm = () => {
 
   const waitingTimeOptions = generateWaitingTimeOptions();
 
-  // Load vehicles when vehicle types are available
   useEffect(() => {
     if (vehicleTypes.length > 0) {
       setIsLoadingVehicles(true);
@@ -89,13 +88,18 @@ export const useQuoteForm = () => {
     }
   }, [vehicleTypes, selectedVehicle]);
 
-  // Calculate waiting time price
   useEffect(() => {
-    const price = calculateWaitingTimePrice(hasWaitingTime, waitingTimeMinutes, pricingSettings, time);
+    const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
+    const price = calculateWaitingTimePrice(
+      hasWaitingTime, 
+      waitingTimeMinutes, 
+      pricingSettings, 
+      time, 
+      selectedVehicleInfo
+    );
     setWaitingTimePrice(price);
-  }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
+  }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time, vehicles, selectedVehicle]);
 
-  // Calculate return route
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -116,7 +120,6 @@ export const useQuoteForm = () => {
     calculateReturnRoute();
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
 
-  // Calculate quote details
   useEffect(() => {
     const details = calculateQuoteDetails(
       selectedVehicle,

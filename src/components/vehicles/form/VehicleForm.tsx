@@ -4,24 +4,22 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import vehicleFormSchema from './vehicleFormSchema';
 import { Button } from '@/components/ui/button';
-import { Vehicle } from '@/types/vehicle';
-import { z } from 'zod';
+import { Vehicle, VehicleFormValues, VehicleType } from '@/types/vehicle';
 import { Form } from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
 import VehicleBasicInfoFields from './VehicleBasicInfoFields';
 import VehicleTypeFields from './VehicleTypeFields';
 import VehicleOptionsFields from './VehicleOptionsFields';
-import VehicleFormActions from './VehicleFormActions';
 import VehiclePricingFields from './VehiclePricingFields';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface VehicleFormProps {
   initialData?: Vehicle;
-  onSubmit: (data: z.infer<typeof vehicleFormSchema>) => Promise<void>;
+  onSubmit: (data: VehicleFormValues) => Promise<void>;
   onCancel: () => void;
   onDeleteClick?: () => void;
   isLoading?: boolean;
-  vehicleTypes: any[];
+  vehicleTypes: VehicleType[];
 }
 
 const VehicleForm: React.FC<VehicleFormProps> = ({
@@ -34,7 +32,7 @@ const VehicleForm: React.FC<VehicleFormProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('info');
 
-  const form = useForm<z.infer<typeof vehicleFormSchema>>({
+  const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleFormSchema),
     defaultValues: {
       name: initialData?.name || '',
@@ -44,15 +42,25 @@ const VehicleForm: React.FC<VehicleFormProps> = ({
       is_luxury: initialData?.is_luxury || false,
       is_active: initialData?.is_active !== false, // Par défaut actif sauf si explicitement inactif
       image_url: initialData?.image_url || null,
+      // Paramètres de tarification
       min_trip_distance: initialData?.min_trip_distance || 0,
       night_rate_enabled: initialData?.night_rate_enabled || false,
       night_rate_start: initialData?.night_rate_start || "20:00",
       night_rate_end: initialData?.night_rate_end || "06:00",
       night_rate_percentage: initialData?.night_rate_percentage || 15,
+      // Paramètres de tarifs d'attente
+      wait_price_per_15min: initialData?.wait_price_per_15min || 7.5,
+      wait_night_enabled: initialData?.wait_night_enabled || false,
+      wait_night_start: initialData?.wait_night_start || "20:00",
+      wait_night_end: initialData?.wait_night_end || "06:00",
+      wait_night_percentage: initialData?.wait_night_percentage || 15,
+      // Paramètres additionnels
+      minimum_trip_fare: initialData?.minimum_trip_fare || 0,
+      holiday_sunday_percentage: initialData?.holiday_sunday_percentage || 0,
     },
   });
 
-  const handleSubmit = async (data: z.infer<typeof vehicleFormSchema>) => {
+  const handleSubmit = async (data: VehicleFormValues) => {
     await onSubmit(data);
   };
 

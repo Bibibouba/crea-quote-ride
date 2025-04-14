@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Edit, Trash2, AlertTriangle, Info } from 'lucide-react';
+import { Edit, Trash2, AlertTriangle, Info, Clock, Percent } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Vehicle } from '@/types/vehicle';
@@ -80,6 +80,41 @@ const VehicleCard = ({ vehicle, onEdit, onDelete }: VehicleCardProps) => {
                   <TooltipContent>
                     <p className="text-xs">
                       Majoration de {vehicle.night_rate_percentage}% entre {vehicle.night_rate_start || "20:00"} et {vehicle.night_rate_end || "06:00"}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {vehicle.wait_price_per_15min > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center rounded-full bg-purple-100 text-purple-800 px-3 py-1 text-xs cursor-help">
+                      <Clock className="h-3 w-3 mr-1" />
+                      <span>Attente: {vehicle.wait_price_per_15min}€/15min</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">
+                      Tarif d'attente: {vehicle.wait_price_per_15min}€ par tranche de 15 minutes
+                      {vehicle.wait_night_enabled && ` (majoration de ${vehicle.wait_night_percentage}% la nuit)`}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {vehicle.holiday_sunday_percentage > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center rounded-full bg-red-100 text-red-800 px-3 py-1 text-xs cursor-help">
+                      <Percent className="h-3 w-3 mr-1" />
+                      <span>Dim/JF: +{vehicle.holiday_sunday_percentage}%</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">
+                      Majoration de {vehicle.holiday_sunday_percentage}% les dimanches et jours fériés
                     </p>
                   </TooltipContent>
                 </Tooltip>

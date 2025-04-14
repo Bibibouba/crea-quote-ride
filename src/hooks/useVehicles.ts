@@ -67,6 +67,22 @@ export const useVehicles = () => {
             is_active: values.is_active,
             vehicle_type_id: values.vehicle_type_id,
             vehicle_type_name: values.vehicle_type_name,
+            // Paramètres de tarification
+            min_trip_distance: values.min_trip_distance,
+            night_rate_enabled: values.night_rate_enabled,
+            night_rate_start: values.night_rate_start,
+            night_rate_end: values.night_rate_end,
+            night_rate_percentage: values.night_rate_percentage,
+            // Paramètres de tarifs d'attente
+            wait_price_per_15min: values.wait_price_per_15min,
+            wait_night_enabled: values.wait_night_enabled,
+            wait_night_start: values.wait_night_start,
+            wait_night_end: values.wait_night_end,
+            wait_night_percentage: values.wait_night_percentage,
+            // Paramètres additionnels
+            minimum_trip_fare: values.minimum_trip_fare,
+            holiday_sunday_percentage: values.holiday_sunday_percentage,
+            // Mettre à jour la date
             updated_at: new Date().toISOString()
           })
           .eq('id', editingVehicle.id);
@@ -96,6 +112,22 @@ export const useVehicles = () => {
             is_active: values.is_active,
             vehicle_type_id: values.vehicle_type_id,
             vehicle_type_name: values.vehicle_type_name,
+            // Paramètres de tarification
+            min_trip_distance: values.min_trip_distance,
+            night_rate_enabled: values.night_rate_enabled,
+            night_rate_start: values.night_rate_start,
+            night_rate_end: values.night_rate_end,
+            night_rate_percentage: values.night_rate_percentage,
+            // Paramètres de tarifs d'attente
+            wait_price_per_15min: values.wait_price_per_15min,
+            wait_night_enabled: values.wait_night_enabled,
+            wait_night_start: values.wait_night_start,
+            wait_night_end: values.wait_night_end,
+            wait_night_percentage: values.wait_night_percentage,
+            // Paramètres additionnels
+            minimum_trip_fare: values.minimum_trip_fare,
+            holiday_sunday_percentage: values.holiday_sunday_percentage,
+            // Info du conducteur
             driver_id: user.id
           })
           .select();

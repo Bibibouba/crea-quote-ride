@@ -16,6 +16,15 @@ const vehicleFormSchema = z.object({
   night_rate_start: z.string().optional(),
   night_rate_end: z.string().optional(),
   night_rate_percentage: z.coerce.number().min(0).optional(),
+  // Paramètres de tarifs d'attente
+  wait_price_per_15min: z.coerce.number().min(0).optional(),
+  wait_night_enabled: z.boolean().optional(),
+  wait_night_start: z.string().optional(),
+  wait_night_end: z.string().optional(),
+  wait_night_percentage: z.coerce.number().min(0).optional(),
+  // Paramètres additionnels
+  minimum_trip_fare: z.coerce.number().min(0).optional(),
+  holiday_sunday_percentage: z.coerce.number().min(0).optional(),
 });
 
 export default vehicleFormSchema;

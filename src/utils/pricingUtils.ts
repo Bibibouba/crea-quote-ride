@@ -5,28 +5,41 @@ export const calculateWaitingTimePrice = (
   hasWaitingTime: boolean, 
   waitingTimeMinutes: number, 
   pricingSettings: PricingSettings | null,
-  time: string
+  time: string,
+  selectedVehicle: any = null
 ): number => {
-  if (!hasWaitingTime || !pricingSettings) return 0;
+  if (!hasWaitingTime) return 0;
   
-  const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
+  // Priorité aux paramètres du véhicule si disponibles
+  const pricePerQuarter = selectedVehicle?.wait_price_per_15min || 
+                        pricingSettings?.wait_price_per_15min || 7.5;
   
   const quarters = Math.ceil(waitingTimeMinutes / 15);
   let price = quarters * pricePerQuarter;
   
-  if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
+  // Vérifier si le tarif de nuit est activé pour ce véhicule
+  const useVehicleWaitNight = selectedVehicle?.wait_night_enabled && 
+                             selectedVehicle?.wait_night_start && 
+                             selectedVehicle?.wait_night_end && 
+                             selectedVehicle?.wait_night_percentage;
+  
+  // Vérifier si c'est un tarif de nuit (en priorité celui du véhicule)
+  if ((useVehicleWaitNight || (pricingSettings?.wait_night_enabled && pricingSettings?.wait_night_percentage)) && time) {
     const [hours, minutes] = time.split(':').map(Number);
     const tripTime = new Date();
     tripTime.setHours(hours);
     tripTime.setMinutes(minutes);
     
+    // Priorité aux paramètres du véhicule
     const startTime = new Date();
-    const [startHours, startMinutes] = pricingSettings.wait_night_start?.split(':').map(Number) || [0, 0];
+    const startTimeStr = useVehicleWaitNight ? selectedVehicle.wait_night_start : pricingSettings?.wait_night_start;
+    const [startHours, startMinutes] = startTimeStr?.split(':').map(Number) || [0, 0];
     startTime.setHours(startHours);
     startTime.setMinutes(startMinutes);
     
     const endTime = new Date();
-    const [endHours, endMinutes] = pricingSettings.wait_night_end?.split(':').map(Number) || [0, 0];
+    const endTimeStr = useVehicleWaitNight ? selectedVehicle.wait_night_end : pricingSettings?.wait_night_end;
+    const [endHours, endMinutes] = endTimeStr?.split(':').map(Number) || [0, 0];
     endTime.setHours(endHours);
     endTime.setMinutes(endMinutes);
     
@@ -36,7 +49,9 @@ export const calculateWaitingTimePrice = (
     );
     
     if (isNight) {
-      const nightPercentage = pricingSettings.wait_night_percentage || 0;
+      const nightPercentage = useVehicleWaitNight ? 
+                            selectedVehicle.wait_night_percentage : 
+                            pricingSettings?.wait_night_percentage || 0;
       price += price * (nightPercentage / 100);
     }
   }
@@ -255,6 +270,8 @@ export const calculateQuoteDetails = (
   
   // Vérifier si les tarifs de nuit doivent être appliqués
   const isNightRate = isNightTime(date, time, selectedVehicleInfo, pricingSettings);
+  
+  // Utiliser en priorité les paramètres du véhicule pour les tarifs du dimanche
   const isSundayRate = isSunday(date);
   
   // Calculer la partie du trajet qui est en tarif de nuit
@@ -267,9 +284,14 @@ export const calculateQuoteDetails = (
     pricingSettings
   );
   
+  // Prioriser les paramètres de tarifs spécifiques au véhicule
   const nightRatePercentage = selectedVehicleInfo.night_rate_enabled ? 
     (selectedVehicleInfo.night_rate_percentage || 0) : 
     (pricingSettings?.night_rate_percentage || 0);
+  
+  const holidaySundayPercentage = selectedVehicleInfo.holiday_sunday_percentage !== undefined ?
+    selectedVehicleInfo.holiday_sunday_percentage :
+    (pricingSettings?.holiday_sunday_percentage || 0);
   
   // Calculer les prix avec les distances ajustées
   let oneWayPriceHT = adjustedDistance * basePrice;
@@ -294,11 +316,19 @@ export const calculateQuoteDetails = (
     returnPriceHT += returnNightPriceHT * (nightRatePercentage / 100);
   }
   
-  if (isSundayRate && pricingSettings && pricingSettings.holiday_sunday_percentage) {
-    const sundayPercentage = pricingSettings.holiday_sunday_percentage / 100;
+  if (isSundayRate && holidaySundayPercentage > 0) {
+    const sundayPercentage = holidaySundayPercentage / 100;
     sundaySurcharge = (oneWayPriceHT + returnPriceHT) * sundayPercentage;
     oneWayPriceHT += oneWayPriceHT * sundayPercentage;
     returnPriceHT += returnPriceHT * sundayPercentage;
+  }
+  
+  // Appliquer le tarif minimum si défini pour ce véhicule
+  const minimumTripFare = selectedVehicleInfo.minimum_trip_fare || (pricingSettings?.minimum_trip_fare || 0);
+  if (minimumTripFare > 0 && (oneWayPriceHT + returnPriceHT) < minimumTripFare) {
+    const ratio = oneWayPriceHT / (oneWayPriceHT + returnPriceHT);
+    oneWayPriceHT = minimumTripFare * ratio;
+    returnPriceHT = minimumTripFare * (1 - ratio);
   }
   
   const waitingTimePriceHT = hasWaitingTime ? waitingTimePrice : 0;
