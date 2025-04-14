@@ -46,9 +46,9 @@ const VehicleAdditionalOptionsForm = ({ vehicleId, defaultSettings }: VehicleAdd
       setLoading(true);
       try {
         const { data, error } = await supabase
-          .from('vehicles')
+          .from('vehicle_pricing_settings')
           .select('minimum_trip_fare, min_trip_distance, holiday_sunday_percentage')
-          .eq('id', vehicleId)
+          .eq('vehicle_id', vehicleId)
           .single();
           
         if (error) throw error;
@@ -96,15 +96,15 @@ const VehicleAdditionalOptionsForm = ({ vehicleId, defaultSettings }: VehicleAdd
   const onSubmit = async (values: z.infer<typeof additionalOptionsSchema>) => {
     setSaving(true);
     try {
-      // Correctly update the fields with the proper type expected by supabase
+      // Mise à jour des paramètres dans la nouvelle table
       const { error } = await supabase
-        .from('vehicles')
+        .from('vehicle_pricing_settings')
         .update({
           minimum_trip_fare: values.minimum_trip_fare,
           min_trip_distance: values.min_trip_distance,
           holiday_sunday_percentage: values.holiday_sunday_percentage,
         })
-        .eq('id', vehicleId);
+        .eq('vehicle_id', vehicleId);
         
       if (error) throw error;
       

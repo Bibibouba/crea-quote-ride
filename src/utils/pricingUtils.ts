@@ -1,4 +1,3 @@
-
 import { PricingSettings, QuoteDetails } from '@/types/quoteForm';
 
 export const calculateWaitingTimePrice = (

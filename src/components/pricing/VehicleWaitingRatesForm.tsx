@@ -52,9 +52,9 @@ const VehicleWaitingRatesForm = ({ vehicleId, defaultSettings }: VehicleWaitingR
       setLoading(true);
       try {
         const { data, error } = await supabase
-          .from('vehicles')
+          .from('vehicle_pricing_settings')
           .select('wait_price_per_15min, wait_night_enabled, wait_night_start, wait_night_end, wait_night_percentage')
-          .eq('id', vehicleId)
+          .eq('vehicle_id', vehicleId)
           .single();
           
         if (error) throw error;
@@ -107,9 +107,9 @@ const VehicleWaitingRatesForm = ({ vehicleId, defaultSettings }: VehicleWaitingR
   const onSubmit = async (values: z.infer<typeof waitingRatesSchema>) => {
     setSaving(true);
     try {
-      // Update the vehicle fields with waiting rates information
+      // Mise à jour des paramètres dans la nouvelle table
       const { error } = await supabase
-        .from('vehicles')
+        .from('vehicle_pricing_settings')
         .update({
           wait_price_per_15min: values.wait_price_per_15min,
           wait_night_enabled: values.wait_night_enabled,
@@ -117,7 +117,7 @@ const VehicleWaitingRatesForm = ({ vehicleId, defaultSettings }: VehicleWaitingR
           wait_night_end: values.wait_night_end,
           wait_night_percentage: values.wait_night_percentage,
         })
-        .eq('id', vehicleId);
+        .eq('vehicle_id', vehicleId);
         
       if (error) throw error;
       

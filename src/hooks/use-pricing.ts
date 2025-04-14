@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -280,6 +279,24 @@ export const usePricing = () => {
     }
   };
 
+  const loadVehiclePricingSettings = async (vehicleId: string) => {
+    if (!user) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('vehicle_pricing_settings')
+        .select('*')
+        .eq('vehicle_id', vehicleId)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error loading vehicle pricing settings:', error);
+      return null;
+    }
+  };
+
   return {
     loading,
     savingSettings,
@@ -290,6 +307,7 @@ export const usePricing = () => {
     saveTier,
     deleteTier,
     refreshData,
-    setSavingSettings
+    setSavingSettings,
+    loadVehiclePricingSettings
   };
 };

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Vehicle, VehicleFormValues } from '@/types/vehicle';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { VehiclePricingSettings } from '@/types/vehiclePricing';
 
 export const useVehicles = () => {
   const { user } = useAuth();
@@ -54,46 +55,59 @@ export const useVehicles = () => {
     console.log('Editing vehicle:', editingVehicle);
     
     try {
+      // Extraire les données de tarification
+      const pricingData: Partial<VehiclePricingSettings> = {
+        min_trip_distance: values.min_trip_distance,
+        night_rate_enabled: values.night_rate_enabled,
+        night_rate_start: values.night_rate_start,
+        night_rate_end: values.night_rate_end,
+        night_rate_percentage: values.night_rate_percentage,
+        wait_price_per_15min: values.wait_price_per_15min,
+        wait_night_enabled: values.wait_night_enabled,
+        wait_night_start: values.wait_night_start,
+        wait_night_end: values.wait_night_end,
+        wait_night_percentage: values.wait_night_percentage,
+        minimum_trip_fare: values.minimum_trip_fare,
+        holiday_sunday_percentage: values.holiday_sunday_percentage,
+      };
+      
+      // Extraire les données du véhicule (sans les données de tarification)
+      const vehicleData = {
+        name: values.name,
+        model: values.model,
+        capacity: values.capacity,
+        image_url: values.image_url,
+        is_luxury: values.is_luxury,
+        is_active: values.is_active,
+        vehicle_type_id: values.vehicle_type_id,
+        vehicle_type_name: values.vehicle_type_name,
+      };
+      
       if (editingVehicle?.id) {
         // Update existing vehicle
-        const { error } = await supabase
+        const { error: vehicleError } = await supabase
           .from('vehicles')
           .update({
-            name: values.name,
-            model: values.model,
-            capacity: values.capacity,
-            image_url: values.image_url,
-            is_luxury: values.is_luxury,
-            is_active: values.is_active,
-            vehicle_type_id: values.vehicle_type_id,
-            vehicle_type_name: values.vehicle_type_name,
-            // Paramètres de tarification
-            min_trip_distance: values.min_trip_distance,
-            night_rate_enabled: values.night_rate_enabled,
-            night_rate_start: values.night_rate_start,
-            night_rate_end: values.night_rate_end,
-            night_rate_percentage: values.night_rate_percentage,
-            // Paramètres de tarifs d'attente
-            wait_price_per_15min: values.wait_price_per_15min,
-            wait_night_enabled: values.wait_night_enabled,
-            wait_night_start: values.wait_night_start,
-            wait_night_end: values.wait_night_end,
-            wait_night_percentage: values.wait_night_percentage,
-            // Paramètres additionnels
-            minimum_trip_fare: values.minimum_trip_fare,
-            holiday_sunday_percentage: values.holiday_sunday_percentage,
-            // Mettre à jour la date
+            ...vehicleData,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingVehicle.id);
           
-        if (error) throw error;
+        if (vehicleError) throw vehicleError;
+        
+        // Update vehicle pricing settings
+        const { error: pricingError } = await supabase
+          .from('vehicle_pricing_settings')
+          .update(pricingData)
+          .eq('vehicle_id', editingVehicle.id);
+        
+        if (pricingError) throw pricingError;
         
         // Update local state
         setVehicles(vehicles.map(v => 
           v.id === editingVehicle.id ? { 
             ...v, 
-            ...values,
+            ...vehicleData,
             updated_at: new Date().toISOString()
           } : v
         ));
@@ -101,43 +115,35 @@ export const useVehicles = () => {
         return true;
       } else {
         // Create new vehicle
-        const { data, error } = await supabase
+        const { data, error: vehicleError } = await supabase
           .from('vehicles')
           .insert({
-            name: values.name,
-            model: values.model, 
-            capacity: values.capacity,
-            image_url: values.image_url,
-            is_luxury: values.is_luxury,
-            is_active: values.is_active,
-            vehicle_type_id: values.vehicle_type_id,
-            vehicle_type_name: values.vehicle_type_name,
-            // Paramètres de tarification
-            min_trip_distance: values.min_trip_distance,
-            night_rate_enabled: values.night_rate_enabled,
-            night_rate_start: values.night_rate_start,
-            night_rate_end: values.night_rate_end,
-            night_rate_percentage: values.night_rate_percentage,
-            // Paramètres de tarifs d'attente
-            wait_price_per_15min: values.wait_price_per_15min,
-            wait_night_enabled: values.wait_night_enabled,
-            wait_night_start: values.wait_night_start,
-            wait_night_end: values.wait_night_end,
-            wait_night_percentage: values.wait_night_percentage,
-            // Paramètres additionnels
-            minimum_trip_fare: values.minimum_trip_fare,
-            holiday_sunday_percentage: values.holiday_sunday_percentage,
-            // Info du conducteur
+            ...vehicleData,
             driver_id: user.id
           })
           .select();
           
-        if (error) throw error;
+        if (vehicleError) throw vehicleError;
         
         console.log('New vehicle created:', data);
         
-        // Update local state
+        // Create vehicle pricing settings if needed
         if (data && data.length > 0) {
+          const newVehicleId = data[0].id;
+          
+          // La création des paramètres de tarification est gérée par un trigger,
+          // mais nous mettons à jour les valeurs soumises
+          const { error: pricingError } = await supabase
+            .from('vehicle_pricing_settings')
+            .update({
+              ...pricingData,
+              driver_id: user.id
+            })
+            .eq('vehicle_id', newVehicleId);
+            
+          if (pricingError) throw pricingError;
+          
+          // Update local state
           setVehicles([data[0], ...vehicles]);
           toast.success('Véhicule ajouté avec succès');
           return true;
@@ -160,7 +166,7 @@ export const useVehicles = () => {
     }
     
     try {
-      // Suppression du véhicule
+      // Les paramètres de tarification seront supprimés automatiquement grâce à ON DELETE CASCADE
       const { error } = await supabase
         .from('vehicles')
         .delete()

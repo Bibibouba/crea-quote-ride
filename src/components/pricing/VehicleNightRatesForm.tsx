@@ -49,9 +49,9 @@ const VehicleNightRatesForm = ({ vehicleId, defaultSettings }: VehicleNightRates
       setLoading(true);
       try {
         const { data, error } = await supabase
-          .from('vehicles')
+          .from('vehicle_pricing_settings')
           .select('night_rate_enabled, night_rate_start, night_rate_end, night_rate_percentage')
-          .eq('id', vehicleId)
+          .eq('vehicle_id', vehicleId)
           .single();
           
         if (error) throw error;
@@ -102,16 +102,16 @@ const VehicleNightRatesForm = ({ vehicleId, defaultSettings }: VehicleNightRates
   const onSubmit = async (values: z.infer<typeof nightRatesSchema>) => {
     setSaving(true);
     try {
-      // Correctly update the vehicle with the night rates fields
+      // Mise à jour des paramètres dans la nouvelle table
       const { error } = await supabase
-        .from('vehicles')
+        .from('vehicle_pricing_settings')
         .update({
           night_rate_enabled: values.night_rate_enabled,
           night_rate_start: values.night_rate_start,
           night_rate_end: values.night_rate_end,
           night_rate_percentage: values.night_rate_percentage,
         })
-        .eq('id', vehicleId);
+        .eq('vehicle_id', vehicleId);
         
       if (error) throw error;
       
