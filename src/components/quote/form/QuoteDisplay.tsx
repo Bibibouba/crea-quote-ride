@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import QuoteSummary from './QuoteSummary';
+import QuoteSummary, { QuoteDetailsType } from './QuoteSummary';
 import ClientInfoSection from './ClientInfoSection';
 import { Vehicle } from '@/types/quoteForm';
 import { calculateQuoteDetails } from '@/utils/pricingUtils';

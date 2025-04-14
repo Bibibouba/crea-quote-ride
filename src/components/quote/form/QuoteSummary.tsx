@@ -1,16 +1,14 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { DollarSignIcon, Loader2, Clock, Moon } from 'lucide-react';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
-import RouteMap from '@/components/map/RouteMap';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Separator } from '@/components/ui/separator';
-import { formatDuration } from '@/lib/formatDuration';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Badge } from '@/components/ui/badge';
 import { Vehicle } from '@/types/quoteForm';
+import RouteMap from '@/components/map/RouteMap';
+import { RouteInfoCard } from './summary/RouteInfoCard';
+import { TripDetailsCard } from './summary/TripDetailsCard';
+import { QuoteActions } from './summary/QuoteActions';
+import { QuoteFooter } from './summary/QuoteFooter';
 
 // Define a type for quote details to make it more type-safe
 export interface QuoteDetailsType {
@@ -50,7 +48,6 @@ interface QuoteSummaryProps {
   returnDistance?: number;
   returnDuration?: number;
   returnCoordinates?: [number, number] | undefined;
-  // Add quoteDetails to the props
   quoteDetails?: QuoteDetailsType;
 }
 
@@ -91,18 +88,6 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   // Calculate the total price including waiting time and return trip
   const totalPrice = estimatedPrice + (hasWaitingTime ? waitingTimePrice : 0) + returnPrice;
   
-  // Format waiting time for display
-  const formatWaitingTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    
-    if (hours > 0) {
-      return `${hours} heure${hours > 1 ? 's' : ''}${remainingMinutes > 0 ? ` et ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}` : ''}`;
-    } else {
-      return `${minutes} minute${minutes > 1 ? 's' : ''}`;
-    }
-  };
-
   // Format price with one decimal
   const formatPrice = (price: number) => {
     return price.toFixed(1);
@@ -131,11 +116,6 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   // Calculate end time of the trip
   const tripEndTime = new Date(rideTime);
   tripEndTime.setMinutes(tripEndTime.getMinutes() + estimatedDuration);
-  
-  // Function to format time as HH:MM
-  const formatTimeDisplay = (date: Date) => {
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-  };
   
   // Check if trip spans into night hours
   let isNightRateApplied = false;
@@ -258,28 +238,12 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   
   return (
     <div className="space-y-6">
-      <div className="bg-secondary/30 p-4 rounded-lg space-y-4">
-        <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
-          <div className="w-full sm:w-1/2">
-            <p className="text-sm font-medium">Départ</p>
-            <p className="text-sm text-muted-foreground break-words">{departureAddress}</p>
-          </div>
-          <div className="w-full sm:w-1/2 sm:text-right">
-            <p className="text-sm font-medium">Destination</p>
-            <p className="text-sm text-muted-foreground break-words">{destinationAddress}</p>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row sm:justify-between border-t pt-4 gap-4">
-          <div>
-            <p className="text-sm font-medium">Distance estimée</p>
-            <p className="text-sm text-muted-foreground">{estimatedDistance} km</p>
-          </div>
-          <div className="sm:text-right">
-            <p className="text-sm font-medium">Durée estimée</p>
-            <p className="text-sm text-muted-foreground">{formatDuration(estimatedDuration)}</p>
-          </div>
-        </div>
-      </div>
+      <RouteInfoCard 
+        departureAddress={departureAddress}
+        destinationAddress={destinationAddress}
+        estimatedDistance={estimatedDistance}
+        estimatedDuration={estimatedDuration}
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="h-[400px] rounded-lg overflow-hidden border">
@@ -290,137 +254,46 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
         </div>
         
         <div className="space-y-4">
-          <div className="rounded-lg border bg-card p-4">
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <p className="font-medium">Véhicule sélectionné</p>
-                <p>{vehicles.find(v => v.id === selectedVehicle)?.name || "Berline"}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-medium">Nombre de passagers</p>
-                <p>{passengers} {parseInt(passengers) === 1 ? 'passager' : 'passagers'}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-medium">Prix au kilomètre</p>
-                <p>{basePrice.toFixed(2)}€/km</p>
-              </div>
-              
-              {/* Trajet aller */}
-              <div className="flex justify-between">
-                <div className="flex items-center">
-                  <ArrowRight className="h-4 w-4 mr-2 flex-shrink-0" />
-                  <p className="font-medium">Trajet aller</p>
-                </div>
-                <p>{formatPrice(estimatedPrice)}€</p>
-              </div>
-              
-              {/* Afficher les infos de tarif de nuit si applicable */}
-              {hasNightRate && isNightRateApplied && (
-                <div className="ml-6 bg-muted/40 p-2 rounded-md">
-                  <div className="flex items-center mb-1">
-                    <Moon className="h-3 w-3 mr-1 text-amber-500" />
-                    <p className="text-xs font-medium">
-                      Tarif de nuit ({nightRatePercentage}% de majoration)
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Ce trajet débute à {time} et se termine à {formatTimeDisplay(tripEndTime)}.
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <strong>{Math.round(nightHours * 10) / 10}h</strong> du trajet sont en horaire de nuit 
-                    (entre {nightRateStart} et {nightRateEnd}).
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    La majoration s'applique uniquement à cette portion du trajet.
-                  </p>
-                </div>
-              )}
-              
-              {/* Afficher les infos de tarif dimanche/férié si applicable */}
-              {isSunday && sundayRate > 0 && (
-                <div className="ml-6 bg-muted/40 p-2 rounded-md mt-2">
-                  <div className="flex items-center mb-1">
-                    <Badge variant="outline" className="h-5 text-xs">Dimanche</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Majoration dimanche/jour férié de {sundayRate}% appliquée sur l'ensemble du trajet.
-                  </p>
-                </div>
-              )}
-              
-              {/* Display waiting time information */}
-              {hasWaitingTime && (
-                <div className="flex justify-between">
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes || 0)})</p>
-                  </div>
-                  <p>{formatPrice(waitingTimePrice || 0)}€</p>
-                </div>
-              )}
-              
-              {/* Display return trip information */}
-              {hasReturnTrip && (
-                <div className="flex justify-between">
-                  <div className="flex items-center">
-                    <ArrowLeft className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <p className="font-medium">
-                      Trajet retour {returnToSameAddress ? '(même adresse)' : ''}
-                    </p>
-                  </div>
-                  <p>{formatPrice(returnPrice)}€</p>
-                </div>
-              )}
-              
-              {/* Display custom return address if applicable */}
-              {hasReturnTrip && !returnToSameAddress && customReturnAddress && (
-                <div className="text-sm text-muted-foreground">
-                  <p className="break-words">Adresse de retour : {customReturnAddress}</p>
-                  {returnDistance > 0 && (
-                    <p className="mt-1">Distance : {returnDistance} km | Durée : {formatDuration(returnDuration || 0)}</p>
-                  )}
-                </div>
-              )}
-              
-              <Separator className="my-2" />
-              
-              <div className="flex justify-between border-t border-border/60 pt-4">
-                <p className="font-medium">Montant total</p>
-                <p className="text-xl font-bold">{formatPrice(totalPrice)}€</p>
-              </div>
-            </div>
-          </div>
+          <TripDetailsCard
+            selectedVehicle={selectedVehicle}
+            passengers={passengers}
+            basePrice={basePrice}
+            estimatedPrice={estimatedPrice}
+            vehicles={vehicles}
+            time={time}
+            hasWaitingTime={hasWaitingTime}
+            waitingTimeMinutes={waitingTimeMinutes}
+            waitingTimePrice={waitingTimePrice}
+            hasReturnTrip={hasReturnTrip}
+            returnToSameAddress={returnToSameAddress}
+            customReturnAddress={customReturnAddress}
+            returnDistance={returnDistance}
+            returnDuration={returnDuration}
+            returnPrice={returnPrice}
+            totalPrice={totalPrice}
+            tripEndTime={tripEndTime}
+            isNightRateApplied={isNightRateApplied}
+            nightHours={nightHours}
+            dayHours={dayHours}
+            isSunday={isSunday}
+            nightRatePercentage={nightRatePercentage}
+            nightRateStart={nightRateStart}
+            nightRateEnd={nightRateEnd}
+            sundayRate={sundayRate}
+            quoteDetails={quoteDetails}
+          />
         </div>
       </div>
       
       {showClientInfo && clientInfoComponent}
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Button 
-          className="w-full"
-          onClick={onSaveQuote}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Enregistrement en cours...
-            </>
-          ) : (
-            <>
-              <DollarSignIcon className="mr-2 h-4 w-4" />
-              Enregistrer ce devis
-            </>
-          )}
-        </Button>
-        <Button variant="outline" onClick={onEditQuote} className="w-full">
-          Modifier le devis
-        </Button>
-      </div>
+      <QuoteActions
+        isSubmitting={isSubmitting}
+        onSaveQuote={onSaveQuote}
+        onEditQuote={onEditQuote}
+      />
       
-      <p className="text-xs text-muted-foreground text-center">
-        * Ce montant est une estimation et peut varier en fonction des conditions réelles de circulation
-      </p>
+      <QuoteFooter />
     </div>
   );
 };
