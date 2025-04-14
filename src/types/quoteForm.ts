@@ -1,4 +1,3 @@
-
 import { useQuoteForm } from "@/hooks/useQuoteForm";
 
 export interface Vehicle {
@@ -12,6 +11,13 @@ export interface Vehicle {
   night_rate_start?: string;
   night_rate_end?: string;
   night_rate_percentage?: number;
+  wait_price_per_15min?: number;
+  wait_night_enabled?: boolean;
+  wait_night_start?: string;
+  wait_night_end?: string;
+  wait_night_percentage?: number;
+  minimum_trip_fare?: number;
+  holiday_sunday_percentage?: number;
 }
 
 export interface PricingSettings {

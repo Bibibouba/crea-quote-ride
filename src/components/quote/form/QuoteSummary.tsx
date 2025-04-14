@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { formatDuration } from '@/lib/formatDuration';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
+import { Vehicle } from '@/types/quoteForm';
 
 interface QuoteSummaryProps {
   departureAddress: string;
@@ -29,7 +30,7 @@ interface QuoteSummaryProps {
   onEditQuote: () => void;
   showClientInfo: boolean;
   clientInfoComponent?: React.ReactNode;
-  vehicles: Array<{ id: string; name: string; basePrice: number; description: string }>;
+  vehicles: Vehicle[];
   hasReturnTrip?: boolean;
   hasWaitingTime?: boolean;
   waitingTimeMinutes?: number;
