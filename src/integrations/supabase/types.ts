@@ -88,7 +88,11 @@ export type Database = {
           bank_details: string | null
           banner_url: string | null
           company_address: string | null
+          company_name: string | null
           company_type: string | null
+          contact_email: string | null
+          contact_first_name: string | null
+          contact_last_name: string | null
           created_at: string
           discount_conditions: string | null
           driver_id: string
@@ -114,7 +118,11 @@ export type Database = {
           bank_details?: string | null
           banner_url?: string | null
           company_address?: string | null
+          company_name?: string | null
           company_type?: string | null
+          contact_email?: string | null
+          contact_first_name?: string | null
+          contact_last_name?: string | null
           created_at?: string
           discount_conditions?: string | null
           driver_id: string
@@ -140,7 +148,11 @@ export type Database = {
           bank_details?: string | null
           banner_url?: string | null
           company_address?: string | null
+          company_name?: string | null
           company_type?: string | null
+          contact_email?: string | null
+          contact_first_name?: string | null
+          contact_last_name?: string | null
           created_at?: string
           discount_conditions?: string | null
           driver_id?: string

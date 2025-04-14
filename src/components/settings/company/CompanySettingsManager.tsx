@@ -15,7 +15,6 @@ import CompanySettingsForm, { CompanySettingsFormValues } from './CompanySetting
 
 type CompanySettings = Database['public']['Tables']['company_settings']['Row'] & {
   banner_url?: string | null;
-  // Added new fields
   company_name?: string | null;
   contact_first_name?: string | null;
   contact_last_name?: string | null;
@@ -83,14 +82,12 @@ const CompanySettingsManager = () => {
       const { error } = await supabase
         .from('company_settings')
         .update({
-          // Style fields
           logo_url: values.logo_url,
           banner_url: values.banner_url,
           primary_color: values.primary_color,
           secondary_color: values.secondary_color,
           font_family: values.font_family,
           
-          // Company information fields
           company_type: values.company_type,
           company_address: values.company_address,
           siret: values.siret,
@@ -99,7 +96,6 @@ const CompanySettingsManager = () => {
           rcs_number: values.rcs_number,
           is_vat_exempt: values.is_vat_exempt,
           
-          // Invoice settings fields
           invoice_prefix: values.invoice_prefix,
           next_invoice_number: values.next_invoice_number,
           payment_delay_days: values.payment_delay_days,
@@ -108,7 +104,6 @@ const CompanySettingsManager = () => {
           bank_details: values.bank_details,
           legal_notices: values.legal_notices,
           
-          // Add new fields
           company_name: values.company_name,
           contact_first_name: values.contact_first_name,
           contact_last_name: values.contact_last_name,
@@ -122,17 +117,14 @@ const CompanySettingsManager = () => {
       
       toast.success('Paramètres d\'entreprise enregistrés');
       
-      // Update local state with the new values
       setCompanySettings({
         ...companySettings,
-        // Style fields
         logo_url: values.logo_url,
         banner_url: values.banner_url,
         primary_color: values.primary_color,
         secondary_color: values.secondary_color,
         font_family: values.font_family,
         
-        // Company information fields
         company_type: values.company_type,
         company_address: values.company_address,
         siret: values.siret,
@@ -141,7 +133,6 @@ const CompanySettingsManager = () => {
         rcs_number: values.rcs_number,
         is_vat_exempt: values.is_vat_exempt,
         
-        // Invoice settings fields
         invoice_prefix: values.invoice_prefix,
         next_invoice_number: values.next_invoice_number,
         payment_delay_days: values.payment_delay_days,
@@ -150,7 +141,6 @@ const CompanySettingsManager = () => {
         bank_details: values.bank_details,
         legal_notices: values.legal_notices,
         
-        // Add new fields
         company_name: values.company_name,
         contact_first_name: values.contact_first_name,
         contact_last_name: values.contact_last_name,

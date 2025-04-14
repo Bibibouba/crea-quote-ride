@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
@@ -59,11 +58,17 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   
+  // Use company_name from company settings if available
   const companyName = companySettings?.company_name || driverData?.company_name || 'Service de VTC';
   doc.text(companyName, 15, 70);
   
   if (driverData) {
-    doc.text(`${driverData.first_name || ''} ${driverData.last_name || ''}`, 15, 75);
+    // If contact information is available in company settings, use that
+    const contactFirstName = companySettings?.contact_first_name || driverData.first_name || '';
+    const contactLastName = companySettings?.contact_last_name || driverData.last_name || '';
+    const contactEmail = companySettings?.contact_email || driverData.email || '';
+
+    doc.text(`${contactFirstName} ${contactLastName}`, 15, 75);
   }
   
   if (companySettings?.company_address) {
