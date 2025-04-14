@@ -15,7 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { PercentIcon, Loader2, Save } from 'lucide-react';
+import { PercentIcon, Loader2, Save, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface PricingSettings {
   night_rate_enabled: boolean | null;
@@ -54,6 +55,14 @@ const NightRatesForm = ({ settings, onSave, saving }: NightRatesFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-700">
+            Ces paramètres sont les tarifs de nuit par défaut. Chaque véhicule peut avoir ses propres paramètres 
+            de tarif de nuit qui auront priorité sur ces valeurs globales.
+          </AlertDescription>
+        </Alert>
+
         <FormField
           control={form.control}
           name="night_rate_enabled"

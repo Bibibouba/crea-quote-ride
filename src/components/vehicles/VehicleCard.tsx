@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, AlertTriangle, Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Vehicle } from '@/types/vehicle';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
-import { AlertTriangle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -53,6 +53,37 @@ const VehicleCard = ({ vehicle, onEdit, onDelete }: VehicleCardProps) => {
               <div className="flex items-center rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs">
                 <span>Premium</span>
               </div>
+            )}
+            {vehicle.min_trip_distance > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs cursor-help">
+                      <Info className="h-3 w-3 mr-1" />
+                      <span>Min {vehicle.min_trip_distance} km</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Distance minimale facturée: {vehicle.min_trip_distance} km</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {vehicle.night_rate_enabled && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-xs cursor-help">
+                      <span>Tarif nuit</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">
+                      Majoration de {vehicle.night_rate_percentage}% entre {vehicle.night_rate_start || "20:00"} et {vehicle.night_rate_end || "06:00"}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         </CardContent>

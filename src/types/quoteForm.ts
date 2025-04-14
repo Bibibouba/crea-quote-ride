@@ -7,6 +7,11 @@ export interface Vehicle {
   basePrice: number;
   capacity: number;
   description: string;
+  min_trip_distance?: number;
+  night_rate_enabled?: boolean;
+  night_rate_start?: string;
+  night_rate_end?: string;
+  night_rate_percentage?: number;
 }
 
 export interface PricingSettings {
@@ -50,6 +55,11 @@ export interface QuoteDetails {
   sundaySurcharge?: number;
   rideVatRate?: number;
   waitingVatRate?: number;
+  hasMinDistanceWarning?: boolean;
+  minDistance?: number;
+  nightMinutes?: number;
+  totalMinutes?: number;
+  nightRatePercentage?: number;
 }
 
 export interface WaitingTimeOption {

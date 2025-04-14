@@ -10,6 +10,12 @@ const vehicleFormSchema = z.object({
   is_luxury: z.boolean().optional(),
   is_active: z.boolean().optional(),
   image_url: z.string().nullable().optional(),
+  // Paramètres de tarification
+  min_trip_distance: z.coerce.number().min(0).optional(),
+  night_rate_enabled: z.boolean().optional(),
+  night_rate_start: z.string().optional(),
+  night_rate_end: z.string().optional(),
+  night_rate_percentage: z.coerce.number().min(0).optional(),
 });
 
 export default vehicleFormSchema;

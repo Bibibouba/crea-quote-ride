@@ -3,10 +3,20 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { ArrowLeftRight, ArrowRight, ArrowLeft, Users, Moon, Calendar, InfoIcon } from 'lucide-react';
+import { 
+  ArrowLeftRight, 
+  ArrowRight, 
+  ArrowLeft, 
+  Users, 
+  Moon, 
+  Calendar, 
+  InfoIcon, 
+  AlertCircle 
+} from 'lucide-react';
 import RouteMap from '@/components/map/RouteMap';
 import { formatDuration } from '@/lib/formatDuration';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface TripSummaryStepProps {
   departureAddress: string;
@@ -62,7 +72,9 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
   const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
   const isNightRate = quoteDetails?.isNightRate;
   const isSunday = quoteDetails?.isSunday;
-  
+  const hasMinDistanceWarning = quoteDetails?.hasMinDistanceWarning;
+  const minDistance = quoteDetails?.minDistance || 0;
+
   // Formatter pour afficher un chiffre après la virgule
   const formatPrice = (price?: number) => {
     if (price === undefined) return "0.0";
@@ -130,6 +142,29 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
         )}
       </div>
       
+      {hasMinDistanceWarning && (
+        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800">Distance minimale</AlertTitle>
+          <AlertDescription className="text-amber-700">
+            La distance de ce trajet ({estimatedDistance} km) est inférieure à la distance minimale facturée pour ce véhicule ({minDistance} km).
+            Un supplément sera appliqué pour atteindre la distance minimale.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {isNightRate && quoteDetails?.nightMinutes && quoteDetails?.totalMinutes && (
+        <Alert variant="default" className="bg-indigo-50 border-indigo-200">
+          <Moon className="h-4 w-4 text-indigo-600" />
+          <AlertTitle className="text-indigo-800">Tarif de nuit applicable</AlertTitle>
+          <AlertDescription className="text-indigo-700">
+            Ce trajet inclut {Math.round((quoteDetails.nightMinutes / quoteDetails.totalMinutes) * 100)}% de 
+            parcours en horaires de nuit ({quoteDetails.nightMinutes} minutes).
+            Une majoration de {quoteDetails.nightRatePercentage}% sera appliquée sur cette portion.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="h-[400px] rounded-lg border overflow-hidden">
           {departureCoordinates && destinationCoordinates ? (
@@ -153,7 +188,14 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <p className="text-sm">Distance estimée (aller)</p>
-                <p className="text-sm font-medium">{estimatedDistance} km</p>
+                <p className="text-sm font-medium">
+                  {estimatedDistance} km
+                  {hasMinDistanceWarning && (
+                    <span className="text-xs text-amber-600 ml-1">
+                      (min. {minDistance} km)
+                    </span>
+                  )}
+                </p>
               </div>
               <div className="flex justify-between">
                 <p className="text-sm">Durée estimée (aller)</p>
@@ -164,7 +206,14 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                 <>
                   <div className="flex justify-between">
                     <p className="text-sm">Distance estimée (retour)</p>
-                    <p className="text-sm font-medium">{returnDistance} km</p>
+                    <p className="text-sm font-medium">
+                      {returnDistance} km
+                      {hasMinDistanceWarning && returnDistance < minDistance && (
+                        <span className="text-xs text-amber-600 ml-1">
+                          (min. {minDistance} km)
+                        </span>
+                      )}
+                    </p>
                   </div>
                   <div className="flex justify-between">
                     <p className="text-sm">Durée estimée (retour)</p>
@@ -202,7 +251,9 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                   </div>
                   {quoteDetails?.basePrice && (
                     <p className="text-xs text-muted-foreground ml-6 mt-0.5">
-                      {estimatedDistance} km × {quoteDetails.basePrice.toFixed(2)}€/km HT
+                      {hasMinDistanceWarning ? 
+                        `${minDistance} km (min.) × ${quoteDetails.basePrice.toFixed(2)}€/km HT` : 
+                        `${estimatedDistance} km × ${quoteDetails.basePrice.toFixed(2)}€/km HT`}
                     </p>
                   )}
                 </div>
@@ -255,7 +306,9 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                     </div>
                     {quoteDetails?.basePrice && (
                       <p className="text-xs text-muted-foreground ml-6 mt-0.5">
-                        {returnToSameAddress ? estimatedDistance : returnDistance} km × {quoteDetails.basePrice.toFixed(2)}€/km HT
+                        {hasMinDistanceWarning && (returnToSameAddress ? estimatedDistance : returnDistance) < minDistance ? 
+                          `${minDistance} km (min.) × ${quoteDetails.basePrice.toFixed(2)}€/km HT` : 
+                          `${returnToSameAddress ? estimatedDistance : returnDistance} km × ${quoteDetails.basePrice.toFixed(2)}€/km HT`}
                       </p>
                     )}
                   </div>
