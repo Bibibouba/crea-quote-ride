@@ -6,6 +6,7 @@ import ClientForm from '@/components/clients/ClientForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle, Users, X } from 'lucide-react';
+import ClientDialog from '@/components/clients/ClientDialog';
 
 const Clients = () => {
   const [showForm, setShowForm] = useState(false);
@@ -20,10 +21,12 @@ const Clients = () => {
               Consultez et gérez votre carnet de clients.
             </p>
           </div>
-          {!showForm && (
-            <Button onClick={() => setShowForm(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Ajouter un client
+          {!showForm ? (
+            <ClientDialog buttonText="Ajouter un client" />
+          ) : (
+            <Button onClick={() => setShowForm(false)} variant="outline">
+              <X className="mr-2 h-4 w-4" />
+              Annuler
             </Button>
           )}
         </div>

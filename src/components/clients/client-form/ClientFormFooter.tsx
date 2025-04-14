@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Save } from 'lucide-react';
 
 interface ClientFormFooterProps {
   onCancel?: () => void;
@@ -19,7 +20,14 @@ const ClientFormFooter: React.FC<ClientFormFooterProps> = ({
         </Button>
       )}
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Enregistrement...' : 'Enregistrer le client'}
+        {isSubmitting ? (
+          'Enregistrement...'
+        ) : (
+          <>
+            <Save className="mr-2 h-4 w-4" />
+            Enregistrer le client
+          </>
+        )}
       </Button>
     </div>
   );

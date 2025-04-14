@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Edit } from 'lucide-react';
 import ClientForm from './ClientForm';
 import { Client } from '@/types/client';
 
@@ -33,21 +33,27 @@ const ClientDialog: React.FC<ClientDialogProps> = ({
     if (onClientAdded) onClientAdded();
   };
 
+  const isEditMode = !!initialData?.id;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant={buttonVariant}>
-          <PlusCircle className="mr-2 h-4 w-4" />
+          {isEditMode ? (
+            <Edit className="h-4 w-4" />
+          ) : (
+            <PlusCircle className="mr-2 h-4 w-4" />
+          )}
           {buttonText}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {initialData?.id ? 'Modifier le client' : 'Ajouter un nouveau client'}
+            {isEditMode ? 'Modifier le client' : 'Ajouter un nouveau client'}
           </DialogTitle>
           <DialogDescription>
-            {initialData?.id
+            {isEditMode
               ? 'Modifiez les informations du client ci-dessous.'
               : 'Remplissez le formulaire pour ajouter un nouveau client.'}
           </DialogDescription>
