@@ -1,0 +1,139 @@
+
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import QuoteSummary from './QuoteSummary';
+import ClientInfoSection from './ClientInfoSection';
+import { Vehicle } from '@/types/quoteForm';
+
+interface QuoteDisplayProps {
+  departureAddress: string;
+  destinationAddress: string;
+  departureCoordinates?: [number, number];
+  destinationCoordinates?: [number, number];
+  date: Date;
+  time: string;
+  estimatedDistance: number;
+  estimatedDuration: number;
+  selectedVehicle: string;
+  passengers: string;
+  basePrice: number;
+  estimatedPrice: number;
+  isSubmitting: boolean;
+  onSaveQuote: () => Promise<void>;
+  onEditQuote: () => void;
+  clientId?: string;
+  firstName: string;
+  setFirstName: (value: string) => void;
+  lastName: string;
+  setLastName: (value: string) => void;
+  email: string;
+  setEmail: (value: string) => void;
+  phone: string;
+  setPhone: (value: string) => void;
+  vehicles: Vehicle[];
+  hasReturnTrip: boolean;
+  hasWaitingTime: boolean;
+  waitingTimeMinutes: number;
+  waitingTimePrice: number;
+  returnToSameAddress: boolean;
+  customReturnAddress: string;
+  returnDistance: number;
+  returnDuration: number;
+  returnCoordinates?: [number, number];
+}
+
+const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
+  departureAddress,
+  destinationAddress,
+  departureCoordinates,
+  destinationCoordinates,
+  date,
+  time,
+  estimatedDistance,
+  estimatedDuration,
+  selectedVehicle,
+  passengers,
+  basePrice,
+  estimatedPrice,
+  isSubmitting,
+  onSaveQuote,
+  onEditQuote,
+  clientId,
+  firstName,
+  setFirstName,
+  lastName,
+  setLastName,
+  email,
+  setEmail,
+  phone,
+  setPhone,
+  vehicles,
+  hasReturnTrip,
+  hasWaitingTime,
+  waitingTimeMinutes,
+  waitingTimePrice,
+  returnToSameAddress,
+  customReturnAddress,
+  returnDistance,
+  returnDuration,
+  returnCoordinates
+}) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Votre devis VTC</CardTitle>
+        <CardDescription>
+          Estimation pour votre trajet du {date ? format(date, "d MMMM yyyy", { locale: fr }) : ""} à {time}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <QuoteSummary 
+          departureAddress={departureAddress}
+          destinationAddress={destinationAddress}
+          departureCoordinates={departureCoordinates}
+          destinationCoordinates={destinationCoordinates}
+          date={date}
+          time={time}
+          estimatedDistance={estimatedDistance}
+          estimatedDuration={estimatedDuration}
+          selectedVehicle={selectedVehicle}
+          passengers={passengers}
+          basePrice={basePrice}
+          estimatedPrice={estimatedPrice}
+          isSubmitting={isSubmitting}
+          onSaveQuote={onSaveQuote}
+          onEditQuote={onEditQuote}
+          showClientInfo={!clientId}
+          clientInfoComponent={
+            !clientId ? (
+              <ClientInfoSection 
+                firstName={firstName}
+                setFirstName={setFirstName}
+                lastName={lastName}
+                setLastName={setLastName}
+                email={email}
+                setEmail={setEmail}
+                phone={phone}
+                setPhone={setPhone}
+              />
+            ) : undefined
+          }
+          vehicles={vehicles}
+          hasReturnTrip={hasReturnTrip}
+          hasWaitingTime={hasWaitingTime}
+          waitingTimeMinutes={waitingTimeMinutes}
+          waitingTimePrice={waitingTimePrice}
+          returnToSameAddress={returnToSameAddress}
+          customReturnAddress={customReturnAddress}
+          returnDistance={returnDistance}
+          returnDuration={returnDuration}
+          returnCoordinates={returnCoordinates}
+        />
+      </CardContent>
+    </Card>
+  );
+};
+
+export default QuoteDisplay;

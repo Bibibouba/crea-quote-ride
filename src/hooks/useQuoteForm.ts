@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useMapbox, Address } from './useMapbox';
 import { usePricing } from './use-pricing';
@@ -9,13 +8,12 @@ import { fetchVehicles } from '@/utils/vehicleUtils';
 import { calculateWaitingTimePrice, calculateQuoteDetails } from '@/utils/pricingUtils';
 import { 
   Vehicle, 
-  WaitingTimeOption, 
-  QuoteDetails, 
   PricingSettings,
-  QuoteFormState
+  QuoteFormState,
+  QuoteDetails
 } from '@/types/quoteForm';
 
-export { WaitingTimeOption };
+export type { WaitingTimeOption } from '@/types/quoteForm';
 
 export const useQuoteForm = () => {
   const { getRoute } = useMapbox();
