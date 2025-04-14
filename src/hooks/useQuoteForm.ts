@@ -21,7 +21,7 @@ interface PricingSettings {
   waiting_vat_rate?: number;
 }
 
-export interface WaitingTimeOption {
+interface WaitingTimeOption {
   value: number;
   label: string;
 }
