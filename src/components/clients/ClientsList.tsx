@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useClients } from '@/hooks/useClients';
 import { useQuotes } from '@/hooks/useQuotes';
@@ -31,9 +30,18 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ClientsList: React.FC = () => {
   const { clients, isLoading, error, deleteClient } = useClients();
@@ -41,6 +49,8 @@ const ClientsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
   const [currentClientComments, setCurrentClientComments] = useState<{ id: string, name: string, comments: string | null }>({ id: '', name: '', comments: null });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<{ id: string, name: string } | null>(null);
 
   // Compute stats for each client
   const clientsWithStats = clients.map(client => {
@@ -51,7 +61,6 @@ const ClientsList: React.FC = () => {
     let lastStatus = null;
     
     if (quoteCount > 0) {
-      // Sort by date (newest first) and get the first one
       const sortedQuotes = [...clientQuotes].sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -68,14 +77,18 @@ const ClientsList: React.FC = () => {
     };
   });
 
-  const handleDeleteClient = async (clientId: string, clientName: string) => {
-    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${clientName} ?`)) {
-      return;
-    }
+  const handleDeleteClick = (clientId: string, clientName: string) => {
+    setClientToDelete({ id: clientId, name: clientName });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!clientToDelete) return;
     
     try {
-      await deleteClient.mutateAsync(clientId);
+      await deleteClient.mutateAsync(clientToDelete.id);
       toast.success(`Client supprimé avec succès`);
+      setDeleteDialogOpen(false);
     } catch (error) {
       toast.error(`Erreur lors de la suppression: ${error instanceof Error ? error.message : 'Une erreur est survenue'}`);
     }
@@ -206,7 +219,7 @@ const ClientsList: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeleteClient(client.id, `${client.first_name} ${client.last_name}`)}
+                            onClick={() => handleDeleteClick(client.id, `${client.first_name} ${client.last_name}`)}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -241,6 +254,27 @@ const ClientsList: React.FC = () => {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action ne peut pas être annulée. Cela supprimera définitivement le client
+              <span className="font-semibold"> {clientToDelete?.name}</span> et toutes ses informations associées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
