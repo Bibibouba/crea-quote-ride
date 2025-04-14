@@ -71,7 +71,13 @@ const SimulatorContainer = () => {
   const handleSubmit = async () => {
     // Use the calculated quote details for more precise pricing
     const totalAmount = quoteFormState.quoteDetails?.totalPrice || 
-                       quoteFormState.estimatedDistance * quoteFormState.basePrice;
+                       (quoteFormState.estimatedDistance * quoteFormState.basePrice);
+                       
+    // Get the selected vehicle details
+    const selectedVehicleDetails = quoteFormState.vehicles.find(v => v.id === quoteFormState.selectedVehicle);
+    
+    // Use the correct price per km from the selected vehicle
+    const currentBasePrice = selectedVehicleDetails?.basePrice || quoteFormState.basePrice;
     
     // Préparer les données du devis
     const quoteData = {

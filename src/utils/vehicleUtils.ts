@@ -43,6 +43,14 @@ export const fetchVehicles = async (
         
       if (pricingError) throw pricingError;
       
+      // Fetch distance pricing tiers for vehicles
+      const { data: distanceTiersData, error: distanceTiersError } = await supabase
+        .from('distance_pricing_tiers')
+        .select('*')
+        .in('vehicle_id', vehicleIds);
+        
+      if (distanceTiersError) throw distanceTiersError;
+      
       // Get driver's global pricing settings
       const { data: globalPricing, error: globalPricingError } = await supabase
         .from('pricing')
@@ -59,10 +67,22 @@ export const fetchVehicles = async (
         // Properly type the vehicle pricing settings
         const vehiclePricing: Partial<VehiclePricingSettings> = pricingData?.find(p => p.vehicle_id === vehicle.id) || {};
         
+        // Get the distance pricing tier for this vehicle (first tier or default)
+        const vehicleTier = distanceTiersData?.find(t => t.vehicle_id === vehicle.id);
+        
+        // Calculate base price from distance tier if available, otherwise fall back to global pricing
+        let basePrice = 1.8; // Default fallback
+        
+        if (vehicleTier) {
+          basePrice = vehicleTier.price_per_km;
+        } else if (globalPricing) {
+          basePrice = globalPricing.price_per_km || 1.8;
+        }
+        
         return {
           id: vehicle.id,
           name: vehicle.name,
-          basePrice: getPriceForVehicle(vehicle.id, globalPricing, vehicleTypes),
+          basePrice: basePrice,
           capacity: vehicle.capacity,
           description: vehicle.model,
           // Add vehicle-specific pricing settings

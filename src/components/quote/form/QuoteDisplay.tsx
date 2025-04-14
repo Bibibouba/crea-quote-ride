@@ -6,7 +6,6 @@ import { fr } from 'date-fns/locale';
 import QuoteSummary from './QuoteSummary';
 import ClientInfoSection from './ClientInfoSection';
 import { Vehicle } from '@/types/quoteForm';
-import { useQuoteFormState } from '@/hooks/useQuoteFormState';
 import { calculateQuoteDetails } from '@/utils/pricingUtils';
 import { usePricing } from '@/hooks/use-pricing';
 
@@ -87,6 +86,9 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
 }) => {
   const { pricingSettings } = usePricing();
   
+  // Get the selected vehicle details
+  const selectedVehicleDetails = vehicles.find(v => v.id === selectedVehicle);
+  
   // Use quoteDetails if provided, otherwise calculate on the fly
   const displayDetails = quoteDetails || calculateQuoteDetails(
     selectedVehicle,
@@ -103,7 +105,7 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
   );
   
   // Use precise pricing from quoteDetails if available
-  const displayEstimatedPrice = displayDetails?.oneWayPrice || estimatedPrice;
+  const displayEstimatedPrice = displayDetails?.totalPrice || estimatedPrice;
   
   return (
     <Card>
@@ -125,7 +127,7 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
           estimatedDuration={estimatedDuration}
           selectedVehicle={selectedVehicle}
           passengers={passengers}
-          basePrice={basePrice}
+          basePrice={selectedVehicleDetails?.basePrice || basePrice}
           estimatedPrice={displayEstimatedPrice}
           isSubmitting={isSubmitting}
           onSaveQuote={onSaveQuote}
@@ -155,6 +157,7 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
           returnDistance={returnDistance}
           returnDuration={returnDuration}
           returnCoordinates={returnCoordinates}
+          quoteDetails={displayDetails}
         />
       </CardContent>
     </Card>
