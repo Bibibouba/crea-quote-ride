@@ -5,13 +5,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Download } from 'lucide-react';
 import { Quote } from '@/types/quote';
 import QuoteSummary from '@/components/quote/form/QuoteSummary';
 import { useVehicles } from '@/hooks/useVehicles';
 import { Vehicle } from '@/types/quoteForm';
+import { useToast } from '@/hooks/use-toast';
+import { generateQuotePDF } from '@/utils/quotePDF';
 
 interface QuoteViewDialogProps {
   isOpen: boolean;
@@ -25,6 +30,7 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
   quote
 }) => {
   const { vehicles } = useVehicles();
+  const { toast } = useToast();
 
   if (!quote) return null;
 
@@ -68,6 +74,34 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
 
   const vehicleName = quote.vehicles?.name || selectedVehicle?.name || 'Véhicule inconnu';
   
+  const handleDownloadPDF = async () => {
+    try {
+      const pdfBlob = await generateQuotePDF(quote);
+      
+      // Create a download link
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `devis-${quote.id.substring(0, 8)}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "PDF généré",
+        description: "Le PDF du devis a été téléchargé avec succès",
+      });
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer le PDF du devis",
+        variant: "destructive",
+      });
+    }
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -106,6 +140,14 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
             quoteDetails={quoteDetails}
           />
         </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Fermer</Button>
+          <Button onClick={handleDownloadPDF} className="gap-2">
+            <Download className="h-4 w-4" />
+            Télécharger en PDF
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
