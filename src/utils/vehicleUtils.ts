@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Vehicle } from '@/types/quoteForm';
 import { VehicleType } from '@/types/vehicle';
+import { VehiclePricingSettings } from '@/types/vehiclePricing';
 
 export const getPriceForVehicle = (vehicleId: string, pricingSettings: any, vehicleTypes: VehicleType[]): number => {
   if (pricingSettings) {
@@ -55,7 +56,8 @@ export const fetchVehicles = async (
       
       // Map vehicles with their pricing settings
       const mappedVehicles = vehiclesData.map(vehicle => {
-        const vehiclePricing = pricingData?.find(p => p.vehicle_id === vehicle.id) || {};
+        // Properly type the vehicle pricing settings
+        const vehiclePricing: Partial<VehiclePricingSettings> = pricingData?.find(p => p.vehicle_id === vehicle.id) || {};
         
         return {
           id: vehicle.id,

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -14,7 +13,7 @@ import { CalendarIcon, Users } from 'lucide-react';
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 import RouteMap from '@/components/map/RouteMap';
 import { Address } from '@/hooks/useMapbox';
-import { WaitingTimeOption } from '@/hooks/useQuoteForm';
+import { WaitingTimeOption } from '@/types/quoteForm';
 
 interface TripInfoStepProps {
   departureAddress: string;

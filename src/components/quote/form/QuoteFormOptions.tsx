@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 import { Address } from '@/hooks/useMapbox';
-import { WaitingTimeOption } from '@/hooks/useQuoteForm';
+import { WaitingTimeOption } from '@/types/quoteForm';
 
 interface QuoteFormOptionsProps {
   hasReturnTrip: boolean;
