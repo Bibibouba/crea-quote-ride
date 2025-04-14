@@ -11,28 +11,20 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { usePricing, DistanceTier } from '@/hooks/use-pricing';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Vehicle } from '@/types/vehicle';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Import pricing component fragments
 import DistanceTiersList from '@/components/pricing/DistanceTiersList';
 import DistanceTierDialog from '@/components/pricing/DistanceTierDialog';
-import NightRatesForm from '@/components/pricing/NightRatesForm';
-import WaitingRatesForm from '@/components/pricing/WaitingRatesForm';
-import AdditionalOptionsForm from '@/components/pricing/AdditionalOptionsForm';
-
-interface Vehicle {
-  id: string;
-  name: string;
-  model: string;
-  capacity: number;
-  is_luxury: boolean;
-  vehicle_type_name: string;
-}
+import VehicleNightRatesForm from '@/components/pricing/VehicleNightRatesForm';
+import VehicleWaitingRatesForm from '@/components/pricing/VehicleWaitingRatesForm';
+import VehicleAdditionalOptionsForm from '@/components/pricing/VehicleAdditionalOptionsForm';
 
 const Pricing = () => {
   const { user } = useAuth();
@@ -53,6 +45,7 @@ const Pricing = () => {
   const [tierDialogOpen, setTierDialogOpen] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState("distance");
 
   // Load vehicles data
   useEffect(() => {
@@ -86,7 +79,7 @@ const Pricing = () => {
     };
     
     fetchVehicles();
-  }, [user, selectedVehicleId]);
+  }, [user]);
   
   // Handle tier dialog operations
   const openAddTierDialog = () => {
@@ -119,11 +112,14 @@ const Pricing = () => {
     await refreshData();
     setRefreshing(false);
   };
-  
-  // Debugging
-  console.log("pricingSettings:", pricingSettings);
-  console.log("Loading:", loading);
-  console.log("Error:", error);
+
+  const handleVehicleChange = (value: string) => {
+    setSelectedVehicleId(value);
+    // Reset to the default tab when changing vehicles
+    setActiveTab("distance");
+  };
+
+  const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
   
   if (loading) {
     return (
@@ -195,123 +191,97 @@ const Pricing = () => {
             </AlertDescription>
           </Alert>
         )}
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-2">Sélectionnez un véhicule</label>
+          <Select value={selectedVehicleId || ''} onValueChange={handleVehicleChange}>
+            <SelectTrigger className="w-full sm:w-[300px]">
+              <SelectValue placeholder="Sélectionnez un véhicule" />
+            </SelectTrigger>
+            <SelectContent>
+              {vehicles.map((vehicle) => (
+                <SelectItem key={vehicle.id} value={vehicle.id}>
+                  {vehicle.name} - {vehicle.model}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {selectedVehicleId && selectedVehicle && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Tarification pour {selectedVehicle.name} - {selectedVehicle.model}</CardTitle>
+              <CardDescription>
+                Définissez les tarifs spécifiques à ce véhicule
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full md:w-auto grid-cols-4 md:flex">
+                  <TabsTrigger value="distance">Tarifs au km</TabsTrigger>
+                  <TabsTrigger value="night">Tarifs de nuit</TabsTrigger>
+                  <TabsTrigger value="waiting">Tarifs d'attente</TabsTrigger>
+                  <TabsTrigger value="additional">Options supplémentaires</TabsTrigger>
+                </TabsList>
+                
+                {/* Distance-based rates */}
+                <TabsContent value="distance" className="space-y-4 mt-4">
+                  <DistanceTiersList
+                    vehicles={vehicles}
+                    distanceTiers={distanceTiers}
+                    selectedVehicleId={selectedVehicleId}
+                    onAddTier={openAddTierDialog}
+                    onEditTier={openEditTierDialog}
+                    onDeleteTier={handleDeleteTier}
+                    onVehicleSelect={setSelectedVehicleId}
+                    hideVehicleSelector={true}
+                  />
+                </TabsContent>
+                
+                {/* Night rates */}
+                <TabsContent value="night" className="space-y-4 mt-4">
+                  {selectedVehicleId && (
+                    <VehicleNightRatesForm
+                      vehicleId={selectedVehicleId}
+                      defaultSettings={pricingSettings}
+                    />
+                  )}
+                </TabsContent>
+                
+                {/* Waiting rates */}
+                <TabsContent value="waiting" className="space-y-4 mt-4">
+                  {selectedVehicleId && (
+                    <VehicleWaitingRatesForm
+                      vehicleId={selectedVehicleId}
+                      defaultSettings={pricingSettings}
+                    />
+                  )}
+                </TabsContent>
+                
+                {/* Additional options */}
+                <TabsContent value="additional" className="space-y-4 mt-4">
+                  {selectedVehicleId && (
+                    <VehicleAdditionalOptionsForm
+                      vehicleId={selectedVehicleId}
+                      defaultSettings={pricingSettings}
+                    />
+                  )}
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        )}
         
-        <Tabs defaultValue="distance">
-          <TabsList className="grid w-full md:w-auto grid-cols-4 md:flex">
-            <TabsTrigger value="distance">Tarifs au km</TabsTrigger>
-            <TabsTrigger value="night">Tarifs de nuit</TabsTrigger>
-            <TabsTrigger value="waiting">Tarifs d'attente</TabsTrigger>
-            <TabsTrigger value="additional">Options supplémentaires</TabsTrigger>
-          </TabsList>
-          
-          {/* Distance-based rates */}
-          <TabsContent value="distance" className="space-y-4 mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tarifs au kilomètre par véhicule</CardTitle>
-                <CardDescription>
-                  Définissez des paliers de tarification dégressifs en fonction de la distance
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <DistanceTiersList
-                  vehicles={vehicles}
-                  distanceTiers={distanceTiers}
-                  selectedVehicleId={selectedVehicleId}
-                  onAddTier={openAddTierDialog}
-                  onEditTier={openEditTierDialog}
-                  onDeleteTier={handleDeleteTier}
-                  onVehicleSelect={setSelectedVehicleId}
-                />
-              </CardContent>
-            </Card>
-            
-            {/* Dialog for adding/editing tiers */}
-            <DistanceTierDialog
-              open={tierDialogOpen}
-              onOpenChange={setTierDialogOpen}
-              onSave={handleSaveTier}
-              editingTier={editingTier}
-              vehicles={vehicles}
-              saving={savingSettings}
-            />
-          </TabsContent>
-          
-          {/* Night rates */}
-          <TabsContent value="night" className="space-y-4 mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tarifs de nuit</CardTitle>
-                <CardDescription>
-                  Définissez des majorations pour les courses effectuées pendant la nuit
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {pricingSettings ? (
-                  <NightRatesForm
-                    settings={pricingSettings}
-                    onSave={saveSettings}
-                    saving={savingSettings}
-                  />
-                ) : (
-                  <div className="py-8 text-center text-muted-foreground">
-                    <p>Aucune donnée disponible. Veuillez actualiser la page.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Waiting rates */}
-          <TabsContent value="waiting" className="space-y-4 mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tarifs d'attente</CardTitle>
-                <CardDescription>
-                  Définissez vos tarifs pour le temps d'attente durant les courses
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {pricingSettings ? (
-                  <WaitingRatesForm
-                    settings={pricingSettings}
-                    onSave={saveSettings}
-                    saving={savingSettings}
-                  />
-                ) : (
-                  <div className="py-8 text-center text-muted-foreground">
-                    <p>Aucune donnée disponible. Veuillez actualiser la page.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Additional options */}
-          <TabsContent value="additional" className="space-y-4 mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Options supplémentaires</CardTitle>
-                <CardDescription>
-                  Paramètres additionnels pour personnaliser vos tarifs
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {pricingSettings ? (
-                  <AdditionalOptionsForm
-                    settings={pricingSettings}
-                    onSave={saveSettings}
-                    saving={savingSettings}
-                  />
-                ) : (
-                  <div className="py-8 text-center text-muted-foreground">
-                    <p>Aucune donnée disponible. Veuillez actualiser la page.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Dialog for adding/editing tiers */}
+        <DistanceTierDialog
+          open={tierDialogOpen}
+          onOpenChange={setTierDialogOpen}
+          onSave={handleSaveTier}
+          editingTier={editingTier}
+          vehicles={vehicles}
+          saving={savingSettings}
+        />
       </div>
     </DashboardLayout>
   );

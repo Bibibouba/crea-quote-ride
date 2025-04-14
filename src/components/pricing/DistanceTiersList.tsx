@@ -1,26 +1,19 @@
-
 import React from 'react';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Edit, Trash2, PlusCircle, Car } from 'lucide-react';
+import { DistanceTier } from '@/hooks/use-pricing';
+import { Vehicle } from '@/types/vehicle';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface Vehicle {
-  id: string;
-  name: string;
-  model: string;
-  capacity: number;
-  is_luxury: boolean;
-  vehicle_type_name: string;
-}
-
-interface DistanceTier {
-  id?: string;
-  min_km: number;
-  max_km: number | null;
-  price_per_km: number;
-  vehicle_id: string | null;
-}
-
+// Ajouter hideVehicleSelector à la liste des props
 interface DistanceTiersListProps {
   vehicles: Vehicle[];
   distanceTiers: DistanceTier[];
@@ -29,9 +22,10 @@ interface DistanceTiersListProps {
   onEditTier: (tier: DistanceTier) => void;
   onDeleteTier: (id: string) => void;
   onVehicleSelect: (id: string) => void;
+  hideVehicleSelector?: boolean;
 }
 
-const DistanceTiersList = ({
+const DistanceTiersList: React.FC<DistanceTiersListProps> = ({
   vehicles,
   distanceTiers,
   selectedVehicleId,
@@ -39,85 +33,58 @@ const DistanceTiersList = ({
   onEditTier,
   onDeleteTier,
   onVehicleSelect,
-}: DistanceTiersListProps) => {
-  // Filter tiers by selected vehicle
-  const filteredTiers = selectedVehicleId ? 
-    distanceTiers.filter(tier => tier.vehicle_id === selectedVehicleId || tier.vehicle_id === null) : 
-    distanceTiers;
-
-  if (vehicles.length === 0) {
-    return (
-      <div className="text-center py-6">
-        <Car className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-2">Ajoutez d'abord un véhicule</h3>
-        <p className="text-muted-foreground mb-4">
-          Vous devez créer au moins un véhicule avant de pouvoir définir vos tarifs.
-        </p>
-        <Button asChild>
-          <a href="/dashboard/vehicles">Ajouter un véhicule</a>
-        </Button>
-      </div>
-    );
-  }
+  hideVehicleSelector = false
+}) => {
+  const filteredTiers = distanceTiers.filter(tier => tier.vehicle_id === selectedVehicleId);
 
   return (
-    <>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {vehicles.map((vehicle) => (
-          <Button
-            key={vehicle.id}
-            variant={selectedVehicleId === vehicle.id ? "default" : "outline"}
-            onClick={() => onVehicleSelect(vehicle.id)}
-          >
-            <Car className="mr-2 h-4 w-4" />
-            {vehicle.name}
-          </Button>
-        ))}
-      </div>
-      
-      <div className="rounded-md border">
-        <div className="grid grid-cols-4 p-4 font-medium bg-muted">
-          <div>De (km)</div>
-          <div>À (km)</div>
-          <div>Prix par km</div>
-          <div></div>
+    <div className="space-y-6">
+      {!hideVehicleSelector && (
+        <div>
+          <label className="block text-sm font-medium mb-2">Sélectionnez un véhicule</label>
+          <Select value={selectedVehicleId || ''} onValueChange={onVehicleSelect}>
+            <SelectTrigger className="w-full sm:w-[300px]">
+              <SelectValue placeholder="Sélectionnez un véhicule" />
+            </SelectTrigger>
+            <SelectContent>
+              {vehicles.map((vehicle) => (
+                <SelectItem key={vehicle.id} value={vehicle.id}>
+                  {vehicle.name} - {vehicle.model}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Separator />
-        
-        {filteredTiers.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              Aucun palier de tarification défini pour ce véhicule.
-            </p>
-          </div>
-        ) : (
-          filteredTiers
-            .sort((a, b) => a.min_km - b.min_km)
-            .map((tier) => (
-              <div key={tier.id} className="grid grid-cols-4 p-4 items-center">
-                <div>{tier.min_km} km</div>
-                <div>{tier.max_km ? `${tier.max_km} km` : 'Illimité'}</div>
-                <div>{tier.price_per_km.toFixed(2)} €/km</div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => onEditTier(tier)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => tier.id && onDeleteTier(tier.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            ))
-        )}
-      </div>
+      )}
       
-      <div className="mt-4 flex justify-end">
-        <Button onClick={onAddTier}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Ajouter un palier
-        </Button>
-      </div>
-    </>
+      <Table>
+        <TableCaption>Paliers de tarification au kilomètre</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">Distance max. (km)</TableHead>
+            <TableHead>Prix par km (€)</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredTiers.map((tier) => (
+            <TableRow key={tier.id}>
+              <TableCell className="font-medium">{tier.max_distance_km}</TableCell>
+              <TableCell>{tier.price_per_km}</TableCell>
+              <TableCell>
+                <Button variant="secondary" size="sm" onClick={() => onEditTier(tier)}>
+                  Modifier
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => onDeleteTier(tier.id)}>
+                  Supprimer
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <Button onClick={onAddTier}>Ajouter un palier</Button>
+    </div>
   );
 };
 
