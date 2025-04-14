@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -10,7 +9,7 @@ import { TripDetailsCard } from './summary/TripDetailsCard';
 import { QuoteActions } from './summary/QuoteActions';
 import { QuoteFooter } from './summary/QuoteFooter';
 
-// Define a type for quote details to make it more type-safe
+// Define QuoteDetailsType if not already defined
 export interface QuoteDetailsType {
   oneWayPrice?: number;
   totalPrice?: number;
@@ -48,7 +47,7 @@ interface QuoteSummaryProps {
   returnDistance?: number;
   returnDuration?: number;
   returnCoordinates?: [number, number] | undefined;
-  quoteDetails?: QuoteDetailsType;
+  quoteDetails?: QuoteDetailsType; // Added this line
 }
 
 const QuoteSummary: React.FC<QuoteSummaryProps> = ({
@@ -78,7 +77,8 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   customReturnAddress = '',
   returnDistance = 0,
   returnDuration = 0,
-  returnCoordinates
+  returnCoordinates,
+  quoteDetails // Add this to the destructured props
 }) => {
   const isMobile = useIsMobile();
   
@@ -280,7 +280,7 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
             nightRateStart={nightRateStart}
             nightRateEnd={nightRateEnd}
             sundayRate={sundayRate}
-            quoteDetails={quoteDetails}
+            quoteDetails={quoteDetails} // Pass quoteDetails to TripDetailsCard
           />
         </div>
       </div>
