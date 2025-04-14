@@ -12,6 +12,16 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { Vehicle } from '@/types/quoteForm';
 
+// Define a type for quote details to make it more type-safe
+export interface QuoteDetailsType {
+  oneWayPrice?: number;
+  totalPrice?: number;
+  nightRateHours?: number;
+  dayRateHours?: number;
+  isNightRateApplied?: boolean;
+  sundayRateApplied?: boolean;
+}
+
 interface QuoteSummaryProps {
   departureAddress: string;
   destinationAddress: string;
@@ -40,6 +50,8 @@ interface QuoteSummaryProps {
   returnDistance?: number;
   returnDuration?: number;
   returnCoordinates?: [number, number] | undefined;
+  // Add quoteDetails to the props
+  quoteDetails?: QuoteDetailsType;
 }
 
 const QuoteSummary: React.FC<QuoteSummaryProps> = ({
