@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Quote } from '@/types/quote';
+import QuoteViewDialog from './QuoteViewDialog';
 
 interface QuotesListProps {
   clientId?: string;
@@ -34,6 +35,8 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [refreshing, setRefreshing] = useState(false);
+  const [viewQuote, setViewQuote] = useState<Quote | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
   // Force initial data fetching
   useEffect(() => {
@@ -48,6 +51,16 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
         setRefreshing(false);
       }, 500);
     });
+  };
+
+  const handleViewQuote = (quote: Quote) => {
+    setViewQuote(quote);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleCloseViewDialog = () => {
+    setIsViewDialogOpen(false);
+    setViewQuote(null);
   };
 
   if (isLoading) {
@@ -190,8 +203,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      disabled={!quote.quote_pdf}
-                      onClick={() => handleOpenPdf(quote.quote_pdf)}
+                      onClick={() => handleViewQuote(quote)}
                     >
                       <Eye className="h-4 w-4 mr-1" />
                       <span className="hidden sm:inline">Voir</span>
@@ -216,6 +228,12 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
           </TableBody>
         </Table>
       </div>
+
+      <QuoteViewDialog 
+        isOpen={isViewDialogOpen}
+        onClose={handleCloseViewDialog}
+        quote={viewQuote}
+      />
     </div>
   );
 };

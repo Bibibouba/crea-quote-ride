@@ -40,7 +40,7 @@ export const useQuotes = (clientId?: string) => {
           .select(`
             *,
             clients(first_name, last_name, email, phone),
-            vehicles(name, model)
+            vehicles(name, model, basePrice)
           `)
           .eq('driver_id', userId)
           .order('created_at', { ascending: false });
@@ -60,7 +60,7 @@ export const useQuotes = (clientId?: string) => {
         console.log(`Fetched ${data?.length || 0} quotes for driver ${userId}`);
         return data as (Quote & {
           clients: { first_name: string; last_name: string; email: string; phone: string };
-          vehicles: { name: string; model: string } | null;
+          vehicles: { name: string; model: string; basePrice: number } | null;
         })[];
       } catch (error) {
         console.error('Error in useQuotes query:', error);

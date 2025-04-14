@@ -25,4 +25,15 @@ export type Quote = {
   return_coordinates?: [number, number];
   departure_coordinates?: [number, number];
   arrival_coordinates?: [number, number];
+  clients?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+  };
+  vehicles?: {
+    name: string;
+    model: string;
+    basePrice: number;
+  };
 };
