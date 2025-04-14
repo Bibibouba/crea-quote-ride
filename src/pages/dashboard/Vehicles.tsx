@@ -9,6 +9,7 @@ import VehicleDialog from '@/components/vehicles/VehicleDialog';
 import EmptyVehicleState from '@/components/vehicles/EmptyVehicleState';
 import { PlusIcon, Loader2 } from 'lucide-react';
 import { Vehicle, VehicleFormValues } from '@/types/vehicle';
+import { toast } from 'sonner';
 
 const Vehicles = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -30,10 +31,13 @@ const Vehicles = () => {
   const handleVehicleSubmit = async (data: VehicleFormValues) => {
     setIsSubmitting(true);
     try {
-      await handleSaveVehicle(data, editingVehicle);
-      setIsDialogOpen(false);
+      const result = await handleSaveVehicle(data, editingVehicle);
+      if (result) {
+        setIsDialogOpen(false);
+      }
     } catch (error) {
       console.error("Error submitting vehicle:", error);
+      toast.error("Une erreur s'est produite lors de l'enregistrement du véhicule");
     } finally {
       setIsSubmitting(false);
     }
@@ -44,6 +48,7 @@ const Vehicles = () => {
       await handleDeleteVehicle(id);
     } catch (error) {
       console.error("Error deleting vehicle:", error);
+      toast.error("Une erreur s'est produite lors de la suppression du véhicule");
     }
   };
 

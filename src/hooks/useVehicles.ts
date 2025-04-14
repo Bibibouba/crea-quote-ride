@@ -130,6 +130,7 @@ export const useVehicles = () => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) return false;
     
     try {
+      // Suppression du véhicule
       const { error } = await supabase
         .from('vehicles')
         .delete()
@@ -138,7 +139,7 @@ export const useVehicles = () => {
         
       if (error) throw error;
       
-      // Update local state
+      // Mise à jour de l'état local
       setVehicles(vehicles.filter(v => v.id !== id));
       toast.success('Véhicule supprimé avec succès');
       return true;
