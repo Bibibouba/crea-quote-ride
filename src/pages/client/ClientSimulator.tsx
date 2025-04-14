@@ -284,7 +284,7 @@ const ClientSimulator = () => {
                 <ClientInfoStep
                   firstName={firstName}
                   setFirstName={setFirstName}
-                  lastName={setLastName}
+                  lastName={lastName}
                   setLastName={setLastName}
                   email={email}
                   setEmail={setEmail}
