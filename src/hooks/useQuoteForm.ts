@@ -1,290 +1,78 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { format } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useMapbox, Address } from './useMapbox';
+import { usePricing } from './use-pricing';
+import { useVehicleTypes } from './useVehicleTypes';
 import { supabase } from '@/integrations/supabase/client';
-import { useMapbox, Address } from '@/hooks/useMapbox';
-import { useQuotes, QuoteWithCoordinates } from '@/hooks/useQuotes';
-import { usePricing } from '@/hooks/use-pricing';
-import { useVehicleTypes } from '@/hooks/useVehicleTypes';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { useClients } from '@/hooks/useClients';
-
-export type QuoteFormStep = 'step1' | 'step2' | 'step3';
 
 export interface WaitingTimeOption {
   value: number;
   label: string;
 }
 
-export function useQuoteForm(clientId?: string) {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { vehicleTypes } = useVehicleTypes();
-  const { clients } = useClients();
-  const { addQuote } = useQuotes();
+// Define the Vehicle interface
+interface Vehicle {
+  id: string;
+  name: string;
+  basePrice: number;
+  capacity: number;
+  description: string;
+}
+
+export const useQuoteForm = () => {
   const { getRoute } = useMapbox();
-  const { 
-    pricingSettings, 
-    loading: pricingLoading,
-    distanceTiers
-  } = usePricing();
-  
-  // Constantes pour la TVA
-  const RIDE_VAT_RATE = 10; // 10% pour les transports
-  const WAITING_VAT_RATE = 20; // 20% pour les temps d'attente
-  
-  const [activeTab, setActiveTab] = useState<QuoteFormStep>('step1');
-  
+  const { pricingSettings } = usePricing();
+  const { vehicleTypes, isLoading: isLoadingVehicleTypes } = useVehicleTypes();
+
+  // State for addresses
   const [departureAddress, setDepartureAddress] = useState('');
   const [destinationAddress, setDestinationAddress] = useState('');
   const [departureCoordinates, setDepartureCoordinates] = useState<[number, number] | undefined>(undefined);
   const [destinationCoordinates, setDestinationCoordinates] = useState<[number, number] | undefined>(undefined);
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [time, setTime] = useState('09:00');
+
+  // State for trip details
+  const [date, setDate] = useState<Date>(new Date());
+  const [time, setTime] = useState('12:00');
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [passengers, setPassengers] = useState('1');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+
+  // State for route
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Return options
   const [hasReturnTrip, setHasReturnTrip] = useState(false);
   const [hasWaitingTime, setHasWaitingTime] = useState(false);
   const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
   const [waitingTimePrice, setWaitingTimePrice] = useState(0);
-  const [waitingTimePriceHT, setWaitingTimePriceHT] = useState(0);
   const [returnToSameAddress, setReturnToSameAddress] = useState(true);
   const [customReturnAddress, setCustomReturnAddress] = useState('');
   const [customReturnCoordinates, setCustomReturnCoordinates] = useState<[number, number] | undefined>(undefined);
   const [returnDistance, setReturnDistance] = useState(0);
   const [returnDuration, setReturnDuration] = useState(0);
-  
-  const [quoteDetails, setQuoteDetails] = useState<any>(null);
+
+  // UI flow
+  const [currentStep, setCurrentStep] = useState(1);
+  const [showQuote, setShowQuote] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
-  const [calculatedPrice, setCalculatedPrice] = useState(0);
-  const [vehiclesLoading, setVehiclesLoading] = useState(true);
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  
-  // Charger les types de véhicules disponibles depuis Supabase
-  useEffect(() => {
-    const loadVehiclesFromTypes = async () => {
-      try {
-        setVehiclesLoading(true);
-        if (vehicleTypes.length > 0) {
-          // Créer une liste de véhicules basée sur les types disponibles
-          const vehiclesList = vehicleTypes.map(type => ({
-            id: type.id,
-            name: type.name,
-            basePrice: 1.8, // prix par défaut, peut être modifié
-            description: `Type de véhicule avec chauffeur`,
-            capacity: 4, // capacité par défaut, peut être modifiée
-            icon: type.icon
-          }));
-          
-          setVehicles(vehiclesList);
-          
-          // Si aucun véhicule n'est sélectionné et qu'il y a des véhicules disponibles
-          if (!selectedVehicle && vehiclesList.length > 0) {
-            setSelectedVehicle(vehiclesList[0].id);
-          }
-        } else {
-          // Véhicules par défaut si aucun type n'est disponible
-          setVehicles([
-            { id: "sedan", name: "Berline", basePrice: 1.8, description: "Mercedes Classe E ou équivalent", capacity: 4 },
-            { id: "van", name: "Van", basePrice: 2.2, description: "Mercedes Classe V ou équivalent", capacity: 7 },
-            { id: "luxury", name: "Luxe", basePrice: 2.5, description: "Mercedes Classe S ou équivalent", capacity: 3 }
-          ]);
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement des véhicules:", error);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible de charger les types de véhicules",
-          variant: "destructive"
-        });
-      } finally {
-        setVehiclesLoading(false);
-      }
-    };
 
-    loadVehiclesFromTypes();
-  }, [vehicleTypes, toast, selectedVehicle]);
+  // Client information
+  const [selectedClient, setSelectedClient] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   
-  useEffect(() => {
-    if (clientId && clients.length > 0) {
-      const client = clients.find(c => c.id === clientId);
-      if (client) {
-        setFirstName(client.first_name);
-        setLastName(client.last_name);
-        setEmail(client.email);
-      }
-    }
-  }, [clientId, clients]);
-  
-  useEffect(() => {
-    if (user && !clientId) {
-      const fetchUserInfo = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('first_name, last_name, email')
-            .eq('id', user.id)
-            .single();
-          
-          if (error) throw error;
-          
-          if (data) {
-            setFirstName(data.first_name || '');
-            setLastName(data.last_name || '');
-            setEmail(data.email || user.email || '');
-          }
-        } catch (error) {
-          console.error('Erreur lors du chargement des informations utilisateur:', error);
-        }
-      };
-      
-      fetchUserInfo();
-    }
-  }, [user, clientId]);
-  
-  // Calculer le prix du temps d'attente
-  useEffect(() => {
-    if (!hasWaitingTime || !pricingSettings) return;
-    
-    const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
-    
-    const quarters = Math.ceil(waitingTimeMinutes / 15);
-    let price = quarters * pricePerQuarter;
-    
-    if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
-      const [hours, minutes] = time.split(':').map(Number);
-      const tripTime = new Date();
-      tripTime.setHours(hours);
-      tripTime.setMinutes(minutes);
-      
-      const startTime = new Date();
-      const [startHours, startMinutes] = pricingSettings.wait_night_start?.split(':').map(Number) || [0, 0];
-      startTime.setHours(startHours);
-      startTime.setMinutes(startMinutes);
-      
-      const endTime = new Date();
-      const [endHours, endMinutes] = pricingSettings.night_rate_end?.split(':').map(Number) || [0, 0];
-      endTime.setHours(endHours);
-      endTime.setMinutes(endMinutes);
-      
-      const isNight = (
-        (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
-        (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
-      );
-      
-      if (isNight) {
-        const nightPercentage = pricingSettings.wait_night_percentage || 0;
-        price += price * (nightPercentage / 100);
-      }
-    }
-    
-    setWaitingTimePriceHT(Math.round(price));
-    // Calculer le prix TTC avec TVA à 20% pour le temps d'attente
-    setWaitingTimePrice(Math.round(price * (1 + WAITING_VAT_RATE / 100)));
-  }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
-  
-  // Calculer l'itinéraire de retour
-  useEffect(() => {
-    const calculateReturnRoute = async () => {
-      if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
-        return;
-      }
-      
-      try {
-        const route = await getRoute(destinationCoordinates, customReturnCoordinates);
-        if (route) {
-          setReturnDistance(Math.round(route.distance));
-          setReturnDuration(Math.round(route.duration));
-        }
-      } catch (error) {
-        console.error("Erreur lors du calcul de l'itinéraire de retour:", error);
-      }
-    };
-    
-    calculateReturnRoute();
-  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
-  
-  // Calculer le prix du trajet
-  useEffect(() => {
-    if (!estimatedDistance || !selectedVehicle) return;
-    
-    const calculatePrice = () => {
-      const selectedVehicleData = vehicles.find(v => v.id === selectedVehicle);
-      if (!selectedVehicleData) return;
-      
-      const basePrice = selectedVehicleData.basePrice || 1.8;
-      
-      // Prix HT
-      const oneWayPriceHT = Math.round(estimatedDistance * basePrice);
-      const returnPriceHT = hasReturnTrip 
-        ? (returnToSameAddress ? oneWayPriceHT : Math.round(returnDistance * basePrice)) 
-        : 0;
-      const waitingTimePriceHT = hasWaitingTime ? waitingTimePriceHT : 0;
-      const totalPriceHT = oneWayPriceHT + waitingTimePriceHT + returnPriceHT;
-      
-      // TVA
-      const oneWayVAT = Math.round(oneWayPriceHT * (RIDE_VAT_RATE / 100));
-      const returnVAT = hasReturnTrip ? Math.round(returnPriceHT * (RIDE_VAT_RATE / 100)) : 0;
-      const waitingTimeVAT = hasWaitingTime ? Math.round(waitingTimePriceHT * (WAITING_VAT_RATE / 100)) : 0;
-      const totalVAT = oneWayVAT + returnVAT + waitingTimeVAT;
-      
-      // Prix TTC
-      const oneWayPrice = oneWayPriceHT + oneWayVAT;
-      const returnPrice = returnPriceHT + returnVAT;
-      const waitingTimePrice = waitingTimePriceHT + waitingTimeVAT;
-      const totalPrice = oneWayPrice + waitingTimePrice + returnPrice;
-      
-      setCalculatedPrice(totalPrice);
-      setQuoteDetails({
-        oneWayPriceHT,
-        oneWayPrice,
-        returnPriceHT,
-        returnPrice,
-        waitingTimePriceHT,
-        waitingTimePrice,
-        totalPriceHT,
-        totalVAT,
-        totalPrice,
-        basePrice,
-        isNightRate: false,
-        isSunday: false
-      });
-    };
-    
-    calculatePrice();
-  }, [estimatedDistance, selectedVehicle, hasReturnTrip, returnToSameAddress, 
-      returnDistance, hasWaitingTime, waitingTimePriceHT, vehicles]);
-  
-  const handleDepartureSelect = useCallback((address: Address) => {
-    setDepartureAddress(address.fullAddress);
-    setDepartureCoordinates(address.coordinates);
-  }, []);
+  // Vehicle data
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
 
-  const handleDestinationSelect = useCallback((address: Address) => {
-    setDestinationAddress(address.fullAddress);
-    setDestinationCoordinates(address.coordinates);
-  }, []);
+  // Quote details and price calculation
+  const [quoteDetails, setQuoteDetails] = useState<any>(null);
 
-  const handleReturnAddressSelect = useCallback((address: Address) => {
-    setCustomReturnAddress(address.fullAddress);
-    setCustomReturnCoordinates(address.coordinates);
-  }, []);
-
-  const handleRouteCalculated = useCallback((distance: number, duration: number) => {
-    setEstimatedDistance(Math.round(distance));
-    setEstimatedDuration(Math.round(duration));
-  }, []);
-  
+  // Waiting time options
   const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
     const minutes = (i + 1) * 15;
     const hours = Math.floor(minutes / 60);
@@ -306,195 +94,301 @@ export function useQuoteForm(clientId?: string) {
     };
   });
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-    }
-    
-    if (!date) {
-      toast({
-        title: 'Date manquante',
-        description: 'Veuillez sélectionner une date pour le trajet',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    if (!departureCoordinates || !destinationCoordinates) {
-      toast({
-        title: 'Adresses incomplètes',
-        description: 'Veuillez sélectionner des adresses valides pour le calcul du trajet',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    if (hasReturnTrip && !returnToSameAddress && !customReturnAddress) {
-      toast({
-        title: 'Adresse de retour manquante',
-        description: 'Veuillez spécifier une adresse de retour',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      const dateTime = new Date(date);
-      const [hours, minutes] = time.split(':');
-      dateTime.setHours(parseInt(hours), parseInt(minutes));
-      
-      let finalClientId = clientId;
-      
-      if (!clientId && firstName && lastName && email) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id;
+  // Load vehicles from vehicle types
+  useEffect(() => {
+    if (vehicleTypes.length > 0) {
+      const fetchVehicles = async () => {
+        setIsLoadingVehicles(true);
         
-        if (!userId) {
-          throw new Error("Utilisateur non authentifié");
+        try {
+          const { data, error } = await supabase
+            .from('vehicles')
+            .select('*')
+            .eq('is_active', true);
+            
+          if (error) throw error;
+          
+          if (data && data.length > 0) {
+            // Map the data to the Vehicle interface
+            const mappedVehicles = data.map(vehicle => ({
+              id: vehicle.id,
+              name: vehicle.name,
+              basePrice: getPriceForVehicle(vehicle.id),
+              capacity: vehicle.capacity,
+              description: vehicle.model
+            }));
+            
+            setVehicles(mappedVehicles);
+            
+            // If there's at least one vehicle, select it by default
+            if (mappedVehicles.length > 0 && !selectedVehicle) {
+              setSelectedVehicle(mappedVehicles[0].id);
+            }
+          } else {
+            // If no vehicles found, create default vehicles from vehicle types
+            const defaultVehicles = vehicleTypes.map((type, index) => ({
+              id: type.id,
+              name: type.name,
+              basePrice: 1.8 + (index * 0.4), // Basic pricing scheme
+              capacity: 4 + (index * 2), // Basic capacity scheme
+              description: `Véhicule ${type.name}`
+            }));
+            
+            setVehicles(defaultVehicles);
+            
+            if (defaultVehicles.length > 0 && !selectedVehicle) {
+              setSelectedVehicle(defaultVehicles[0].id);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching vehicles:", error);
+        } finally {
+          setIsLoadingVehicles(false);
         }
-        
-        const { data, error } = await supabase
-          .from('clients')
-          .insert({
-            driver_id: userId,
-            first_name: firstName,
-            last_name: lastName,
-            email: email,
-            client_type: 'personal'
-          })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        finalClientId = data.id;
-      }
-      
-      if (!finalClientId) {
-        throw new Error("Aucun client spécifié pour ce devis");
-      }
-      
-      const selectedVehicleData = vehicles.find(v => v.id === selectedVehicle);
-      const basePrice = selectedVehicleData?.basePrice || 1.8;
-      
-      // Prix HT
-      const oneWayPriceHT = Math.round(estimatedDistance * basePrice);
-      const returnPriceHT = hasReturnTrip 
-        ? (returnToSameAddress ? oneWayPriceHT : Math.round(returnDistance * basePrice)) 
-        : 0;
-      
-      // TVA
-      const oneWayVAT = Math.round(oneWayPriceHT * (RIDE_VAT_RATE / 100));
-      const returnVAT = hasReturnTrip ? Math.round(returnPriceHT * (RIDE_VAT_RATE / 100)) : 0;
-      const waitingTimeVAT = hasWaitingTime ? Math.round(waitingTimePriceHT * (WAITING_VAT_RATE / 100)) : 0;
-      const totalVAT = oneWayVAT + returnVAT + waitingTimeVAT;
-      
-      // Prix TTC
-      const oneWayPrice = oneWayPriceHT + oneWayVAT;
-      const returnPrice = returnPriceHT + returnVAT;
-      const waitingTimePrice = waitingTimePriceHT + waitingTimeVAT;
-      const totalPrice = oneWayPrice + waitingTimePrice + returnPrice;
-      
-      setCalculatedPrice(totalPrice);
-      setQuoteDetails({
-        oneWayPriceHT,
-        oneWayPrice,
-        returnPriceHT,
-        returnPrice,
-        waitingTimePriceHT,
-        waitingTimePrice,
-        totalPriceHT: oneWayPriceHT + waitingTimePriceHT + returnPriceHT,
-        totalVAT,
-        totalPrice,
-        basePrice,
-        isNightRate: false,
-        isSunday: false
-      });
-      
-      const quoteData: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'> = {
-        client_id: finalClientId,
-        vehicle_id: null,
-        departure_location: departureAddress,
-        arrival_location: destinationAddress,
-        departure_coordinates: departureCoordinates,
-        arrival_coordinates: destinationCoordinates,
-        distance_km: estimatedDistance,
-        duration_minutes: estimatedDuration, 
-        ride_date: dateTime.toISOString(),
-        amount: totalPrice,
-        status: 'pending',
-        driver_id: '',
-        has_return_trip: hasReturnTrip,
-        has_waiting_time: hasWaitingTime,
-        waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
-        waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
-        return_to_same_address: returnToSameAddress,
-        custom_return_address: customReturnAddress,
-        return_coordinates: customReturnCoordinates,
-        return_distance_km: returnDistance,
-        return_duration_minutes: returnDuration
       };
       
-      await addQuote.mutateAsync(quoteData);
-      
-      toast({
-        title: 'Devis enregistré',
-        description: 'Votre devis a été enregistré avec succès',
-      });
-      
-      setIsQuoteSent(true);
-      
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement du devis:', error);
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de l'enregistrement: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
-        variant: 'destructive',
-      });
-      throw error;
-    } finally {
-      setIsSubmitting(false);
+      fetchVehicles();
     }
+  }, [vehicleTypes, selectedVehicle]);
+
+  // Function to get price for a vehicle based on pricing settings
+  const getPriceForVehicle = (vehicleId: string): number => {
+    if (pricingSettings) {
+      // Use system-wide pricing if available
+      return pricingSettings.price_per_km || 1.8;
+    }
+    
+    // Default values based on vehicle type
+    const vehicleIndex = vehicleTypes.findIndex(v => v.id === vehicleId);
+    if (vehicleIndex >= 0) {
+      return 1.8 + (vehicleIndex * 0.4); // Basic pricing scheme
+    }
+    
+    return 1.8; // Default price
   };
 
-  const resetForm = () => {
-    setDepartureAddress('');
-    setDestinationAddress('');
-    setDepartureCoordinates(undefined);
-    setDestinationCoordinates(undefined);
-    setDate(new Date());
-    setTime('09:00');
-    setSelectedVehicle('');
-    setPassengers('1');
-    setHasReturnTrip(false);
-    setHasWaitingTime(false);
-    setWaitingTimeMinutes(15);
-    setReturnToSameAddress(true);
-    setCustomReturnAddress('');
-    setCustomReturnCoordinates(undefined);
-  };
-  
-  const handleNextStep = () => {
-    if (activeTab === 'step1') setActiveTab('step2');
-    else if (activeTab === 'step2') setActiveTab('step3');
-  };
-  
-  const handlePreviousStep = () => {
-    if (activeTab === 'step3') setActiveTab('step2');
-    else if (activeTab === 'step2') setActiveTab('step1');
-  };
-  
-  return {
-    activeTab,
-    setActiveTab,
+  // Calculate waiting time price
+  useEffect(() => {
+    if (!hasWaitingTime || !pricingSettings) return;
     
+    const pricePerMin = pricingSettings.waiting_fee_per_minute || 0.5;
+    const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
+    
+    const quarters = Math.ceil(waitingTimeMinutes / 15);
+    let price = quarters * pricePerQuarter;
+    
+    if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      const tripTime = new Date();
+      tripTime.setHours(hours);
+      tripTime.setMinutes(minutes);
+      
+      const startTime = new Date();
+      const [startHours, startMinutes] = pricingSettings.wait_night_start?.split(':').map(Number) || [0, 0];
+      startTime.setHours(startHours);
+      startTime.setMinutes(startMinutes);
+      
+      const endTime = new Date();
+      const [endHours, endMinutes] = pricingSettings.wait_night_end?.split(':').map(Number) || [0, 0];
+      endTime.setHours(endHours);
+      endTime.setMinutes(endMinutes);
+      
+      const isNight = (
+        (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
+        (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
+      );
+      
+      if (isNight) {
+        const nightPercentage = pricingSettings.wait_night_percentage || 0;
+        price += price * (nightPercentage / 100);
+      }
+    }
+    
+    setWaitingTimePrice(Math.round(price));
+  }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
+
+  // Calculate return route when needed
+  useEffect(() => {
+    const calculateReturnRoute = async () => {
+      if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
+        return;
+      }
+      
+      try {
+        const route = await getRoute(destinationCoordinates, customReturnCoordinates);
+        if (route) {
+          setReturnDistance(Math.round(route.distance));
+          setReturnDuration(Math.round(route.duration));
+        }
+      } catch (error) {
+        console.error("Erreur lors du calcul de l'itinéraire de retour:", error);
+      }
+    };
+    
+    calculateReturnRoute();
+  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
+
+  // Calculate quote details when relevant parameters change
+  useEffect(() => {
+    // Only calculate if we have the necessary data
+    if (!selectedVehicle || estimatedDistance === 0) return;
+    
+    const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
+    if (!selectedVehicleInfo) return;
+    
+    const basePrice = selectedVehicleInfo.basePrice;
+    
+    // Check if time is during night hours for night rate
+    let isNightRate = false;
+    let isSunday = false;
+    
+    if (date && time && pricingSettings) {
+      // Check for night rate
+      if (pricingSettings.night_rate_enabled && pricingSettings.night_rate_start && pricingSettings.night_rate_end) {
+        const [hours, minutes] = time.split(':').map(Number);
+        const tripTime = new Date(date);
+        tripTime.setHours(hours);
+        tripTime.setMinutes(minutes);
+        
+        const startTime = new Date(date);
+        const [startHours, startMinutes] = pricingSettings.night_rate_start.split(':').map(Number);
+        startTime.setHours(startHours);
+        startTime.setMinutes(startMinutes);
+        
+        const endTime = new Date(date);
+        const [endHours, endMinutes] = pricingSettings.night_rate_end.split(':').map(Number);
+        endTime.setHours(endHours);
+        endTime.setMinutes(endMinutes);
+        
+        isNightRate = (
+          (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
+          (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
+        );
+      }
+      
+      // Check if it's Sunday
+      const dayOfWeek = date.getDay();
+      isSunday = dayOfWeek === 0;
+    }
+    
+    // Calculate basic prices
+    let oneWayPriceHT = estimatedDistance * basePrice;
+    let returnPriceHT = hasReturnTrip ? (returnToSameAddress ? estimatedDistance * basePrice : returnDistance * basePrice) : 0;
+    
+    // Apply night rate if applicable
+    if (isNightRate && pricingSettings && pricingSettings.night_rate_percentage) {
+      const nightPercentage = pricingSettings.night_rate_percentage / 100;
+      oneWayPriceHT += oneWayPriceHT * nightPercentage;
+      returnPriceHT += returnPriceHT * nightPercentage;
+    }
+    
+    // Apply Sunday/holiday rate if applicable
+    if (isSunday && pricingSettings && pricingSettings.holiday_sunday_percentage) {
+      const sundayPercentage = pricingSettings.holiday_sunday_percentage / 100;
+      oneWayPriceHT += oneWayPriceHT * sundayPercentage;
+      returnPriceHT += returnPriceHT * sundayPercentage;
+    }
+    
+    // Round prices
+    oneWayPriceHT = Math.round(oneWayPriceHT);
+    returnPriceHT = Math.round(returnPriceHT);
+    
+    // Apply waiting time price
+    const waitingTimePriceHT = hasWaitingTime ? waitingTimePrice : 0;
+    
+    // Apply VAT rates
+    const rideVatRate = pricingSettings?.ride_vat_rate || 10; // 10% for rides
+    const waitingVatRate = pricingSettings?.waiting_vat_rate || 20; // 20% for waiting time
+    
+    // Calculate TTC prices
+    const oneWayPrice = oneWayPriceHT * (1 + (rideVatRate / 100));
+    const returnPrice = returnPriceHT * (1 + (rideVatRate / 100));
+    const waitingTimePriceTTC = waitingTimePriceHT * (1 + (waitingVatRate / 100));
+    
+    // Calculate totals
+    const totalPriceHT = oneWayPriceHT + returnPriceHT + waitingTimePriceHT;
+    
+    // Calculate VAT amounts
+    const rideVAT = (oneWayPriceHT + returnPriceHT) * (rideVatRate / 100);
+    const waitingVAT = waitingTimePriceHT * (waitingVatRate / 100);
+    const totalVAT = rideVAT + waitingVAT;
+    
+    // Calculate total TTC
+    const totalPrice = totalPriceHT + totalVAT;
+    
+    // Update quote details
+    setQuoteDetails({
+      basePrice,
+      isNightRate,
+      isSunday,
+      oneWayPriceHT: Math.round(oneWayPriceHT),
+      oneWayPrice: Math.round(oneWayPrice),
+      returnPriceHT: Math.round(returnPriceHT),
+      returnPrice: Math.round(returnPrice),
+      waitingTimePriceHT: Math.round(waitingTimePriceHT),
+      waitingTimePrice: Math.round(waitingTimePriceTTC),
+      totalPriceHT: Math.round(totalPriceHT),
+      totalVAT: Math.round(totalVAT),
+      totalPrice: Math.round(totalPrice),
+      rideVatRate,
+      waitingVatRate
+    });
+  }, [
+    selectedVehicle, 
+    estimatedDistance, 
+    returnDistance, 
+    hasReturnTrip, 
+    returnToSameAddress, 
+    vehicles,
+    hasWaitingTime,
+    waitingTimePrice,
+    time,
+    date,
+    pricingSettings
+  ]);
+
+  // Helper functions for addresses
+  const handleDepartureSelect = (address: Address) => {
+    setDepartureAddress(address.fullAddress);
+    setDepartureCoordinates(address.coordinates);
+  };
+
+  const handleDestinationSelect = (address: Address) => {
+    setDestinationAddress(address.fullAddress);
+    setDestinationCoordinates(address.coordinates);
+  };
+
+  const handleReturnAddressSelect = (address: Address) => {
+    setCustomReturnAddress(address.fullAddress);
+    setCustomReturnCoordinates(address.coordinates);
+  };
+
+  const handleRouteCalculated = (distance: number, duration: number) => {
+    setEstimatedDistance(Math.round(distance));
+    setEstimatedDuration(Math.round(duration));
+  };
+
+  // Navigation between steps
+  const nextStep = () => setCurrentStep(prev => prev + 1);
+  const prevStep = () => setCurrentStep(prev => prev - 1);
+  const resetForm = () => {
+    setCurrentStep(1);
+    setShowQuote(false);
+    setIsQuoteSent(false);
+  };
+
+  return {
+    // Address state
     departureAddress,
     setDepartureAddress,
     destinationAddress,
     setDestinationAddress,
     departureCoordinates,
+    setDepartureCoordinates,
     destinationCoordinates,
+    setDestinationCoordinates,
+    
+    // Trip details state
     date,
     setDate,
     time,
@@ -503,21 +397,14 @@ export function useQuoteForm(clientId?: string) {
     setSelectedVehicle,
     passengers,
     setPassengers,
-    firstName,
-    setFirstName,
-    lastName,
-    setLastName,
-    email,
-    setEmail,
+    
+    // Route state
     estimatedDistance,
+    setEstimatedDistance,
     estimatedDuration,
-    isSubmitting,
+    setEstimatedDuration,
     
-    price: calculatedPrice,
-    quoteDetails,
-    isQuoteSent,
-    setIsQuoteSent,
-    
+    // Return options state
     hasReturnTrip,
     setHasReturnTrip,
     hasWaitingTime,
@@ -525,28 +412,57 @@ export function useQuoteForm(clientId?: string) {
     waitingTimeMinutes,
     setWaitingTimeMinutes,
     waitingTimePrice,
+    setWaitingTimePrice,
     returnToSameAddress,
     setReturnToSameAddress,
     customReturnAddress,
     setCustomReturnAddress,
     customReturnCoordinates,
+    setCustomReturnCoordinates,
     returnDistance,
+    setReturnDistance,
     returnDuration,
+    setReturnDuration,
+    
+    // UI flow state
+    currentStep,
+    setCurrentStep,
+    showQuote,
+    setShowQuote,
+    isLoading,
+    setIsLoading,
+    isSubmitting,
+    setIsSubmitting,
+    isQuoteSent,
+    setIsQuoteSent,
+    
+    // Client information state
+    selectedClient,
+    setSelectedClient,
+    firstName,
+    setFirstName,
+    lastName,
+    setLastName,
+    email,
+    setEmail,
+    phone,
+    setPhone,
+    
+    // Vehicles and options
+    vehicles,
+    isLoadingVehicles,
     waitingTimeOptions,
     
-    vehiclesLoading,
-    pricingLoading,
-    vehicles,
+    // Quote details
+    quoteDetails,
     
-    handleNextStep,
-    handlePreviousStep,
-    
-    handleSubmit,
+    // Helper functions
     handleDepartureSelect,
     handleDestinationSelect,
     handleReturnAddressSelect,
     handleRouteCalculated,
-    resetForm,
-    navigate
+    nextStep,
+    prevStep,
+    resetForm
   };
-}
+};

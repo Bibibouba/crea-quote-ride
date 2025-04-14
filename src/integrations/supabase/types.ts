@@ -85,40 +85,82 @@ export type Database = {
       }
       company_settings: {
         Row: {
+          bank_details: string | null
           banner_url: string | null
+          company_address: string | null
+          company_type: string | null
           created_at: string
+          discount_conditions: string | null
           driver_id: string
           font_family: string | null
           id: string
+          invoice_prefix: string | null
           is_trial: boolean | null
+          is_vat_exempt: boolean | null
+          late_payment_rate: number | null
+          legal_notices: string | null
           logo_url: string | null
+          next_invoice_number: number | null
+          payment_delay_days: number | null
           primary_color: string | null
+          rcs_number: string | null
+          registration_city: string | null
           secondary_color: string | null
+          siret: string | null
           updated_at: string
+          vat_number: string | null
         }
         Insert: {
+          bank_details?: string | null
           banner_url?: string | null
+          company_address?: string | null
+          company_type?: string | null
           created_at?: string
+          discount_conditions?: string | null
           driver_id: string
           font_family?: string | null
           id?: string
+          invoice_prefix?: string | null
           is_trial?: boolean | null
+          is_vat_exempt?: boolean | null
+          late_payment_rate?: number | null
+          legal_notices?: string | null
           logo_url?: string | null
+          next_invoice_number?: number | null
+          payment_delay_days?: number | null
           primary_color?: string | null
+          rcs_number?: string | null
+          registration_city?: string | null
           secondary_color?: string | null
+          siret?: string | null
           updated_at?: string
+          vat_number?: string | null
         }
         Update: {
+          bank_details?: string | null
           banner_url?: string | null
+          company_address?: string | null
+          company_type?: string | null
           created_at?: string
+          discount_conditions?: string | null
           driver_id?: string
           font_family?: string | null
           id?: string
+          invoice_prefix?: string | null
           is_trial?: boolean | null
+          is_vat_exempt?: boolean | null
+          late_payment_rate?: number | null
+          legal_notices?: string | null
           logo_url?: string | null
+          next_invoice_number?: number | null
+          payment_delay_days?: number | null
           primary_color?: string | null
+          rcs_number?: string | null
+          registration_city?: string | null
           secondary_color?: string | null
+          siret?: string | null
           updated_at?: string
+          vat_number?: string | null
         }
         Relationships: [
           {
@@ -203,6 +245,7 @@ export type Database = {
           night_rate_percentage: number | null
           night_rate_start: string | null
           price_per_km: number
+          ride_vat_rate: number | null
           service_area: string | null
           updated_at: string
           vehicle_id: string | null
@@ -212,6 +255,7 @@ export type Database = {
           wait_night_start: string | null
           wait_price_per_15min: number | null
           waiting_fee_per_minute: number
+          waiting_vat_rate: number | null
         }
         Insert: {
           base_fare: number
@@ -227,6 +271,7 @@ export type Database = {
           night_rate_percentage?: number | null
           night_rate_start?: string | null
           price_per_km: number
+          ride_vat_rate?: number | null
           service_area?: string | null
           updated_at?: string
           vehicle_id?: string | null
@@ -236,6 +281,7 @@ export type Database = {
           wait_night_start?: string | null
           wait_price_per_15min?: number | null
           waiting_fee_per_minute: number
+          waiting_vat_rate?: number | null
         }
         Update: {
           base_fare?: number
@@ -251,6 +297,7 @@ export type Database = {
           night_rate_percentage?: number | null
           night_rate_start?: string | null
           price_per_km?: number
+          ride_vat_rate?: number | null
           service_area?: string | null
           updated_at?: string
           vehicle_id?: string | null
@@ -260,6 +307,7 @@ export type Database = {
           wait_night_start?: string | null
           wait_price_per_15min?: number | null
           waiting_fee_per_minute?: number
+          waiting_vat_rate?: number | null
         }
         Relationships: [
           {

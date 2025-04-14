@@ -15,9 +15,24 @@ import { Database } from '@/integrations/supabase/types';
 import CompanySettingsForm, { CompanySettingsFormValues } from './CompanySettingsForm';
 
 // Create a custom type that extends the company_settings table Row type
-// and explicitly adds the banner_url field
+// and explicitly adds the new fields we've added to the database
 type CompanySettings = Database['public']['Tables']['company_settings']['Row'] & {
   banner_url?: string | null;
+  // Added fields
+  siret?: string | null;
+  company_address?: string | null;
+  vat_number?: string | null;
+  company_type?: string | null;
+  registration_city?: string | null;
+  rcs_number?: string | null;
+  invoice_prefix?: string | null;
+  next_invoice_number?: number | null;
+  payment_delay_days?: number | null;
+  late_payment_rate?: number | null;
+  discount_conditions?: string | null;
+  bank_details?: string | null;
+  legal_notices?: string | null;
+  is_vat_exempt?: boolean | null;
 };
 
 const CompanySettingsManager = () => {
