@@ -2,27 +2,29 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import VehicleForm from './VehicleForm';
-import { Vehicle } from '@/types/vehicle';
-import { VehicleType } from '@/types/vehicleType';
+import { VehicleFormValues, Vehicle } from '@/types/vehicle';
+import { VehicleType } from '@/types/vehicle';
 
 interface VehicleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  vehicle?: Vehicle | null;
+  initialValues?: Partial<VehicleFormValues>;
   vehicleTypes: VehicleType[];
-  title: string;
+  onSubmit: (data: VehicleFormValues) => void;
+  isSubmitting: boolean;
+  title?: string;
   description?: string;
-  onSave: () => void;
 }
 
 const VehicleDialog: React.FC<VehicleDialogProps> = ({ 
   open, 
   onOpenChange, 
-  vehicle, 
+  initialValues, 
   vehicleTypes, 
-  title,
-  description,
-  onSave 
+  onSubmit,
+  isSubmitting,
+  title = initialValues?.id ? "Modifier un véhicule" : "Ajouter un véhicule",
+  description = initialValues?.id ? "Modifier les informations du véhicule" : "Ajouter un nouveau véhicule à votre flotte"
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -32,10 +34,10 @@ const VehicleDialog: React.FC<VehicleDialogProps> = ({
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         <VehicleForm 
-          vehicle={vehicle} 
+          initialValues={initialValues} 
           vehicleTypes={vehicleTypes} 
-          onSuccess={onSave} 
-          onCancel={() => onOpenChange(false)}
+          onSubmit={onSubmit}
+          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>

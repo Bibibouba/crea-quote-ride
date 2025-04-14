@@ -12,8 +12,8 @@ import { VehicleFormValues } from '@/types/vehicle';
 
 const Vehicles = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { vehicles, isLoading, addVehicle, deleteVehicle, updateVehicle } = useVehicles();
-  const { vehicleTypes, isLoading: isLoadingVehicleTypes } = useVehicleTypes();
+  const { vehicles, loading, handleSaveVehicle, handleDeleteVehicle } = useVehicles();
+  const { vehicleTypes, loading: typesLoading } = useVehicleTypes();
   const [editingVehicle, setEditingVehicle] = useState<VehicleFormValues | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,7 +31,8 @@ const Vehicles = () => {
       is_active: vehicle.is_active,
       is_luxury: vehicle.is_luxury,
       image_url: vehicle.image_url,
-      vehicle_type_name: vehicle.vehicle_type_name
+      vehicle_type_name: vehicle.vehicle_type_name,
+      id: vehicle.id
     };
     
     setEditingVehicle(vehicleFormValues);
@@ -41,13 +42,10 @@ const Vehicles = () => {
   const handleVehicleSubmit = async (data: VehicleFormValues) => {
     setIsSubmitting(true);
     try {
-      if (editingVehicle) {
-        await updateVehicle.mutateAsync({
-          id: editingVehicle.id,
-          ...data
-        });
+      if (editingVehicle?.id) {
+        await handleSaveVehicle(data, { id: editingVehicle.id } as any);
       } else {
-        await addVehicle.mutateAsync(data);
+        await handleSaveVehicle(data, {} as any);
       }
       setIsDialogOpen(false);
     } catch (error) {
@@ -59,7 +57,7 @@ const Vehicles = () => {
 
   const handleDeleteVehicle = async (id: string) => {
     try {
-      await deleteVehicle.mutateAsync(id);
+      await handleDeleteVehicle(id);
     } catch (error) {
       console.error("Error deleting vehicle:", error);
     }
@@ -80,7 +78,7 @@ const Vehicles = () => {
         </Button>
       </div>
 
-      {isLoading || isLoadingVehicleTypes ? (
+      {loading || typesLoading ? (
         <div className="flex items-center justify-center h-40">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>

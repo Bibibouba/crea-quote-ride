@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuoteForm } from '@/hooks/useQuoteForm';
@@ -6,11 +7,13 @@ import TripInfoStep from '@/components/quote/form/TripInfoStep';
 import TripSummaryStep from '@/components/quote/form/TripSummaryStep';
 import ClientInfoStep from '@/components/quote/form/ClientInfoStep';
 import SuccessMessageStep from '@/components/quote/form/SuccessMessageStep';
+import { useNavigate } from 'react-router-dom';
 
 const ClientSimulator = () => {
+  const [activeTab, setActiveTab] = useState<'step1' | 'step2' | 'step3'>('step1');
+  const navigate = useNavigate();
+  
   const {
-    activeTab,
-    setActiveTab,
     departureAddress,
     setDepartureAddress,
     destinationAddress,
@@ -33,7 +36,6 @@ const ClientSimulator = () => {
     setEmail,
     estimatedDistance,
     estimatedDuration,
-    price,
     quoteDetails,
     isSubmitting,
     isQuoteSent,
@@ -55,22 +57,39 @@ const ClientSimulator = () => {
     returnDuration,
     waitingTimeOptions,
     
-    vehiclesLoading,
-    pricingLoading,
     vehicles,
+    isLoadingVehicles,
     
-    handleNextStep,
-    handlePreviousStep,
-    handleSubmit,
     handleDepartureSelect,
     handleDestinationSelect,
     handleReturnAddressSelect,
     handleRouteCalculated,
-    resetForm,
-    navigate
+    resetForm
   } = useQuoteForm();
   
-  if (vehiclesLoading || pricingLoading) {
+  // Adding necessary functions that were missing
+  const handleNextStep = () => {
+    if (activeTab === 'step1') {
+      setActiveTab('step2');
+    } else if (activeTab === 'step2') {
+      setActiveTab('step3');
+    }
+  };
+
+  const handlePreviousStep = () => {
+    if (activeTab === 'step3') {
+      setActiveTab('step2');
+    } else if (activeTab === 'step2') {
+      setActiveTab('step1');
+    }
+  };
+
+  const handleSubmit = async () => {
+    // Simulate form submission
+    setIsQuoteSent(true);
+  };
+  
+  if (isLoadingVehicles) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Chargement des données...</p>

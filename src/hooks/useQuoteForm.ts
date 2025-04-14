@@ -22,7 +22,7 @@ interface Vehicle {
 export const useQuoteForm = () => {
   const { getRoute } = useMapbox();
   const { pricingSettings } = usePricing();
-  const { vehicleTypes, isLoading: isLoadingVehicleTypes } = useVehicleTypes();
+  const { vehicleTypes, loading: isLoadingVehicleTypes } = useVehicleTypes();
 
   // State for addresses
   const [departureAddress, setDepartureAddress] = useState('');
@@ -296,9 +296,9 @@ export const useQuoteForm = () => {
     // Apply waiting time price
     const waitingTimePriceHT = hasWaitingTime ? waitingTimePrice : 0;
     
-    // Apply VAT rates
-    const rideVatRate = pricingSettings?.ride_vat_rate || 10; // 10% for rides
-    const waitingVatRate = pricingSettings?.waiting_vat_rate || 20; // 20% for waiting time
+    // Apply VAT rates with safe defaults
+    const rideVatRate = pricingSettings?.ride_vat_rate !== undefined ? pricingSettings.ride_vat_rate : 10; // 10% for rides
+    const waitingVatRate = pricingSettings?.waiting_vat_rate !== undefined ? pricingSettings.waiting_vat_rate : 20; // 20% for waiting time
     
     // Calculate TTC prices
     const oneWayPrice = oneWayPriceHT * (1 + (rideVatRate / 100));
