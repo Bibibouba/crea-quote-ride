@@ -4,7 +4,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Car, CreditCard, Settings } from 'lucide-react';
+import { Car, CreditCard, Settings, CreditCard as PaymentIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Progress } from '@/components/ui/progress';
@@ -129,13 +129,20 @@ const Dashboard = () => {
               <div className="flex flex-col gap-1">
                 <p className="text-sm text-muted-foreground">
                   Pendant cette période d'essai, toutes les fonctionnalités sont débloquées.
-                  Certaines informations comme les coordonnées de société seront remplacées par celles de MENESGUEN SERVICES dans les devis générés.
                 </p>
                 {signupDate && (
                   <p className="text-xs text-muted-foreground">
-                    Inscrit {formatSignupTimeAgo()}
+                    Inscrit <span className="font-bold text-green-600">{formatSignupTimeAgo()}</span>
                   </p>
                 )}
+              </div>
+              <div className="flex justify-end">
+                <Button className="bg-green-600 hover:bg-green-700" asChild>
+                  <Link to="/dashboard/subscription">
+                    <PaymentIcon className="mr-2 h-4 w-4" />
+                    Souscrire maintenant
+                  </Link>
+                </Button>
               </div>
             </div>
           </CardContent>
