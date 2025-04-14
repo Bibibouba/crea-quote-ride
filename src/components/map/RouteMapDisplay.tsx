@@ -41,6 +41,7 @@ const RouteMapDisplay: React.FC<RouteMapDisplayProps> = ({
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
+      // Clean up on unmount
       return () => {
         map.current?.remove();
       };

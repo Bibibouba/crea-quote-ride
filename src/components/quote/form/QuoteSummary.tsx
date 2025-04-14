@@ -18,6 +18,26 @@ export interface QuoteDetailsType {
   dayRateHours?: number;
   isNightRateApplied?: boolean;
   sundayRateApplied?: boolean;
+  oneWayPriceHT?: number;
+  returnPriceHT?: number;
+  waitingTimePriceHT?: number;
+  totalPriceHT?: number;
+  totalVAT?: number;
+  returnPrice?: number;
+  waitingTimePrice?: number;
+  nightSurcharge?: number;
+  sundaySurcharge?: number;
+  rideVatRate?: number;
+  waitingVatRate?: number;
+  basePrice?: number;
+  hasMinDistanceWarning?: boolean;
+  minDistance?: number;
+  nightMinutes?: number;
+  totalMinutes?: number;
+  nightRatePercentage?: number;
+  nightHours?: number;
+  nightStartDisplay?: string;
+  nightEndDisplay?: string;
 }
 
 interface QuoteSummaryProps {
