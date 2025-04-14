@@ -22,6 +22,7 @@ import { useMapbox, Address } from '@/hooks/useMapbox';
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import QuoteFormOptions from './form/QuoteFormOptions';
+import { Quote } from '@/types/quote';
 
 interface QuoteFormProps {
   clientId?: string;
@@ -308,7 +309,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         throw new Error("Utilisateur non authentifié");
       }
       
-      const quoteData = {
+      const quoteData: Omit<Quote, "id" | "created_at" | "updated_at" | "quote_pdf"> = {
         client_id: finalClientId,
         vehicle_id: selectedVehicle,
         departure_location: departureAddress,
@@ -319,7 +320,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ clientId, onSuccess, showDashboar
         duration_minutes: estimatedDuration, 
         ride_date: dateTime.toISOString(),
         amount: totalPriceCalculated,
-        status: 'pending',
+        status: "pending",
         driver_id: driverId,
         has_return_trip: hasReturnTrip,
         has_waiting_time: hasWaitingTime,

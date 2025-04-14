@@ -31,6 +31,8 @@ export const useQuotes = (clientId?: string) => {
         throw new Error('User not authenticated');
       }
       
+      console.log('Fetching quotes for driver:', userId);
+      
       // Construisons notre requête en filtrant par driver_id
       let query = supabase
         .from('quotes')
@@ -99,7 +101,7 @@ export const useQuotes = (clientId?: string) => {
 
   // Ajouter un nouveau devis
   const addQuote = useMutation({
-    mutationFn: async (newQuote: Omit<QuoteWithCoordinates, 'id' | 'created_at' | 'updated_at' | 'quote_pdf'>) => {
+    mutationFn: async (newQuote: Omit<QuoteWithCoordinates, "id" | "created_at" | "updated_at" | "quote_pdf">) => {
       // Get the current user's ID from Supabase
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
