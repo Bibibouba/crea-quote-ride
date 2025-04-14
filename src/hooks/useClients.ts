@@ -139,6 +139,23 @@ export const useClients = () => {
   
   const deleteClient = useMutation({
     mutationFn: async (clientId: string) => {
+      // Vérifier d'abord si le client a des devis associés
+      const { data: quotes, error: quotesError } = await supabase
+        .from('quotes')
+        .select('id')
+        .eq('client_id', clientId);
+      
+      if (quotesError) {
+        console.error('Error checking for quotes', quotesError);
+        throw quotesError;
+      }
+      
+      // Si le client a des devis, ne pas permettre la suppression
+      if (quotes && quotes.length > 0) {
+        throw new Error("Ce client a des devis associés et ne peut pas être supprimé. Supprimez d'abord les devis liés à ce client.");
+      }
+
+      // Sinon, procéder à la suppression
       const { error } = await supabase
         .from('clients')
         .delete()
