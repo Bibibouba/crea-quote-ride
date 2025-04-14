@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useClients } from '@/hooks/useClients';
 import { useQuotes } from '@/hooks/useQuotes';
 import { Button } from '@/components/ui/button';
-import { Eye, User } from 'lucide-react';
+import { Eye, User, Trash2, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -17,11 +17,30 @@ import QuoteStatusBadge from '@/components/quotes/QuoteStatusBadge';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { toast } from 'sonner';
+import ClientDialog from './ClientDialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ClientsList: React.FC = () => {
-  const { clients, isLoading, error } = useClients();
+  const { clients, isLoading, error, deleteClient } = useClients();
   const { quotes } = useQuotes();
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
+  const [currentClientComments, setCurrentClientComments] = useState<{ id: string, name: string, comments: string | null }>({ id: '', name: '', comments: null });
 
   // Compute stats for each client
   const clientsWithStats = clients.map(client => {
@@ -49,6 +68,28 @@ const ClientsList: React.FC = () => {
     };
   });
 
+  const handleDeleteClient = async (clientId: string, clientName: string) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${clientName} ?`)) {
+      return;
+    }
+    
+    try {
+      await deleteClient.mutateAsync(clientId);
+      toast.success(`Client supprimé avec succès`);
+    } catch (error) {
+      toast.error(`Erreur lors de la suppression: ${error instanceof Error ? error.message : 'Une erreur est survenue'}`);
+    }
+  };
+  
+  const showClientComments = (client: any) => {
+    setCurrentClientComments({
+      id: client.id,
+      name: `${client.first_name} ${client.last_name}`,
+      comments: client.comments
+    });
+    setIsCommentsDialogOpen(true);
+  };
+
   if (isLoading) {
     return <div className="py-10 text-center">Chargement des clients...</div>;
   }
@@ -75,13 +116,14 @@ const ClientsList: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex">
+      <div className="flex justify-between">
         <Input
           placeholder="Rechercher un client..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
+        <ClientDialog buttonText="Ajouter un client" />
       </div>
 
       <div className="rounded-md border">
@@ -122,22 +164,83 @@ const ClientsList: React.FC = () => {
                   )}
                 </TableCell>
                 <TableCell>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    asChild
-                  >
-                    <Link to={`/dashboard/quotes?client=${client.id}`}>
-                      <Eye className="h-4 w-4 mr-1" />
-                      Voir l'historique
-                    </Link>
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      asChild
+                    >
+                      <Link to={`/dashboard/quotes?client=${client.id}`}>
+                        <Eye className="h-4 w-4 mr-1" />
+                        Voir
+                      </Link>
+                    </Button>
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => showClientComments(client)}
+                            disabled={!client.comments}
+                          >
+                            <FileText className={`h-4 w-4 ${client.comments ? 'text-blue-500' : 'text-gray-300'}`} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Voir les commentaires</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    <ClientDialog 
+                      initialData={client} 
+                      buttonText="" 
+                      buttonVariant="ghost"
+                    />
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteClient(client.id, `${client.first_name} ${client.last_name}`)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Supprimer le client</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={isCommentsDialogOpen} onOpenChange={setIsCommentsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Commentaires - {currentClientComments.name}</DialogTitle>
+            <DialogDescription>
+              Notes et commentaires sur ce client
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[200px] rounded-md border p-4">
+            {currentClientComments.comments ? (
+              <p className="whitespace-pre-line">{currentClientComments.comments}</p>
+            ) : (
+              <p className="text-muted-foreground italic">Aucun commentaire</p>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

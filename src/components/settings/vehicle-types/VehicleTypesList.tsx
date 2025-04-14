@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Pencil, Trash2, CarFront, Check, X } from 'lucide-react';
+import { Pencil, Trash2, CarFront, Check, X, Star, StarOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { VehicleType } from '@/types/vehicle';
@@ -54,6 +54,14 @@ const VehicleTypesList = ({ vehicleTypes, setVehicleTypes, onEditType }: Vehicle
   };
 
   const handleDeleteType = async (id: string) => {
+    const targetType = vehicleTypes.find(t => t.id === id);
+    
+    // Prevent deletion of default type
+    if (targetType?.is_default) {
+      toast.error('Vous ne pouvez pas supprimer le type par défaut');
+      return;
+    }
+    
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce type de véhicule ?')) {
       return;
     }
@@ -70,6 +78,40 @@ const VehicleTypesList = ({ vehicleTypes, setVehicleTypes, onEditType }: Vehicle
       toast.success('Type de véhicule supprimé');
     } catch (error: any) {
       console.error('Erreur lors de la suppression:', error);
+      toast.error(`Erreur: ${error.message}`);
+    }
+  };
+  
+  const setDefaultType = async (id: string) => {
+    if (!window.confirm('Définir ce type comme type par défaut ?')) {
+      return;
+    }
+    
+    try {
+      // First, remove default status from all types
+      const { error: updateError } = await supabase
+        .from('vehicle_types')
+        .update({ is_default: false })
+        .neq('id', 'dummy'); // This will update all rows
+        
+      if (updateError) throw updateError;
+      
+      // Then set the selected type as default
+      const { error } = await supabase
+        .from('vehicle_types')
+        .update({ is_default: true })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setVehicleTypes(types => 
+        types.map(t => ({ ...t, is_default: t.id === id }))
+      );
+      
+      toast.success('Type par défaut mis à jour');
+    } catch (error: any) {
+      console.error('Erreur lors de la définition du type par défaut:', error);
       toast.error(`Erreur: ${error.message}`);
     }
   };
@@ -132,22 +174,30 @@ const VehicleTypesList = ({ vehicleTypes, setVehicleTypes, onEditType }: Vehicle
             </div>
             <div className="flex justify-end space-x-2">
               {!type.is_default && (
-                <>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => startEditing(type.id, type.name)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleDeleteType(type.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setDefaultType(type.id)}
+                  title="Définir comme type par défaut"
+                >
+                  <Star className="h-4 w-4 text-amber-500" />
+                </Button>
+              )}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => startEditing(type.id, type.name)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              {!type.is_default && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => handleDeleteType(type.id)}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
               )}
             </div>
           </div>

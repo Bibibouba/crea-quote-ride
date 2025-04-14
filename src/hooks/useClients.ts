@@ -106,6 +106,32 @@ export const useClients = () => {
       });
     },
   });
+  
+  const deleteClient = useMutation({
+    mutationFn: async (clientId: string) => {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', clientId);
+
+      if (error) {
+        console.error('Error deleting client', error);
+        throw error;
+      }
+
+      return clientId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erreur',
+        description: `Erreur lors de la suppression du client: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
 
   return {
     clients: clients || [],
@@ -113,6 +139,7 @@ export const useClients = () => {
     error: error ? (error as Error).message : null,
     addClient,
     updateClient,
+    deleteClient,
     refetch,
   };
 };

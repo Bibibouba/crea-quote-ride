@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -162,7 +161,7 @@ const PersonalClientForm: React.FC<PersonalClientFormProps> = ({ form }) => {
                   <div className="relative">
                     <FileText className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Textarea 
-                      placeholder="Commentaires..." 
+                      placeholder="Commentaires sur le client..." 
                       className="min-h-24 pl-10 pt-6" 
                       {...field} 
                     />
