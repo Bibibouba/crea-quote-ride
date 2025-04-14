@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,45 +13,60 @@ import { Vehicle } from '@/types/vehicle';
 import { VehicleType } from '@/types/vehicleType';
 import { Loader2 } from 'lucide-react';
 
+// Define schema for form validation
 const formSchema = z.object({
   name: z.string().min(2, {
     message: 'Le nom du véhicule doit comporter au moins 2 caractères.',
   }),
-  typeId: z.string().min(1, {
+  model: z.string().min(1, {
+    message: 'Le modèle du véhicule est requis.',
+  }),
+  capacity: z.number().min(1, {
+    message: 'La capacité doit être d\'au moins 1 personne.',
+  }),
+  image_url: z.string().optional(),
+  is_luxury: z.boolean().default(false),
+  is_active: z.boolean().default(true),
+  vehicle_type_id: z.string().min(1, {
     message: 'Veuillez sélectionner un type de véhicule.',
   }),
-  isDefault: z.boolean().default(false),
-  icon: z.string().optional(),
+  vehicle_type_name: z.string().optional()
 });
 
-interface VehicleFormProps {
+// Export the form values type for use in other components
+export type VehicleFormValues = z.infer<typeof formSchema>;
+
+export interface VehicleFormProps {
   vehicle?: Vehicle | null;
   vehicleTypes: VehicleType[];
-  onSave: () => void;
+  onSuccess: () => void;
+  onCancel: () => void;
 }
 
-const VehicleForm = ({ vehicle, vehicleTypes, onSave }: VehicleFormProps) => {
-  const { isLoading, createVehicle, updateVehicle } = useVehicles();
+const VehicleForm = ({ vehicle, vehicleTypes, onSuccess, onCancel }: VehicleFormProps) => {
+  const { submitting, handleSaveVehicle } = useVehicles();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<VehicleFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: vehicle?.name || '',
-      typeId: vehicle?.type_id || '',
-      isDefault: vehicle?.is_default || false,
-      icon: vehicle?.icon || '',
+      model: vehicle?.model || '',
+      capacity: vehicle?.capacity || 4,
+      image_url: vehicle?.image_url || '',
+      is_luxury: vehicle?.is_luxury || false,
+      is_active: vehicle?.is_active || true,
+      vehicle_type_id: vehicle?.vehicle_type_id || (vehicleTypes.length > 0 ? vehicleTypes[0].id : ''),
+      vehicle_type_name: vehicle?.vehicle_type_name || '',
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: VehicleFormValues) => {
     try {
-      if (vehicle) {
-        await updateVehicle({ ...vehicle, ...values });
-      } else {
-        await createVehicle(values);
+      const success = await handleSaveVehicle(values, vehicle);
+      if (success) {
+        form.reset();
+        onSuccess();
       }
-      form.reset();
-      onSave();
     } catch (error) {
       console.error('Erreur lors de la sauvegarde du véhicule:', error);
     }
@@ -75,7 +91,41 @@ const VehicleForm = ({ vehicle, vehicleTypes, onSave }: VehicleFormProps) => {
 
         <FormField
           control={form.control}
-          name="typeId"
+          name="model"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Modèle</FormLabel>
+              <FormControl>
+                <Input placeholder="S500" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="capacity"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Capacité (passagers)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  min={1} 
+                  max={20}
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="vehicle_type_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Type de véhicule</FormLabel>
@@ -100,11 +150,25 @@ const VehicleForm = ({ vehicle, vehicleTypes, onSave }: VehicleFormProps) => {
 
         <FormField
           control={form.control}
-          name="isDefault"
+          name="image_url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>URL de l'image</FormLabel>
+              <FormControl>
+                <Input placeholder="https://example.com/image.jpg" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="is_luxury"
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FormLabel className="text-base">Véhicule par défaut</FormLabel>
+                <FormLabel className="text-base">Véhicule de luxe</FormLabel>
               </div>
               <FormControl>
                 <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -113,16 +177,36 @@ const VehicleForm = ({ vehicle, vehicleTypes, onSave }: VehicleFormProps) => {
           )}
         />
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Enregistrement...
-            </>
-          ) : (
-            'Enregistrer'
+        <FormField
+          control={form.control}
+          name="is_active"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Véhicule actif</FormLabel>
+              </div>
+              <FormControl>
+                <Switch checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
+            </FormItem>
           )}
-        </Button>
+        />
+
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Annuler
+          </Button>
+          <Button type="submit" disabled={submitting}>
+            {submitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enregistrement...
+              </>
+            ) : (
+              'Enregistrer'
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );

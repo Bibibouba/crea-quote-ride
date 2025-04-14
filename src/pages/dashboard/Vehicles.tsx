@@ -25,32 +25,6 @@ const Vehicles = () => {
   const [open, setOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
 
-  const getDefaultFormValues = (): VehicleFormValues => {
-    if (editingVehicle) {
-      return {
-        name: editingVehicle.name,
-        model: editingVehicle.model,
-        capacity: editingVehicle.capacity,
-        image_url: editingVehicle.image_url || "",
-        is_luxury: editingVehicle.is_luxury,
-        is_active: editingVehicle.is_active,
-        vehicle_type_id: editingVehicle.vehicle_type_id || "",
-        vehicle_type_name: editingVehicle.vehicle_type_name || "",
-      };
-    }
-    
-    return {
-      name: "",
-      model: "",
-      capacity: 4,
-      image_url: "",
-      is_luxury: false,
-      is_active: true,
-      vehicle_type_id: vehicleTypes.length > 0 ? vehicleTypes[0].id : "",
-      vehicle_type_name: "",
-    };
-  };
-
   const handleAddNew = () => {
     setEditingVehicle(null);
     setOpen(true);
@@ -109,11 +83,12 @@ const Vehicles = () => {
           onOpenChange={setOpen}
           title={editingVehicle ? "Modifier le véhicule" : "Ajouter un véhicule"}
           description="Renseignez les informations de votre véhicule ci-dessous"
-          defaultValues={getDefaultFormValues()}
+          vehicle={editingVehicle}
           vehicleTypes={vehicleTypes}
-          typesLoading={typesLoading}
-          submitting={submitting}
-          onSubmit={onSubmit}
+          onSave={() => {
+            // Refresh vehicles by calling the appropriate hooks
+            // This will be handled by the onSuccess callback in the form
+          }}
         />
       </div>
     </DashboardLayout>

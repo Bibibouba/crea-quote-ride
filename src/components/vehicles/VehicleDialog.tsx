@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import VehicleForm from './VehicleForm';
 import { Vehicle } from '@/types/vehicle';
 import { VehicleType } from '@/types/vehicleType';
@@ -9,15 +10,26 @@ interface VehicleDialogProps {
   onOpenChange: (open: boolean) => void;
   vehicle?: Vehicle | null;
   vehicleTypes: VehicleType[];
+  title: string;
+  description?: string;
   onSave: () => void;
 }
 
-const VehicleDialog: React.FC<VehicleDialogProps> = ({ open, onOpenChange, vehicle, vehicleTypes, onSave }) => {
+const VehicleDialog: React.FC<VehicleDialogProps> = ({ 
+  open, 
+  onOpenChange, 
+  vehicle, 
+  vehicleTypes, 
+  title,
+  description,
+  onSave 
+}) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{vehicle ? 'Modifier le véhicule' : 'Ajouter un véhicule'}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
+          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         <VehicleForm 
           vehicle={vehicle} 

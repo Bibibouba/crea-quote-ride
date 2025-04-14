@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { VehicleType } from '@/types/vehicleType';
@@ -69,7 +70,7 @@ export const useVehicles = () => {
   };
 
   const handleSaveVehicle = async (values: VehicleFormValues, editingVehicle: Vehicle | null) => {
-    if (!user) return;
+    if (!user) return false;
     
     setSubmitting(true);
     
