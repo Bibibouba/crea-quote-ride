@@ -1,38 +1,21 @@
+
 import { useEffect, useState } from 'react';
 import { useMapbox, Address } from './useMapbox';
 import { usePricing } from './use-pricing';
 import { useVehicleTypes } from './useVehicleTypes';
 import { supabase } from '@/integrations/supabase/client';
+import { generateWaitingTimeOptions } from '@/utils/waitingTimeOptions';
+import { fetchVehicles } from '@/utils/vehicleUtils';
+import { calculateWaitingTimePrice, calculateQuoteDetails } from '@/utils/pricingUtils';
+import { 
+  Vehicle, 
+  WaitingTimeOption, 
+  QuoteDetails, 
+  PricingSettings,
+  QuoteFormState
+} from '@/types/quoteForm';
 
-interface PricingSettings {
-  price_per_km?: number;
-  waiting_fee_per_minute?: number;
-  wait_price_per_15min?: number;
-  wait_night_enabled?: boolean;
-  wait_night_percentage?: number;
-  wait_night_start?: string;
-  wait_night_end?: string;
-  night_rate_enabled?: boolean;
-  night_rate_percentage?: number;
-  night_rate_start?: string;
-  night_rate_end?: string;
-  holiday_sunday_percentage?: number;
-  ride_vat_rate?: number;
-  waiting_vat_rate?: number;
-}
-
-export interface WaitingTimeOption {
-  value: number;
-  label: string;
-}
-
-interface Vehicle {
-  id: string;
-  name: string;
-  basePrice: number;
-  capacity: number;
-  description: string;
-}
+export { WaitingTimeOption };
 
 export const useQuoteForm = () => {
   const { getRoute } = useMapbox();
@@ -77,134 +60,44 @@ export const useQuoteForm = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
 
-  const [quoteDetails, setQuoteDetails] = useState<any>(null);
+  const [quoteDetails, setQuoteDetails] = useState<QuoteDetails | null>(null);
 
-  const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
-    const minutes = (i + 1) * 15;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    
-    let label = "";
-    if (hours > 0) {
-      label += `${hours} heure${hours > 1 ? 's' : ''}`;
-      if (remainingMinutes > 0) {
-        label += ` et ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
-      }
-    } else {
-      label = `${minutes} minutes`;
-    }
-    
-    return {
-      value: minutes,
-      label
-    };
-  });
+  const waitingTimeOptions = generateWaitingTimeOptions();
 
+  // Load vehicles when vehicle types are available
   useEffect(() => {
     if (vehicleTypes.length > 0) {
-      const fetchVehicles = async () => {
-        setIsLoadingVehicles(true);
+      setIsLoadingVehicles(true);
+      
+      const handleVehiclesLoaded = (vehicles: Vehicle[], newSelectedVehicle?: string) => {
+        setVehicles(vehicles);
+        setIsLoadingVehicles(false);
         
-        try {
-          const { data, error } = await supabase
-            .from('vehicles')
-            .select('*')
-            .eq('is_active', true);
-            
-          if (error) throw error;
-          
-          if (data && data.length > 0) {
-            const mappedVehicles = data.map(vehicle => ({
-              id: vehicle.id,
-              name: vehicle.name,
-              basePrice: getPriceForVehicle(vehicle.id),
-              capacity: vehicle.capacity,
-              description: vehicle.model
-            }));
-            
-            setVehicles(mappedVehicles);
-            
-            if (mappedVehicles.length > 0 && !selectedVehicle) {
-              setSelectedVehicle(mappedVehicles[0].id);
-            }
-          } else {
-            const defaultVehicles = vehicleTypes.map((type, index) => ({
-              id: type.id,
-              name: type.name,
-              basePrice: 1.8 + (index * 0.4),
-              capacity: 4 + (index * 2),
-              description: `Véhicule ${type.name}`
-            }));
-            
-            setVehicles(defaultVehicles);
-            
-            if (defaultVehicles.length > 0 && !selectedVehicle) {
-              setSelectedVehicle(defaultVehicles[0].id);
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching vehicles:", error);
-        } finally {
-          setIsLoadingVehicles(false);
+        if (newSelectedVehicle) {
+          setSelectedVehicle(newSelectedVehicle);
         }
       };
       
-      fetchVehicles();
+      const fetchUserVehicles = async () => {
+        const { data } = await supabase.auth.getSession();
+        const userId = data.session?.user?.id;
+        
+        if (userId) {
+          await fetchVehicles(userId, vehicleTypes, selectedVehicle, handleVehiclesLoaded);
+        }
+      };
+      
+      fetchUserVehicles();
     }
   }, [vehicleTypes, selectedVehicle]);
 
-  const getPriceForVehicle = (vehicleId: string): number => {
-    if (pricingSettings) {
-      return pricingSettings.price_per_km || 1.8;
-    }
-    
-    const vehicleIndex = vehicleTypes.findIndex(v => v.id === vehicleId);
-    if (vehicleIndex >= 0) {
-      return 1.8 + (vehicleIndex * 0.4);
-    }
-    
-    return 1.8;
-  };
-
+  // Calculate waiting time price
   useEffect(() => {
-    if (!hasWaitingTime || !pricingSettings) return;
-    
-    const pricePerMin = pricingSettings.waiting_fee_per_minute || 0.5;
-    const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
-    
-    const quarters = Math.ceil(waitingTimeMinutes / 15);
-    let price = quarters * pricePerQuarter;
-    
-    if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
-      const [hours, minutes] = time.split(':').map(Number);
-      const tripTime = new Date();
-      tripTime.setHours(hours);
-      tripTime.setMinutes(minutes);
-      
-      const startTime = new Date();
-      const [startHours, startMinutes] = pricingSettings.wait_night_start?.split(':').map(Number) || [0, 0];
-      startTime.setHours(startHours);
-      startTime.setMinutes(startMinutes);
-      
-      const endTime = new Date();
-      const [endHours, endMinutes] = pricingSettings.wait_night_end?.split(':').map(Number) || [0, 0];
-      endTime.setHours(endHours);
-      endTime.setMinutes(endMinutes);
-      
-      const isNight = (
-        (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
-        (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
-      );
-      
-      if (isNight) {
-        const nightPercentage = pricingSettings.wait_night_percentage || 0;
-        price += price * (nightPercentage / 100);
-      }
-    }
-    
-    setWaitingTimePrice(Math.round(price));
+    const price = calculateWaitingTimePrice(hasWaitingTime, waitingTimeMinutes, pricingSettings, time);
+    setWaitingTimePrice(price);
   }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
 
+  // Calculate return route
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -225,99 +118,23 @@ export const useQuoteForm = () => {
     calculateReturnRoute();
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
 
+  // Calculate quote details
   useEffect(() => {
-    if (!selectedVehicle || estimatedDistance === 0) return;
+    const details = calculateQuoteDetails(
+      selectedVehicle,
+      estimatedDistance,
+      returnDistance,
+      hasReturnTrip,
+      returnToSameAddress,
+      vehicles,
+      hasWaitingTime,
+      waitingTimePrice,
+      time,
+      date,
+      pricingSettings
+    );
     
-    const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
-    if (!selectedVehicleInfo) return;
-    
-    const basePrice = selectedVehicleInfo.basePrice;
-    
-    let isNightRate = false;
-    let isSunday = false;
-    
-    if (date && time && pricingSettings) {
-      if (pricingSettings.night_rate_enabled && pricingSettings.night_rate_start && pricingSettings.night_rate_end) {
-        const [hours, minutes] = time.split(':').map(Number);
-        const tripTime = new Date(date);
-        tripTime.setHours(hours);
-        tripTime.setMinutes(minutes);
-        
-        const startTime = new Date(date);
-        const [startHours, startMinutes] = pricingSettings.night_rate_start.split(':').map(Number);
-        startTime.setHours(startHours);
-        startTime.setMinutes(startMinutes);
-        
-        const endTime = new Date(date);
-        const [endHours, endMinutes] = pricingSettings.night_rate_end.split(':').map(Number);
-        endTime.setHours(endHours);
-        endTime.setMinutes(endMinutes);
-        
-        isNightRate = (
-          (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
-          (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
-        );
-      }
-      
-      const dayOfWeek = date.getDay();
-      isSunday = dayOfWeek === 0;
-    }
-    
-    let oneWayPriceHT = estimatedDistance * basePrice;
-    let returnPriceHT = hasReturnTrip ? (returnToSameAddress ? estimatedDistance * basePrice : returnDistance * basePrice) : 0;
-    
-    let nightSurcharge = 0;
-    let sundaySurcharge = 0;
-    
-    if (isNightRate && pricingSettings && pricingSettings.night_rate_percentage) {
-      const nightPercentage = pricingSettings.night_rate_percentage / 100;
-      nightSurcharge = (oneWayPriceHT + returnPriceHT) * nightPercentage;
-      oneWayPriceHT += oneWayPriceHT * nightPercentage;
-      returnPriceHT += returnPriceHT * nightPercentage;
-    }
-    
-    if (isSunday && pricingSettings && pricingSettings.holiday_sunday_percentage) {
-      const sundayPercentage = pricingSettings.holiday_sunday_percentage / 100;
-      sundaySurcharge = (oneWayPriceHT + returnPriceHT) * sundayPercentage;
-      oneWayPriceHT += oneWayPriceHT * sundayPercentage;
-      returnPriceHT += returnPriceHT * sundayPercentage;
-    }
-    
-    const waitingTimePriceHT = hasWaitingTime ? waitingTimePrice : 0;
-    
-    const rideVatRate = pricingSettings?.ride_vat_rate !== undefined ? pricingSettings.ride_vat_rate : 10;
-    const waitingVatRate = pricingSettings?.waiting_vat_rate !== undefined ? pricingSettings.waiting_vat_rate : 20;
-    
-    const oneWayPrice = oneWayPriceHT * (1 + (rideVatRate / 100));
-    const returnPrice = returnPriceHT * (1 + (rideVatRate / 100));
-    const waitingTimePriceTTC = waitingTimePriceHT * (1 + (waitingVatRate / 100));
-    
-    const totalPriceHT = oneWayPriceHT + returnPriceHT + waitingTimePriceHT;
-    
-    const rideVAT = (oneWayPriceHT + returnPriceHT) * (rideVatRate / 100);
-    const waitingVAT = waitingTimePriceHT * (waitingVatRate / 100);
-    const totalVAT = rideVAT + waitingVAT;
-    
-    const totalPrice = totalPriceHT + totalVAT;
-    
-    setQuoteDetails({
-      basePrice,
-      isNightRate,
-      isSunday,
-      oneWayPriceHT: oneWayPriceHT,
-      oneWayPrice: oneWayPrice,
-      returnPriceHT: returnPriceHT,
-      returnPrice: returnPrice,
-      waitingTimePriceHT: waitingTimePriceHT,
-      waitingTimePrice: waitingTimePriceTTC,
-      totalPriceHT: totalPriceHT,
-      totalVAT: totalVAT,
-      totalPrice: totalPrice,
-      nightSurcharge: nightSurcharge,
-      sundaySurcharge: sundaySurcharge,
-      rideVatRate,
-      waitingVatRate
-    });
+    setQuoteDetails(details);
   }, [
     selectedVehicle, 
     estimatedDistance, 
