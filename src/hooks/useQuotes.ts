@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -58,10 +57,25 @@ export const useQuotes = (clientId?: string) => {
         }
         
         console.log(`Fetched ${data?.length || 0} quotes for driver ${userId}`);
-        return data as (Quote & {
-          clients: { first_name: string; last_name: string; email: string; phone: string };
-          vehicles: { name: string; model: string; basePrice: number } | null;
-        })[];
+        
+        // Transform data to ensure coordinates are correctly typed
+        const transformedData = data?.map(quote => {
+          // Create a properly formatted quote object
+          const formattedQuote: Quote = {
+            ...quote,
+            // Ensure coordinates are handled properly
+            departure_coordinates: quote.departure_coordinates || undefined,
+            arrival_coordinates: quote.arrival_coordinates || undefined,
+            return_coordinates: quote.return_coordinates || undefined,
+            // Handle potentially missing related data
+            clients: quote.clients || undefined,
+            vehicles: quote.vehicles || null
+          };
+          
+          return formattedQuote;
+        });
+        
+        return transformedData || [];
       } catch (error) {
         console.error('Error in useQuotes query:', error);
         throw error;
@@ -104,7 +118,6 @@ export const useQuotes = (clientId?: string) => {
     },
   });
 
-  // Add a new quote - ensure we set the driver_id
   const addQuote = useMutation({
     mutationFn: async (newQuote: Omit<QuoteWithCoordinates, "id" | "created_at" | "updated_at" | "quote_pdf">) => {
       try {

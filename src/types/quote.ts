@@ -22,9 +22,10 @@ export type Quote = {
   custom_return_address?: string;
   return_distance_km?: number;
   return_duration_minutes?: number;
-  return_coordinates?: [number, number];
-  departure_coordinates?: [number, number];
-  arrival_coordinates?: [number, number];
+  // Update these coordinate types to be more flexible
+  return_coordinates?: number[] | [number, number];
+  departure_coordinates?: number[] | [number, number];
+  arrival_coordinates?: number[] | [number, number];
   clients?: {
     first_name: string;
     last_name: string;
@@ -35,5 +36,5 @@ export type Quote = {
     name: string;
     model: string;
     basePrice: number;
-  };
+  } | null;
 };

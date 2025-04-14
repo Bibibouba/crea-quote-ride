@@ -44,6 +44,25 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
     waitingTimePrice: quote.waiting_time_price || 0
   };
 
+  // Ensure coordinates are properly formatted as [number, number]
+  const departureCoords = quote.departure_coordinates ? 
+    (Array.isArray(quote.departure_coordinates) && quote.departure_coordinates.length >= 2 ? 
+      [quote.departure_coordinates[0], quote.departure_coordinates[1]] as [number, number] : 
+      undefined) : 
+    undefined;
+  
+  const destinationCoords = quote.arrival_coordinates ? 
+    (Array.isArray(quote.arrival_coordinates) && quote.arrival_coordinates.length >= 2 ? 
+      [quote.arrival_coordinates[0], quote.arrival_coordinates[1]] as [number, number] : 
+      undefined) : 
+    undefined;
+  
+  const returnCoords = quote.return_coordinates ? 
+    (Array.isArray(quote.return_coordinates) && quote.return_coordinates.length >= 2 ? 
+      [quote.return_coordinates[0], quote.return_coordinates[1]] as [number, number] : 
+      undefined) : 
+    undefined;
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -55,8 +74,8 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
           <QuoteSummary
             departureAddress={quote.departure_location}
             destinationAddress={quote.arrival_location}
-            departureCoordinates={quote.departure_coordinates as [number, number] || undefined}
-            destinationCoordinates={quote.arrival_coordinates as [number, number] || undefined}
+            departureCoordinates={departureCoords}
+            destinationCoordinates={destinationCoords}
             date={rideDate}
             time={formattedTime}
             estimatedDistance={quote.distance_km || 0}
@@ -78,7 +97,7 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
             customReturnAddress={quote.custom_return_address || ''}
             returnDistance={quote.return_distance_km || 0}
             returnDuration={quote.return_duration_minutes || 0}
-            returnCoordinates={quote.return_coordinates as [number, number] || undefined}
+            returnCoordinates={returnCoords}
             quoteDetails={quoteDetails}
           />
         </div>
