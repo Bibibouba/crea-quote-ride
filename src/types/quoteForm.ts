@@ -1,4 +1,3 @@
-
 import { useQuoteForm } from "@/hooks/useQuoteForm";
 
 export interface Vehicle {
@@ -50,7 +49,6 @@ export interface QuoteDetails {
   waitingTimePrice: number;
   totalPrice: number;
   nightSurcharge: number;
-  // Additional fields needed for calculation and display
   basePrice?: number;
   isNightRate?: boolean;
   isSunday?: boolean;
@@ -67,14 +65,11 @@ export interface QuoteDetails {
   nightMinutes?: number;
   totalMinutes?: number;
   nightRatePercentage?: number;
-  // Champs pour l'affichage détaillé des tarifs de nuit
   nightHours?: number;
   dayHours?: number;
   nightStartDisplay?: string;
   nightEndDisplay?: string;
-  // Champs pour le dimanche/jour férié
   sundayRate?: number;
-  // Nouveaux champs pour le détail du calcul du tarif de nuit
   dayKm?: number;
   nightKm?: number;
   totalKm?: number;
