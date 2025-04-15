@@ -77,10 +77,8 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
     time: formattedTime,
     date: rideDate,
     basePrice: basePrice,
-    totalPrice: quote.amount,
-    // Add other fields that might be needed
     totalPriceHT: quote.amount, // This is an approximation
-    nightSurcharge: quote.night_surcharge || 0,
+    nightSurcharge: quote.night_price ? (quote.night_price - (quote.day_price || 0)) : 0,
     dayKm: quote.day_km || 0,
     nightKm: quote.night_km || 0,
     totalKm: quote.total_km || quote.distance_km || 0,

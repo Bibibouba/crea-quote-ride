@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { Moon, Calendar } from 'lucide-react';
+import { Moon, Sun, GanttChart } from 'lucide-react';
+import { PriceFormatter } from './PriceFormatter';
 
 export interface NightRateInfo {
   isApplied: boolean;
   percentage: number;
-  nightHours: number;
-  totalHours: number;
-  nightStart: string;
-  nightEnd: string;
+  nightHours?: number;
+  totalHours?: number;
+  nightStart?: string;
+  nightEnd?: string;
   nightSurcharge?: number;
   dayKm?: number;
   nightKm?: number;
@@ -20,12 +21,11 @@ export interface NightRateInfo {
 export interface SundayRateInfo {
   isApplied: boolean;
   percentage: number;
-  sundaySurcharge?: number;
 }
 
 interface TripTimeInfoProps {
-  startTime: string;
-  endTime: string;
+  startTime?: string;
+  endTime?: string;
   nightRateInfo?: NightRateInfo;
   sundayRateInfo?: SundayRateInfo;
 }
@@ -43,78 +43,56 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   return (
     <div className="space-y-2">
       {nightRateInfo?.isApplied && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-md p-3">
-          <div className="flex items-start gap-2">
-            <Moon className="h-4 w-4 text-indigo-600 mt-1 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-indigo-800">
-                Tarif de nuit
-              </p>
-              <p className="text-xs text-indigo-700 mt-1">
-                <span className="font-medium">
-                  {Math.round(nightRateInfo.nightHours * 10) / 10}h
-                </span> de trajet en tarif de nuit (+{nightRateInfo.percentage}%)
-                {nightRateInfo.nightStart && nightRateInfo.nightEnd && (
-                  <span className="block mt-1">
-                    Tarif de nuit de {nightRateInfo.nightStart} à {nightRateInfo.nightEnd}
-                  </span>
-                )}
-              </p>
-              
-              {nightRateInfo.dayKm !== undefined && 
-               nightRateInfo.nightKm !== undefined && 
-               nightRateInfo.totalKm !== undefined && (
-                <div className="mt-2 text-xs text-indigo-700 border-t border-indigo-100 pt-2">
-                  <p className="flex justify-between">
-                    <span>Trajet en journée:</span>
-                    <span className="font-medium">{nightRateInfo.dayKm} km</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>Trajet de nuit:</span>
-                    <span className="font-medium">{nightRateInfo.nightKm} km</span>
-                  </p>
-                  {nightRateInfo.dayPrice !== undefined && nightRateInfo.nightPrice !== undefined && (
-                    <>
-                      <p className="flex justify-between mt-1">
-                        <span>Prix journée:</span>
-                        <span className="font-medium">{nightRateInfo.dayPrice.toFixed(2)}€</span>
-                      </p>
-                      <p className="flex justify-between">
-                        <span>Prix nuit (majoré):</span>
-                        <span className="font-medium">{nightRateInfo.nightPrice.toFixed(2)}€</span>
-                      </p>
-                      {nightRateInfo.nightSurcharge !== undefined && (
-                        <p className="flex justify-between mt-1 font-medium text-indigo-800">
-                          <span>Supplément nuit:</span>
-                          <span>+{nightRateInfo.nightSurcharge.toFixed(2)}€</span>
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+        <div className="bg-muted/40 p-2 rounded-md space-y-1">
+          <div className="flex items-center gap-2 mb-1">
+            <GanttChart className="h-4 w-4 text-blue-500" />
+            <p className="text-sm font-medium">Détail tarif jour/nuit</p>
+            {nightRateInfo.nightStart && nightRateInfo.nightEnd && (
+              <span className="text-xs text-muted-foreground ml-auto">
+                Tarif nuit : {nightRateInfo.nightStart} - {nightRateInfo.nightEnd} (+{nightRateInfo.percentage}%)
+              </span>
+            )}
           </div>
+          
+          {nightRateInfo.dayKm !== undefined && nightRateInfo.dayPrice !== undefined && (
+            <div className="flex items-center gap-2 text-sm">
+              <Sun className="h-3.5 w-3.5 text-yellow-500" />
+              <span>Tarif jour : {nightRateInfo.dayKm} km × <PriceFormatter price={nightRateInfo.dayPrice / nightRateInfo.dayKm} /></span>
+              <span className="ml-auto font-medium">
+                <PriceFormatter price={nightRateInfo.dayPrice} />
+              </span>
+            </div>
+          )}
+          
+          {nightRateInfo.nightKm !== undefined && nightRateInfo.nightKm > 0 && nightRateInfo.nightPrice !== undefined && (
+            <div className="flex items-center gap-2 text-sm">
+              <Moon className="h-3.5 w-3.5 text-indigo-400" />
+              <span>
+                Tarif nuit : {nightRateInfo.nightKm} km × <PriceFormatter price={nightRateInfo.dayPrice / nightRateInfo.dayKm} /> 
+                {nightRateInfo.percentage > 0 && ` (+${nightRateInfo.percentage}%)`}
+              </span>
+              <span className="ml-auto font-medium">
+                <PriceFormatter price={nightRateInfo.nightPrice} />
+              </span>
+            </div>
+          )}
+          
+          {nightRateInfo.nightHours !== undefined && nightRateInfo.totalHours !== undefined && (
+            <div className="mt-1 text-xs text-muted-foreground">
+              Durée estimée: {Math.round((nightRateInfo.totalHours - nightRateInfo.nightHours) * 10) / 10}h de jour, 
+              {Math.round(nightRateInfo.nightHours * 10) / 10}h de nuit
+            </div>
+          )}
         </div>
       )}
-
+      
       {sundayRateInfo?.isApplied && (
-        <div className="bg-orange-50 border border-orange-100 rounded-md p-3">
-          <div className="flex items-start gap-2">
-            <Calendar className="h-4 w-4 text-orange-600 mt-1 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-orange-800">
-                Majoration dimanche/jour férié
-              </p>
-              <p className="text-xs text-orange-700 mt-1">
-                Majoration de {sundayRateInfo.percentage}% sur l'ensemble du trajet
-              </p>
-              {sundayRateInfo.sundaySurcharge !== undefined && (
-                <p className="text-xs font-medium text-orange-800 mt-1">
-                  Supplément: +{sundayRateInfo.sundaySurcharge.toFixed(2)}€
-                </p>
-              )}
-            </div>
+        <div className="bg-muted/40 p-2 rounded-md">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-sm font-medium">Majoration dimanche/férié</span>
+            <span className="text-xs text-muted-foreground ml-auto">
+              +{sundayRateInfo.percentage}%
+            </span>
           </div>
         </div>
       )}

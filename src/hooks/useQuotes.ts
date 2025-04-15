@@ -152,7 +152,18 @@ export const useQuotes = (clientId?: string) => {
           night_km: newQuote.night_km,
           total_km: newQuote.total_km,
           day_price: newQuote.day_price,
-          night_price: newQuote.night_price
+          night_price: newQuote.night_price,
+          night_surcharge: newQuote.night_surcharge,
+          has_night_rate: newQuote.has_night_rate,
+          night_hours: newQuote.night_hours,
+          night_rate_percentage: newQuote.night_rate_percentage,
+          is_sunday_holiday: newQuote.is_sunday_holiday,
+          sunday_holiday_percentage: newQuote.sunday_holiday_percentage,
+          sunday_holiday_surcharge: newQuote.sunday_holiday_surcharge,
+          wait_time_day: newQuote.wait_time_day,
+          wait_time_night: newQuote.wait_time_night,
+          wait_price_day: newQuote.wait_price_day,
+          wait_price_night: newQuote.wait_price_night
         };
 
         // Create the quote

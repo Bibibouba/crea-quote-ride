@@ -1,63 +1,68 @@
 
-import { PricingSettings } from '@/types/quoteForm';
-
 /**
- * Calculates night surcharge portion of a trip
+ * Calcule la surcharge pour le tarif de nuit en fonction des proportions
+ * jour/nuit du trajet aller et retour
  */
 export const calculateNightSurcharge = (
   oneWayNightProportion: number,
   returnNightProportion: number,
-  adjustedDistance: number,
-  adjustedReturnDistance: number,
-  basePrice: number, 
+  oneWayDistance: number,
+  returnDistance: number,
+  basePrice: number,
   nightRatePercentage: number,
   hasReturnTrip: boolean
-): {
-  nightSurcharge: number;
-  oneWayNightPriceHT: number;
-  oneWayDayPriceHT: number;
-  returnNightPriceHT: number;
-  returnDayPriceHT: number;
-  dayKm: number;
-  nightKm: number;
-  totalKm: number;
-  dayPrice: number;
-  nightPrice: number;
-} => {
-  // Calculate day and night kilometers for one-way trip
-  const dayKm = Math.round((1 - oneWayNightProportion) * adjustedDistance);
-  const nightKm = Math.round(oneWayNightProportion * adjustedDistance);
-  const totalKm = adjustedDistance;
+) => {
+  // Calculer les kilomètres de jour et de nuit pour l'aller
+  const oneWayDayDistance = oneWayDistance * (1 - oneWayNightProportion);
+  const oneWayNightDistance = oneWayDistance * oneWayNightProportion;
   
-  // Calculate base prices for day and night portions
-  const dayPrice = dayKm * basePrice;
-  const nightPriceBase = nightKm * basePrice;
-  const nightPriceWithSurcharge = nightPriceBase * (1 + nightRatePercentage / 100);
-  const nightPrice = nightPriceWithSurcharge;
+  // Calculer les prix de base pour l'aller (jour et nuit)
+  const oneWayDayPriceHT = oneWayDayDistance * basePrice;
+  const oneWayNightPriceHT = oneWayNightDistance * basePrice;
   
-  // Calculate night surcharge (the difference between night price with and without surcharge)
-  const nightSurcharge = nightPriceWithSurcharge - nightPriceBase;
+  // Calculer la surcharge de nuit pour l'aller
+  const oneWayNightSurcharge = oneWayNightPriceHT * (nightRatePercentage / 100);
   
-  // Calculate one-way price components
-  const oneWayNightPriceHT = oneWayNightProportion > 0 ? nightPrice : 0;
-  const oneWayDayPriceHT = dayPrice;
+  // Variables pour le retour (initialisées à 0)
+  let returnDayDistance = 0;
+  let returnNightDistance = 0;
+  let returnDayPriceHT = 0;
+  let returnNightPriceHT = 0;
+  let returnNightSurcharge = 0;
   
-  // Calculate return price components if applicable
-  const returnNightPriceHT = hasReturnTrip ? 
-    (adjustedReturnDistance * basePrice * returnNightProportion) : 0;
-  const returnDayPriceHT = hasReturnTrip ? 
-    (adjustedReturnDistance * basePrice - returnNightPriceHT) : 0;
+  // Si un retour est prévu, calculer les valeurs correspondantes
+  if (hasReturnTrip) {
+    returnDayDistance = returnDistance * (1 - returnNightProportion);
+    returnNightDistance = returnDistance * returnNightProportion;
+    
+    returnDayPriceHT = returnDayDistance * basePrice;
+    returnNightPriceHT = returnNightDistance * basePrice;
+    
+    returnNightSurcharge = returnNightPriceHT * (nightRatePercentage / 100);
+  }
+  
+  // Calculer la surcharge totale
+  const totalNightSurcharge = oneWayNightSurcharge + returnNightSurcharge;
+  
+  // Calculer les kilomètres totaux
+  const totalDayDistance = oneWayDayDistance + returnDayDistance;
+  const totalNightDistance = oneWayNightDistance + returnNightDistance;
+  const totalDistance = oneWayDistance + (hasReturnTrip ? returnDistance : 0);
+  
+  // Calculer les prix de jour et de nuit pour le détail
+  const dayPrice = totalDayDistance * basePrice;
+  const nightPrice = (totalNightDistance * basePrice) + totalNightSurcharge;
   
   return {
-    nightSurcharge,
-    oneWayNightPriceHT,
-    oneWayDayPriceHT,
-    returnNightPriceHT,
-    returnDayPriceHT,
-    dayKm,
-    nightKm,
-    totalKm,
-    dayPrice,
-    nightPrice
+    nightSurcharge: Math.round(totalNightSurcharge * 100) / 100,
+    oneWayDayPriceHT: Math.round(oneWayDayPriceHT * 100) / 100,
+    oneWayNightPriceHT: Math.round(oneWayNightPriceHT * 100) / 100,
+    returnDayPriceHT: Math.round(returnDayPriceHT * 100) / 100,
+    returnNightPriceHT: Math.round(returnNightPriceHT * 100) / 100,
+    dayKm: Math.round(totalDayDistance * 100) / 100,
+    nightKm: Math.round(totalNightDistance * 100) / 100,
+    totalKm: Math.round(totalDistance * 100) / 100,
+    dayPrice: Math.round(dayPrice * 100) / 100,
+    nightPrice: Math.round(nightPrice * 100) / 100
   };
 };

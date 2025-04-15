@@ -32,6 +32,18 @@ export type Quote = {
   total_km?: number;
   day_price?: number;
   night_price?: number;
+  night_surcharge?: number;
+  has_night_rate?: boolean;
+  night_hours?: number;
+  night_rate_percentage?: number;
+  is_sunday_holiday?: boolean;
+  sunday_holiday_percentage?: number;
+  sunday_holiday_surcharge?: number;
+  // Waiting time detailed fields
+  wait_time_day?: number;
+  wait_time_night?: number;
+  wait_price_day?: number;
+  wait_price_night?: number;
   clients?: {
     first_name: string;
     last_name: string;

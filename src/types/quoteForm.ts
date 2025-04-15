@@ -1,3 +1,4 @@
+
 import { useQuoteForm } from "@/hooks/useQuoteForm";
 
 export interface Vehicle {
@@ -98,7 +99,7 @@ export interface QuoteDetailsType {
   time: string;
   date: Date;
 
-  // New fields for day/night rate details
+  // Champs pour les détails des tarifs jour/nuit
   dayKm?: number;
   nightKm?: number;
   totalKm?: number;
@@ -126,6 +127,11 @@ export interface QuoteDetailsType {
   nightStartDisplay?: string;
   nightEndDisplay?: string;
   sundayRate?: number;
+  // Nouveau champ pour les temps d'attente
+  waitTimeDay?: number;
+  waitTimeNight?: number;
+  waitPriceDay?: number;
+  waitPriceNight?: number;
 }
 
 export type QuoteFormState = ReturnType<typeof useQuoteForm>;

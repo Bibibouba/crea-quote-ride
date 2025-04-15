@@ -1,6 +1,6 @@
 
 import { PricingSettings, QuoteDetails } from '@/types/quoteForm';
-import { isNightTime, isSunday, calculateNightDuration } from './timeUtils';
+import { isNightTime, isSunday, calculateNightDuration, calculateDayNightKmSplit } from './timeUtils';
 import { calculateNightSurcharge } from './nightRateCalculator';
 import { calculateSundaySurcharge } from './sundayRateCalculator';
 import { applyMinimumFare } from './minFareCalculator';
