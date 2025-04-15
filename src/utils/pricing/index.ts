@@ -7,3 +7,4 @@ export { calculateNightSurcharge } from './nightRateCalculator';
 export { calculateSundaySurcharge } from './sundayRateCalculator';
 export { applyMinimumFare } from './minFareCalculator';
 export { calculateVatAndTotalPrices } from './vatCalculator';
+export { calculateNewQuoteDetails, type QuoteCalculationInput, type QuoteDetailsType } from './newQuoteCalculator';
