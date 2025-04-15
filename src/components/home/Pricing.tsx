@@ -46,7 +46,7 @@ const Pricing = () => {
             </ul>
             
             <Button size="lg" className="w-full mt-8" asChild>
-              <Link to="/inscription">Commencer l'essai gratuit</Link>
+              <Link to="/dashboard/subscription">Passer au paiement</Link>
             </Button>
             
             <p className="mt-4 text-xs text-center text-muted-foreground">
@@ -90,7 +90,7 @@ const Pricing = () => {
             </p>
             
             <Button size="lg" className="w-full mt-6" asChild variant="default">
-              <Link to="/inscription">Commencer l'essai gratuit</Link>
+              <Link to="/dashboard/subscription">Passer au paiement</Link>
             </Button>
             
             <p className="mt-4 text-xs text-center text-muted-foreground">
@@ -133,7 +133,7 @@ const Pricing = () => {
             </p>
             
             <Button size="lg" className="w-full mt-6" asChild>
-              <Link to="/inscription">Commencer l'essai gratuit</Link>
+              <Link to="/dashboard/subscription">Passer au paiement</Link>
             </Button>
             
             <p className="mt-4 text-xs text-center text-muted-foreground">
