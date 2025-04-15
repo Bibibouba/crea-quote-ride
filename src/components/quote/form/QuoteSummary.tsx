@@ -2,49 +2,12 @@ import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Vehicle } from '@/types/quoteForm';
+import { Vehicle, QuoteDetailsType } from '@/types/quoteForm';
 import RouteMap from '@/components/map/RouteMap';
 import { RouteInfoCard } from './summary/RouteInfoCard';
 import { TripDetailsCard } from './summary/TripDetailsCard';
 import { QuoteActions } from './summary/QuoteActions';
 import { QuoteFooter } from './summary/QuoteFooter';
-
-// Define QuoteDetailsType if not already defined
-export interface QuoteDetailsType {
-  oneWayPrice?: number;
-  totalPrice?: number;
-  nightRateHours?: number;
-  dayRateHours?: number;
-  isNightRateApplied?: boolean;
-  sundayRateApplied?: boolean;
-  oneWayPriceHT?: number;
-  returnPriceHT?: number;
-  waitingTimePriceHT?: number;
-  totalPriceHT?: number;
-  totalVAT?: number;
-  returnPrice?: number;
-  waitingTimePrice?: number;
-  nightSurcharge?: number;
-  sundaySurcharge?: number;
-  rideVatRate?: number;
-  waitingVatRate?: number;
-  basePrice?: number;
-  hasMinDistanceWarning?: boolean;
-  minDistance?: number;
-  nightMinutes?: number;
-  totalMinutes?: number;
-  nightRatePercentage?: number;
-  nightHours?: number;
-  dayHours?: number;
-  nightStartDisplay?: string;
-  nightEndDisplay?: string;
-  sundayRate?: number;
-  dayKm?: number;
-  nightKm?: number;
-  totalKm?: number;
-  dayPrice?: number;
-  nightPrice?: number;
-}
 
 interface QuoteSummaryProps {
   departureAddress: string;
@@ -109,25 +72,20 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
-  // Calculate the return price if applicable
   const returnPrice = hasReturnTrip ? (returnToSameAddress ? estimatedPrice : Math.round(returnDistance * basePrice)) : 0;
   
-  // Calculate the total price including waiting time and return trip
   const totalPrice = estimatedPrice + (hasWaitingTime ? waitingTimePrice : 0) + returnPrice;
   
-  // Format price with one decimal
   const formatPrice = (price: number) => {
     return price.toFixed(1);
   };
   
-  // Get night rate details from the selected vehicle
   const selectedVehicleObj = vehicles.find(v => v.id === selectedVehicle);
   const hasNightRate = selectedVehicleObj?.night_rate_enabled || false;
   const nightRatePercentage = selectedVehicleObj?.night_rate_percentage || 0;
   const nightRateStart = selectedVehicleObj?.night_rate_start || '20:00';
   const nightRateEnd = selectedVehicleObj?.night_rate_end || '06:00';
   
-  // Determine if the trip has a night portion based on time and duration
   const [hours, minutes] = time.split(':').map(Number);
   const rideTime = new Date(date);
   rideTime.setHours(hours, minutes);
@@ -140,17 +98,14 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
   const [nightEndHours, nightEndMinutes] = nightRateEnd?.split(':').map(Number) || [0, 0];
   nightEndTime.setHours(nightEndHours, nightEndMinutes);
   
-  // Calculate end time of the trip
   const tripEndTime = new Date(rideTime);
   tripEndTime.setMinutes(tripEndTime.getMinutes() + estimatedDuration);
   
-  // Check if trip spans into night hours
   let isNightRateApplied = false;
   let nightHours = 0;
   let dayHours = 0;
   
   if (hasNightRate) {
-    // Calculate if any part of the trip occurs during night rate hours
     const tripStartMinutes = hours * 60 + minutes;
     const tripDurationMinutes = estimatedDuration;
     const tripEndMinutes = (tripStartMinutes + tripDurationMinutes) % (24 * 60);
@@ -158,59 +113,47 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
     const nightStartTotalMinutes = nightStartHours * 60 + nightStartMinutes;
     const nightEndTotalMinutes = nightEndHours * 60 + nightEndMinutes;
     
-    // Night spans across midnight
     if (nightStartTotalMinutes > nightEndTotalMinutes) {
-      // Trip starts before midnight
       if (tripStartMinutes >= nightStartTotalMinutes) {
         if (tripEndMinutes <= nightEndTotalMinutes) {
-          // Trip entirely at night
           nightHours = tripDurationMinutes / 60;
           isNightRateApplied = true;
         } else if (tripEndMinutes > nightEndTotalMinutes && tripEndMinutes < nightStartTotalMinutes) {
-          // Trip starts at night, ends during day
           const nightMinutes = (24 * 60 - tripStartMinutes) + nightEndTotalMinutes;
           nightHours = nightMinutes / 60;
           dayHours = (tripDurationMinutes - nightMinutes) / 60;
           isNightRateApplied = true;
         } else {
-          // Trip starts at night, crosses day, ends at night
           const dayMinutes = nightStartTotalMinutes - nightEndTotalMinutes;
           dayHours = dayMinutes / 60;
           nightHours = (tripDurationMinutes - dayMinutes) / 60;
           isNightRateApplied = true;
         }
       } 
-      // Trip starts after midnight, before night end
       else if (tripStartMinutes < nightEndTotalMinutes) {
         if (tripEndMinutes <= nightEndTotalMinutes) {
-          // Trip entirely at night
           nightHours = tripDurationMinutes / 60;
           isNightRateApplied = true;
         } else if (tripEndMinutes < nightStartTotalMinutes) {
-          // Trip starts at night, ends during day
           const nightMinutes = nightEndTotalMinutes - tripStartMinutes;
           nightHours = nightMinutes / 60;
           dayHours = (tripDurationMinutes - nightMinutes) / 60;
           isNightRateApplied = true;
         } else {
-          // Trip starts at night, crosses day, ends at night
           const dayMinutes = nightStartTotalMinutes - nightEndTotalMinutes;
           dayHours = dayMinutes / 60;
           nightHours = (tripDurationMinutes - dayMinutes) / 60;
           isNightRateApplied = true;
         }
       }
-      // Trip starts during day
       else if (tripStartMinutes < nightStartTotalMinutes) {
         if (tripEndMinutes >= nightStartTotalMinutes) {
           if (tripEndMinutes <= (24 * 60)) {
-            // Trip starts during day, ends at night before midnight
             const dayMinutes = nightStartTotalMinutes - tripStartMinutes;
             dayHours = dayMinutes / 60;
             nightHours = (tripDurationMinutes - dayMinutes) / 60;
             isNightRateApplied = true;
           } else {
-            // Trip starts during day, crosses midnight, ends at night
             const dayMinutes1 = nightStartTotalMinutes - tripStartMinutes;
             const nightMinutes1 = (24 * 60) - nightStartTotalMinutes;
             const nightMinutes2 = tripEndMinutes > nightEndTotalMinutes ? nightEndTotalMinutes : tripEndMinutes;
@@ -220,37 +163,23 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
           }
         }
       }
-    } 
-    // Standard night hours (night start < night end)
-    else {
-      // Check if trip overlaps with night hours
-      const tripEndMinutesActual = tripStartMinutes + tripDurationMinutes;
-      
-      // No overlap with night
+    } else {
       if (tripEndMinutesActual <= nightStartTotalMinutes || tripStartMinutes >= nightEndTotalMinutes) {
         isNightRateApplied = false;
-      }
-      // Trip entirely at night
-      else if (tripStartMinutes >= nightStartTotalMinutes && tripEndMinutesActual <= nightEndTotalMinutes) {
+      } else if (tripStartMinutes >= nightStartTotalMinutes && tripEndMinutesActual <= nightEndTotalMinutes) {
         nightHours = tripDurationMinutes / 60;
         isNightRateApplied = true;
-      }
-      // Trip starts during day, ends at night
-      else if (tripStartMinutes < nightStartTotalMinutes && tripEndMinutesActual <= nightEndTotalMinutes) {
+      } else if (tripStartMinutes < nightStartTotalMinutes && tripEndMinutesActual <= nightEndTotalMinutes) {
         const dayMinutes = nightStartTotalMinutes - tripStartMinutes;
         dayHours = dayMinutes / 60;
         nightHours = (tripDurationMinutes - dayMinutes) / 60;
         isNightRateApplied = true;
-      }
-      // Trip starts at night, ends during day
-      else if (tripStartMinutes >= nightStartTotalMinutes && tripEndMinutesActual > nightEndTotalMinutes) {
+      } else if (tripStartMinutes >= nightStartTotalMinutes && tripEndMinutesActual > nightEndTotalMinutes) {
         const nightMinutes = nightEndTotalMinutes - tripStartMinutes;
         nightHours = nightMinutes / 60;
         dayHours = (tripDurationMinutes - nightMinutes) / 60;
         isNightRateApplied = true;
-      }
-      // Trip starts during day, crosses night, ends during day
-      else if (tripStartMinutes < nightStartTotalMinutes && tripEndMinutesActual > nightEndTotalMinutes) {
+      } else if (tripStartMinutes < nightStartTotalMinutes && tripEndMinutesActual > nightEndTotalMinutes) {
         const nightMinutes = nightEndTotalMinutes - nightStartTotalMinutes;
         nightHours = nightMinutes / 60;
         dayHours = (tripDurationMinutes - nightMinutes) / 60;
@@ -259,7 +188,6 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
     }
   }
   
-  // Check if the trip is on a Sunday
   const isSunday = date.getDay() === 0;
   const sundayRate = selectedVehicleObj?.holiday_sunday_percentage || 0;
   
