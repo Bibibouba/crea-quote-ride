@@ -5,7 +5,6 @@ export interface VehiclePricingSettings {
   driver_id: string;
   
   // Paramètres de base
-  price_per_km?: number;
   minimum_trip_fare?: number;
   min_trip_distance?: number;
   holiday_sunday_percentage?: number;

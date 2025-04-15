@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -39,7 +40,7 @@ export const useQuotes = (clientId?: string) => {
           .select(`
             *,
             clients(first_name, last_name, email, phone),
-            vehicles(name, model)
+            vehicles(name, model, basePrice)
           `)
           .eq('driver_id', userId)
           .order('created_at', { ascending: false });
@@ -69,15 +70,9 @@ export const useQuotes = (clientId?: string) => {
             return_coordinates: quote.return_coordinates || undefined,
             // Handle potentially missing related data
             clients: quote.clients || undefined,
-            // Explicitly cast status to the union type
-            status: quote.status as 'pending' | 'accepted' | 'declined',
-            // Safely handle vehicles data with proper null checking
-            vehicles: quote.vehicles && typeof quote.vehicles === 'object' 
-              ? {
-                  name: quote.vehicles.name || 'Véhicule inconnu',
-                  model: quote.vehicles.model || '?',
-                  basePrice: 0 // Note: basePrice isn't available in vehicles table, we'll handle it elsewhere
-                }
+            // Check if vehicles is a valid object or an error object
+            vehicles: (typeof quote.vehicles === 'object' && quote.vehicles !== null && !('error' in quote.vehicles)) 
+              ? quote.vehicles 
               : null
           };
           
@@ -146,23 +141,6 @@ export const useQuotes = (clientId?: string) => {
         const quoteWithDriverId = {
           ...newQuote,
           driver_id: userId,
-          // Add day/night rate fields if they exist in the quote details
-          day_km: newQuote.day_km,
-          night_km: newQuote.night_km,
-          total_km: newQuote.total_km,
-          day_price: newQuote.day_price,
-          night_price: newQuote.night_price,
-          night_surcharge: newQuote.night_surcharge,
-          has_night_rate: newQuote.has_night_rate,
-          night_hours: newQuote.night_hours,
-          night_rate_percentage: newQuote.night_rate_percentage,
-          is_sunday_holiday: newQuote.is_sunday_holiday,
-          sunday_holiday_percentage: newQuote.sunday_holiday_percentage,
-          sunday_holiday_surcharge: newQuote.sunday_holiday_surcharge,
-          wait_time_day: newQuote.wait_time_day,
-          wait_time_night: newQuote.wait_time_night,
-          wait_price_day: newQuote.wait_price_day,
-          wait_price_night: newQuote.wait_price_night
         };
 
         // Create the quote

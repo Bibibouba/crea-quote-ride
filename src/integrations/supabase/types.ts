@@ -88,11 +88,7 @@ export type Database = {
           bank_details: string | null
           banner_url: string | null
           company_address: string | null
-          company_name: string | null
           company_type: string | null
-          contact_email: string | null
-          contact_first_name: string | null
-          contact_last_name: string | null
           created_at: string
           discount_conditions: string | null
           driver_id: string
@@ -118,11 +114,7 @@ export type Database = {
           bank_details?: string | null
           banner_url?: string | null
           company_address?: string | null
-          company_name?: string | null
           company_type?: string | null
-          contact_email?: string | null
-          contact_first_name?: string | null
-          contact_last_name?: string | null
           created_at?: string
           discount_conditions?: string | null
           driver_id: string
@@ -148,11 +140,7 @@ export type Database = {
           bank_details?: string | null
           banner_url?: string | null
           company_address?: string | null
-          company_name?: string | null
           company_type?: string | null
-          contact_email?: string | null
-          contact_first_name?: string | null
-          contact_last_name?: string | null
           created_at?: string
           discount_conditions?: string | null
           driver_id?: string
@@ -376,19 +364,14 @@ export type Database = {
           client_id: string
           created_at: string
           custom_return_address: string | null
-          day_km: number | null
-          day_price: number | null
           departure_coordinates: number[] | null
           departure_location: string
           distance_km: number | null
           driver_id: string
           duration_minutes: number | null
-          has_night_rate: boolean | null
           has_return_trip: boolean | null
           has_waiting_time: boolean | null
           id: string
-          night_km: number | null
-          night_price: number | null
           quote_pdf: string | null
           return_coordinates: number[] | null
           return_distance_km: number | null
@@ -396,7 +379,6 @@ export type Database = {
           return_to_same_address: boolean | null
           ride_date: string
           status: string
-          total_km: number | null
           updated_at: string
           vehicle_id: string | null
           waiting_time_minutes: number | null
@@ -409,19 +391,14 @@ export type Database = {
           client_id: string
           created_at?: string
           custom_return_address?: string | null
-          day_km?: number | null
-          day_price?: number | null
           departure_coordinates?: number[] | null
           departure_location: string
           distance_km?: number | null
           driver_id: string
           duration_minutes?: number | null
-          has_night_rate?: boolean | null
           has_return_trip?: boolean | null
           has_waiting_time?: boolean | null
           id?: string
-          night_km?: number | null
-          night_price?: number | null
           quote_pdf?: string | null
           return_coordinates?: number[] | null
           return_distance_km?: number | null
@@ -429,7 +406,6 @@ export type Database = {
           return_to_same_address?: boolean | null
           ride_date: string
           status?: string
-          total_km?: number | null
           updated_at?: string
           vehicle_id?: string | null
           waiting_time_minutes?: number | null
@@ -442,19 +418,14 @@ export type Database = {
           client_id?: string
           created_at?: string
           custom_return_address?: string | null
-          day_km?: number | null
-          day_price?: number | null
           departure_coordinates?: number[] | null
           departure_location?: string
           distance_km?: number | null
           driver_id?: string
           duration_minutes?: number | null
-          has_night_rate?: boolean | null
           has_return_trip?: boolean | null
           has_waiting_time?: boolean | null
           id?: string
-          night_km?: number | null
-          night_price?: number | null
           quote_pdf?: string | null
           return_coordinates?: number[] | null
           return_distance_km?: number | null
@@ -462,7 +433,6 @@ export type Database = {
           return_to_same_address?: boolean | null
           ride_date?: string
           status?: string
-          total_km?: number | null
           updated_at?: string
           vehicle_id?: string | null
           waiting_time_minutes?: number | null
@@ -504,7 +474,6 @@ export type Database = {
           night_rate_end: string | null
           night_rate_percentage: number | null
           night_rate_start: string | null
-          price_per_km: number | null
           updated_at: string
           vehicle_id: string
           wait_night_enabled: boolean | null
@@ -524,7 +493,6 @@ export type Database = {
           night_rate_end?: string | null
           night_rate_percentage?: number | null
           night_rate_start?: string | null
-          price_per_km?: number | null
           updated_at?: string
           vehicle_id: string
           wait_night_enabled?: boolean | null
@@ -544,7 +512,6 @@ export type Database = {
           night_rate_end?: string | null
           night_rate_percentage?: number | null
           night_rate_start?: string | null
-          price_per_km?: number | null
           updated_at?: string
           vehicle_id?: string
           wait_night_enabled?: boolean | null

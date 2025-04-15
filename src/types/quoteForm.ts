@@ -45,6 +45,12 @@ export interface PricingSettings {
 }
 
 export interface QuoteDetails {
+  oneWayPrice: number;
+  returnPrice: number;
+  waitingTimePrice: number;
+  totalPrice: number;
+  nightSurcharge: number;
+  // Additional fields needed for calculation and display
   basePrice?: number;
   isNightRate?: boolean;
   isSunday?: boolean;
@@ -53,11 +59,6 @@ export interface QuoteDetails {
   waitingTimePriceHT?: number;
   totalPriceHT?: number;
   totalVAT?: number;
-  oneWayPrice: number;
-  returnPrice: number;
-  waitingTimePrice: number;
-  totalPrice: number;
-  nightSurcharge: number;
   sundaySurcharge?: number;
   rideVatRate?: number;
   waitingVatRate?: number;
@@ -66,26 +67,10 @@ export interface QuoteDetails {
   nightMinutes?: number;
   totalMinutes?: number;
   nightRatePercentage?: number;
+  // Champs pour l'affichage détaillé des tarifs de nuit
   nightHours?: number;
-  dayHours?: number;
   nightStartDisplay?: string;
   nightEndDisplay?: string;
-  dayKm?: number;
-  nightKm?: number;
-  totalKm?: number;
-  dayPrice?: number;
-  nightPrice?: number;
-  sundayRate?: number;
-  waitTimeDay?: number;
-  waitTimeNight?: number;
-  waitPriceDay?: number;
-  waitPriceNight?: number;
-  // New fields for compatibility with database schema
-  amount_ht?: number;
-  one_way_price_ht?: number;
-  return_price_ht?: number;
-  one_way_price?: number;
-  return_price?: number;
 }
 
 export interface WaitingTimeOption {
@@ -98,60 +83,4 @@ export interface QuoteFormStateProps {
   onSuccess?: () => void;
 }
 
-export interface QuoteDetailsType {
-  estimatedDistance: number;
-  estimatedDuration: number;
-  amount: number;
-  departureAddress: string;
-  destinationAddress: string;
-  departureCoordinates: [number, number];
-  destinationCoordinates: [number, number];
-  time: string;
-  date: Date;
-  // Fields matching database schema
-  dayKm?: number;
-  nightKm?: number;
-  totalKm?: number;
-  dayPrice?: number;
-  nightPrice?: number;
-  nightSurcharge?: number;
-  isNightRate?: boolean;
-  nightRatePercentage?: number;
-  nightHours?: number;
-  dayHours?: number;
-  basePrice?: number;
-  isSunday?: boolean;
-  oneWayPriceHT?: number;
-  returnPriceHT?: number;
-  waitingTimePriceHT?: number;
-  totalPriceHT?: number;
-  totalVAT?: number;
-  sundaySurcharge?: number;
-  rideVatRate?: number;
-  waitingVatRate?: number;
-  hasMinDistanceWarning?: boolean;
-  minDistance?: number;
-  nightMinutes?: number;
-  totalMinutes?: number;
-  nightStartDisplay?: string;
-  nightEndDisplay?: string;
-  sundayRate?: number;
-  waitTimeDay?: number;
-  waitTimeNight?: number;
-  waitPriceDay?: number;
-  waitPriceNight?: number;
-  // Fields for compatibility with QuoteDetails
-  oneWayPrice?: number;
-  returnPrice?: number;
-  waitingTimePrice?: number;
-  totalPrice?: number;
-  amount_ht?: number;
-  one_way_price_ht?: number;
-  return_price_ht?: number;
-  one_way_price?: number;
-  return_price?: number;
-}
-
 export type QuoteFormState = ReturnType<typeof useQuoteForm>;
-
-export type QuoteDetailsTypeOptional = Partial<QuoteDetailsType>;

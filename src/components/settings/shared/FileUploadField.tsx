@@ -32,6 +32,13 @@ const FileUploadField = ({
 }: FileUploadFieldProps) => {
   const [isUploading, setIsUploading] = useState(false);
 
+  // Détermine quel bucket utiliser en fonction du fileNamePrefix
+  const getBucketName = (prefix: string) => {
+    if (prefix === 'logo') return 'logo';
+    if (prefix === 'banner') return 'imageheader';
+    return 'logo'; // Bucket par défaut si le préfixe ne correspond à aucun cas
+  };
+
   const uploadFile = async (file: File) => {
     if (!user) {
       toast.error('Vous devez être connecté pour télécharger des fichiers');
@@ -54,39 +61,53 @@ const FileUploadField = ({
     }
 
     const fileExt = file.name.split('.').pop();
-    const subfolder = fileNamePrefix === 'logo' ? 'logos' : 'headers';
-    const filePath = `${subfolder}/${user.id}-${Date.now()}.${fileExt}`;
+    const fileName = `${fileNamePrefix}-${user.id}-${Date.now()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`;
     
-    const BUCKET_NAME = 'company-assets';
+    // Détermine le bucket à utiliser
+    const bucketName = getBucketName(fileNamePrefix);
 
     try {
       setIsUploading(true);
       
-      console.log(`🚀 Attempting to upload to bucket: ${BUCKET_NAME}, path: ${filePath}`);
+      // Vérification que le bucket existe
+      const { data: bucketsData, error: bucketError } = await supabase.storage.listBuckets();
       
+      if (bucketError) {
+        console.error('Erreur lors de la vérification des buckets:', bucketError);
+        throw bucketError;
+      }
+      
+      // Vérification si le bucket existe dans la liste
+      const bucketExists = bucketsData?.some(bucket => bucket.name === bucketName);
+      console.log('Buckets disponibles:', bucketsData?.map(b => b.name));
+      console.log(`Le bucket ${bucketName} existe:`, bucketExists);
+      
+      if (!bucketExists) {
+        toast.error(`Le bucket de stockage "${bucketName}" n'existe pas. Contactez l'administrateur.`);
+        return null;
+      }
+      
+      // Upload du fichier
       const { error: uploadError } = await supabase.storage
-        .from(BUCKET_NAME)
+        .from(bucketName)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true
         });
 
-      if (uploadError) {
-        console.error('❌ Upload Error:', uploadError);
-        toast.error(`Erreur lors du téléchargement: ${uploadError.message}`);
-        return null;
-      }
+      if (uploadError) throw uploadError;
       
+      // Récupération de l'URL publique
       const { data } = supabase.storage
-        .from(BUCKET_NAME)
+        .from(bucketName)
         .getPublicUrl(filePath);
       
-      console.log('✅ Upload successful, public URL:', data.publicUrl);
       toast.success('Fichier téléchargé avec succès');
       return data.publicUrl;
     } catch (error: any) {
-      console.error('❌ Unexpected Error:', error);
-      toast.error(`Erreur inattendue: ${error.message}`);
+      console.error('Erreur lors du téléchargement du fichier:', error);
+      toast.error(`Erreur: ${error.message}`);
       return null;
     } finally {
       setIsUploading(false);

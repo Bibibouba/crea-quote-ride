@@ -8,7 +8,6 @@ import { useMapbox, Address } from '@/hooks/useMapbox';
 import { Quote } from '@/types/quote';
 import { Vehicle } from '@/types/quoteForm';
 import { usePricing } from '@/hooks/use-pricing';
-import { calculateQuoteDetails } from '@/utils/pricing/quoteCalculator';
 
 export interface UseQuoteFormStateProps {
   clientId?: string;
@@ -288,27 +287,18 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
         throw new Error("Aucun client spécifié pour ce devis");
       }
       
-      const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
-      if (!selectedVehicleInfo) {
-        throw new Error("Véhicule non trouvé");
+      const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
+      const oneWayPrice = estimatedDistance * basePrice;
+      const returnPrice = hasReturnTrip 
+        ? (returnToSameAddress ? estimatedDistance * basePrice : returnDistance * basePrice) 
+        : 0;
+      
+      let totalPriceCalculated = oneWayPrice;
+      if (hasWaitingTime) {
+        totalPriceCalculated += waitingTimePrice;
       }
-      
-      const quoteDetails = calculateQuoteDetails(
-        selectedVehicle,
-        estimatedDistance,
-        returnDistance,
-        hasReturnTrip,
-        returnToSameAddress,
-        vehicles,
-        hasWaitingTime,
-        waitingTimePrice,
-        time,
-        date,
-        pricingSettings
-      );
-      
-      if (!quoteDetails) {
-        throw new Error("Erreur lors du calcul du devis");
+      if (hasReturnTrip) {
+        totalPriceCalculated += returnPrice;
       }
       
       console.log("Creating quote for driver_id:", driverId);
@@ -324,7 +314,7 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
         distance_km: estimatedDistance,
         duration_minutes: estimatedDuration, 
         ride_date: dateTime.toISOString(),
-        amount: quoteDetails.totalPrice,
+        amount: totalPriceCalculated,
         status: "pending",
         has_return_trip: hasReturnTrip,
         has_waiting_time: hasWaitingTime,
@@ -334,23 +324,7 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
         custom_return_address: customReturnAddress,
         return_coordinates: customReturnCoordinates,
         return_distance_km: returnDistance,
-        return_duration_minutes: returnDuration,
-        day_km: quoteDetails.dayKm,
-        night_km: quoteDetails.nightKm,
-        total_km: quoteDetails.totalKm,
-        day_price: quoteDetails.dayPrice,
-        night_price: quoteDetails.nightPrice,
-        night_surcharge: quoteDetails.nightSurcharge,
-        has_night_rate: quoteDetails.isNightRate,
-        night_hours: quoteDetails.nightHours,
-        night_rate_percentage: quoteDetails.nightRatePercentage,
-        is_sunday_holiday: quoteDetails.isSunday,
-        sunday_holiday_percentage: quoteDetails.sundayRate,
-        sunday_holiday_surcharge: quoteDetails.sundaySurcharge,
-        wait_time_day: quoteDetails.waitTimeDay,
-        wait_time_night: quoteDetails.waitTimeNight,
-        wait_price_day: quoteDetails.waitPriceDay,
-        wait_price_night: quoteDetails.waitPriceNight
+        return_duration_minutes: returnDuration
       };
       
       await addQuote.mutateAsync(quoteData);

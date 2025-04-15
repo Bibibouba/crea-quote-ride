@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuotes } from '@/hooks/useQuotes';
 import QuoteStatusBadge from './QuoteStatusBadge';
 import QuoteStatusSelector from './QuoteStatusSelector';
 import { Button } from '@/components/ui/button';
-import { Eye, FileText, RefreshCw, Download } from 'lucide-react';
+import { Eye, FileText, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -24,8 +25,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Quote } from '@/types/quote';
 import QuoteViewDialog from './QuoteViewDialog';
-import { useToast } from '@/hooks/use-toast';
-import { generateQuotePDF } from '@/utils/quotePDF';
 
 interface QuotesListProps {
   clientId?: string;
@@ -38,7 +37,6 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [viewQuote, setViewQuote] = useState<Quote | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const { toast } = useToast();
 
   // Force initial data fetching
   useEffect(() => {
@@ -63,34 +61,6 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
   const handleCloseViewDialog = () => {
     setIsViewDialogOpen(false);
     setViewQuote(null);
-  };
-
-  const handleDownloadPDF = async (quote: Quote) => {
-    try {
-      const pdfBlob = await generateQuotePDF(quote);
-      
-      // Create a download link
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `devis-${quote.id.substring(0, 8)}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast({
-        title: "PDF généré",
-        description: "Le PDF du devis a été téléchargé avec succès",
-      });
-    } catch (error) {
-      console.error('Erreur lors de la génération du PDF:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de générer le PDF du devis",
-        variant: "destructive",
-      });
-    }
   };
 
   if (isLoading) {
@@ -238,14 +208,6 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
                       <Eye className="h-4 w-4 mr-1" />
                       <span className="hidden sm:inline">Voir</span>
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDownloadPDF(quote)}
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">PDF</span>
-                    </Button>
                     <div className="hidden sm:block">
                       <QuoteStatusSelector
                         status={quote.status}
@@ -253,6 +215,12 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
                         disabled={updateQuoteStatus.isPending}
                       />
                     </div>
+                    {quote.status === 'accepted' && (
+                      <Button variant="outline" size="sm" className="hidden sm:flex">
+                        <FileText className="h-4 w-4 mr-1" />
+                        Facture
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

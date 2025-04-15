@@ -14,7 +14,6 @@ interface SimulatorTabsProps {
   handleSubmit: () => Promise<void>;
   handleNextStep: () => void;
   handlePreviousStep: () => void;
-  children?: React.ReactNode; // Keep the children prop for flexibility
 }
 
 const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
@@ -24,8 +23,7 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
   isSubmitting,
   handleSubmit,
   handleNextStep,
-  handlePreviousStep,
-  children
+  handlePreviousStep
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'step1' | 'step2' | 'step3')} className="space-y-6">
@@ -141,8 +139,6 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
           handlePreviousStep={handlePreviousStep}
         />
       </TabsContent>
-      
-      {children}
     </Tabs>
   );
 };

@@ -3,10 +3,10 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import QuoteSummary from './QuoteSummary';
+import QuoteSummary, { QuoteDetailsType } from './QuoteSummary';
 import ClientInfoSection from './ClientInfoSection';
-import { Vehicle, QuoteDetailsType } from '@/types/quoteForm'; // Updated import
-import { calculateQuoteDetails } from '@/utils/pricing';
+import { Vehicle } from '@/types/quoteForm';
+import { calculateQuoteDetails } from '@/utils/pricingUtils';
 import { usePricing } from '@/hooks/use-pricing';
 
 interface QuoteDisplayProps {
@@ -89,7 +89,7 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
   // Get the selected vehicle details
   const selectedVehicleDetails = vehicles.find(v => v.id === selectedVehicle);
   
-  // Calculate quote details if not provided
+  // Use quoteDetails if provided, otherwise calculate on the fly
   const displayDetails = quoteDetails || calculateQuoteDetails(
     selectedVehicle,
     estimatedDistance,
@@ -106,21 +106,6 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
   
   // Use precise pricing from quoteDetails if available
   const displayEstimatedPrice = displayDetails?.totalPrice || estimatedPrice;
-  
-  // Log the quote details to verify calculations
-  console.log('QuoteDisplay - Quote details:', {
-    dayKm: displayDetails?.dayKm,
-    nightKm: displayDetails?.nightKm,
-    dayPrice: displayDetails?.dayPrice,
-    nightPrice: displayDetails?.nightPrice,
-    nightRateApplied: displayDetails?.isNightRate,
-    nightHours: displayDetails?.nightHours,
-    dayHours: displayDetails?.dayHours,
-    nightRatePercentage: displayDetails?.nightRatePercentage,
-    totalHT: displayDetails?.totalPriceHT,
-    vat: displayDetails?.totalVAT,
-    totalTTC: displayDetails?.totalPrice
-  });
   
   return (
     <Card>

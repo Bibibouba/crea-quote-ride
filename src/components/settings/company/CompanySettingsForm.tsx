@@ -34,24 +34,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 type CompanySettings = Database['public']['Tables']['company_settings']['Row'] & {
   banner_url?: string | null;
-  company_name?: string | null;
-  contact_first_name?: string | null;
-  contact_last_name?: string | null;
-  contact_email?: string | null;
 };
 
 const companySettingsSchema = z.object({
+  // Style
   logo_url: z.string().optional().nullable(),
   banner_url: z.string().optional().nullable(),
   primary_color: z.string().optional().nullable(),
   secondary_color: z.string().optional().nullable(),
   font_family: z.string().optional().nullable(),
   
-  company_name: z.string().optional().nullable(),
-  contact_first_name: z.string().optional().nullable(),
-  contact_last_name: z.string().optional().nullable(),
-  contact_email: z.string().email().optional().nullable(),
+  // Company Information
+  company_type: z.string().optional(),
+  company_address: z.string().optional(),
+  siret: z.string().optional(),
+  vat_number: z.string().optional(),
+  registration_city: z.string().optional(),
+  rcs_number: z.string().optional(),
+  is_vat_exempt: z.boolean().optional(),
   
+  // Invoice Settings
   invoice_prefix: z.string().optional(),
   next_invoice_number: z.coerce.number().optional(),
   payment_delay_days: z.coerce.number().optional(),
@@ -59,14 +61,6 @@ const companySettingsSchema = z.object({
   discount_conditions: z.string().optional(),
   bank_details: z.string().optional(),
   legal_notices: z.string().optional(),
-  
-  company_type: z.string().optional().nullable(),
-  company_address: z.string().optional().nullable(),
-  siret: z.string().optional().nullable(),
-  vat_number: z.string().optional().nullable(),
-  registration_city: z.string().optional().nullable(),
-  rcs_number: z.string().optional().nullable(),
-  is_vat_exempt: z.boolean().optional().nullable(),
 });
 
 export type CompanySettingsFormValues = z.infer<typeof companySettingsSchema>;
@@ -83,17 +77,23 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
   const form = useForm<CompanySettingsFormValues>({
     resolver: zodResolver(companySettingsSchema),
     defaultValues: {
+      // Style
       logo_url: companySettings?.logo_url || "",
       banner_url: companySettings?.banner_url || "",
       primary_color: companySettings?.primary_color || "#3B82F6",
       secondary_color: companySettings?.secondary_color || "#10B981",
       font_family: companySettings?.font_family || "Inter",
       
-      company_name: companySettings?.company_name || "",
-      contact_first_name: companySettings?.contact_first_name || "",
-      contact_last_name: companySettings?.contact_last_name || "",
-      contact_email: companySettings?.contact_email || "",
+      // Company Information
+      company_type: companySettings?.company_type || "micro-entreprise",
+      company_address: companySettings?.company_address || "",
+      siret: companySettings?.siret || "",
+      vat_number: companySettings?.vat_number || "",
+      registration_city: companySettings?.registration_city || "",
+      rcs_number: companySettings?.rcs_number || "",
+      is_vat_exempt: companySettings?.is_vat_exempt || false,
       
+      // Invoice Settings
       invoice_prefix: companySettings?.invoice_prefix || "FACT-",
       next_invoice_number: companySettings?.next_invoice_number || 1,
       payment_delay_days: companySettings?.payment_delay_days || 30,
@@ -101,14 +101,6 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
       discount_conditions: companySettings?.discount_conditions || "",
       bank_details: companySettings?.bank_details || "",
       legal_notices: companySettings?.legal_notices || "TVA non applicable, art. 293 B du CGI",
-      
-      company_type: companySettings?.company_type || "",
-      company_address: companySettings?.company_address || "",
-      siret: companySettings?.siret || "",
-      vat_number: companySettings?.vat_number || "",
-      registration_city: companySettings?.registration_city || "",
-      rcs_number: companySettings?.rcs_number || "",
-      is_vat_exempt: companySettings?.is_vat_exempt || false,
     },
   });
 
@@ -148,84 +140,13 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
             <div className="space-y-4 pt-2">
               <FormField
                 control={form.control}
-                name="company_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nom de l'entreprise</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nom de votre entreprise" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Le nom officiel de votre entreprise
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h3 className="font-medium mb-3">Contact principal</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="contact_first_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Prénom du contact</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Prénom" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="contact_last_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nom du contact</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nom" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="contact_email"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>Email du contact</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email" 
-                            placeholder="Email de contact" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Email de la personne à contacter pour cette entreprise
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <FormField
-                control={form.control}
                 name="company_type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type d'entreprise</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value || undefined}
+                      defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -348,7 +269,7 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
                       <Checkbox
-                        checked={field.value || false}
+                        checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
