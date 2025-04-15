@@ -7,9 +7,11 @@ import { useWaitingTimeCalculation } from './useWaitingTimeCalculation';
 import { useRouteCalculation } from './useRouteCalculation';
 import { useQuoteDetails } from './useQuoteDetails';
 import { useSaveQuote } from './useSaveQuote';
+import { useToast } from '@/hooks/use-toast';
 
 export const useQuoteForm = () => {
   const { pricingSettings } = usePricing();
+  const { toast } = useToast(); // Import toast directly instead of using require
   
   // Address state
   const [departureAddress, setDepartureAddress] = useState('');
@@ -189,9 +191,6 @@ export const useQuoteForm = () => {
   
   // Calculate the base price based on the selected vehicle
   const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
-  
-  // Import toast since we're using it in handleCalculateQuote
-  const { toast } = require('@/hooks/use-toast');
   
   return {
     departureAddress,
