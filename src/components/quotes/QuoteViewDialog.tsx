@@ -84,7 +84,7 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
     totalKm: quote.total_km || quote.distance_km || 0,
     dayPrice: quote.day_price || 0,
     nightPrice: quote.night_price || 0,
-    waitingTimePrice: quote.waiting_time_price || 0
+    waitingTimePriceHT: quote.waiting_time_price || 0
   };
   
   const handleDownloadPDF = async () => {
