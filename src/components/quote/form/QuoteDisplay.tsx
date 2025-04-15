@@ -107,23 +107,16 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
   // Use precise pricing from quoteDetails if available
   const displayEstimatedPrice = displayDetails?.totalPrice || estimatedPrice;
   
-  // Log the quote details to verify night rate calculations
+  // Log the quote details to verify calculations
   console.log('QuoteDisplay - Quote details:', {
-    nightRateApplied: displayDetails?.isNightRate,
-    nightHours: displayDetails?.nightHours,
-    dayHours: displayDetails?.dayHours,
-    nightRatePercentage: displayDetails?.nightRatePercentage,
-    nightStartTime: displayDetails?.nightStartDisplay,
-    nightEndTime: displayDetails?.nightEndDisplay,
-    nightSurcharge: displayDetails?.nightSurcharge,
     dayKm: displayDetails?.dayKm,
     nightKm: displayDetails?.nightKm,
     dayPrice: displayDetails?.dayPrice,
     nightPrice: displayDetails?.nightPrice,
-    waitTimeDay: displayDetails?.waitTimeDay,
-    waitTimeNight: displayDetails?.waitTimeNight,
-    waitPriceDay: displayDetails?.waitPriceDay,
-    waitPriceNight: displayDetails?.waitPriceNight,
+    nightRateApplied: displayDetails?.isNightRate,
+    nightHours: displayDetails?.nightHours,
+    dayHours: displayDetails?.dayHours,
+    nightRatePercentage: displayDetails?.nightRatePercentage,
     totalHT: displayDetails?.totalPriceHT,
     vat: displayDetails?.totalVAT,
     totalTTC: displayDetails?.totalPrice

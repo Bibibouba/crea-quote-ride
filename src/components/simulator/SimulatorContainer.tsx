@@ -53,7 +53,9 @@ const SimulatorContainer = () => {
       waitPriceDay: formState.quoteDetails.waitPriceDay,
       waitPriceNight: formState.quoteDetails.waitPriceNight,
       isSunday: formState.quoteDetails.isSunday,
-      sundaySurcharge: formState.quoteDetails.sundaySurcharge
+      sundaySurcharge: formState.quoteDetails.sundaySurcharge,
+      totalPriceHT: formState.quoteDetails.totalPriceHT,
+      totalVAT: formState.quoteDetails.totalVAT
     });
 
     const quoteData = {

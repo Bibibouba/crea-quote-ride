@@ -1,74 +1,14 @@
 
-import { PricingSettings } from '@/types/quoteForm';
-import { isNightTime } from './timeUtils';
-
 /**
- * Calcule le prix du temps d'attente en séparant jour et nuit
- */
-export const calculateWaitingTimePrice = (
-  hasWaitingTime: boolean, 
-  waitingTimeMinutes: number, 
-  pricingSettings: PricingSettings | null,
-  time: string,
-  selectedVehicle: any = null
-): number => {
-  if (!hasWaitingTime) return 0;
-  
-  const pricePerQuarter = selectedVehicle?.wait_price_per_15min || 
-                        pricingSettings?.wait_price_per_15min || 7.5;
-  
-  const quarters = Math.ceil(waitingTimeMinutes / 15);
-  let price = quarters * pricePerQuarter;
-  
-  const useVehicleWaitNight = selectedVehicle?.wait_night_enabled && 
-                             selectedVehicle?.wait_night_start && 
-                             selectedVehicle?.wait_night_end && 
-                             selectedVehicle?.wait_night_percentage;
-  
-  if ((useVehicleWaitNight || (pricingSettings?.wait_night_enabled && pricingSettings?.wait_night_percentage)) && time) {
-    const [hours, minutes] = time.split(':').map(Number);
-    const tripTime = new Date();
-    tripTime.setHours(hours);
-    tripTime.setMinutes(minutes);
-    
-    const startTime = new Date();
-    const startTimeStr = useVehicleWaitNight ? selectedVehicle.wait_night_start : pricingSettings?.wait_night_start;
-    const [startHours, startMinutes] = startTimeStr?.split(':').map(Number) || [0, 0];
-    startTime.setHours(startHours);
-    startTime.setMinutes(startMinutes);
-    
-    const endTime = new Date();
-    const endTimeStr = useVehicleWaitNight ? selectedVehicle.wait_night_end : pricingSettings?.wait_night_end;
-    const [endHours, endMinutes] = endTimeStr?.split(':').map(Number) || [0, 0];
-    endTime.setHours(endHours);
-    endTime.setMinutes(endMinutes);
-    
-    const isNight = (
-      (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
-      (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
-    );
-    
-    if (isNight) {
-      const nightPercentage = useVehicleWaitNight ? 
-                            selectedVehicle.wait_night_percentage : 
-                            pricingSettings?.wait_night_percentage || 0;
-      price += price * (nightPercentage / 100);
-    }
-  }
-  
-  return Math.round(price);
-};
-
-/**
- * Calcul détaillé du temps d'attente avec séparation jour/nuit
+ * Calcule le prix du temps d'attente en tenant compte des tarifs de jour et de nuit
  */
 export const calculateDetailedWaitingPrice = (
-  hasWaitingTime: boolean, 
-  waitingTimeMinutes: number, 
-  pricingSettings: PricingSettings | null,
-  time: string,
+  hasWaitingTime: boolean,
+  waitingTimeMinutes: number,
+  pricingSettings: any,
+  startTime: string,
   date: Date,
-  selectedVehicle: any = null
+  vehicleSettings: any
 ) => {
   if (!hasWaitingTime || waitingTimeMinutes <= 0) {
     return {
@@ -80,115 +20,126 @@ export const calculateDetailedWaitingPrice = (
     };
   }
   
-  const pricePerQuarter = selectedVehicle?.wait_price_per_15min || 
-                         pricingSettings?.wait_price_per_15min || 7.5;
+  // Déterminer si la majoration de nuit est activée
+  const waitNightEnabled = vehicleSettings?.wait_night_enabled || pricingSettings?.wait_night_enabled || false;
   
-  const useVehicleWaitNight = selectedVehicle?.wait_night_enabled && 
-                              selectedVehicle?.wait_night_start && 
-                              selectedVehicle?.wait_night_end && 
-                              selectedVehicle?.wait_night_percentage;
+  if (!waitNightEnabled) {
+    // Si pas de majoration de nuit, tout le temps d'attente est au tarif de jour
+    const pricePerMinute = (vehicleSettings?.wait_price_per_15min || pricingSettings?.wait_price_per_15min || 7.5) / 15;
+    const totalPrice = waitingTimeMinutes * pricePerMinute;
+    
+    return {
+      waitTimeDay: waitingTimeMinutes,
+      waitTimeNight: 0,
+      waitPriceDay: totalPrice,
+      waitPriceNight: 0,
+      totalWaitPrice: totalPrice
+    };
+  }
   
-  // Récupérer les paramètres de nuit
-  const nightStartStr = useVehicleWaitNight ? 
-                       selectedVehicle.wait_night_start : 
-                       pricingSettings?.wait_night_start || "20:00";
+  // Récupérer les paramètres de tarif de nuit
+  const waitNightStart = vehicleSettings?.wait_night_start || pricingSettings?.wait_night_start || '20:00';
+  const waitNightEnd = vehicleSettings?.wait_night_end || pricingSettings?.wait_night_end || '06:00';
+  const waitNightPercentage = vehicleSettings?.wait_night_percentage || pricingSettings?.wait_night_percentage || 10;
   
-  const nightEndStr = useVehicleWaitNight ? 
-                     selectedVehicle.wait_night_end : 
-                     pricingSettings?.wait_night_end || "06:00";
+  // Calculer l'heure de début d'attente (après l'arrivée)
+  const [startHours, startMinutes] = startTime.split(':').map(Number);
+  const tripDuration = waitingTimeMinutes > 0 ? 60 : 0; // Durée estimée du trajet (en minutes)
   
-  const nightPercentage = useVehicleWaitNight ? 
-                         selectedVehicle.wait_night_percentage : 
-                         pricingSettings?.wait_night_percentage || 15;
+  const waitStartDate = new Date(date);
+  waitStartDate.setHours(startHours, startMinutes + tripDuration, 0, 0);
   
-  // Calculer la durée d'attente pendant la nuit
-  const tripStartTime = new Date(date);
-  const [hours, minutes] = time.split(':').map(Number);
-  tripStartTime.setHours(hours, minutes, 0, 0);
+  // Créer des objets Date pour le début et la fin de la nuit
+  const nightStartHours = parseInt(waitNightStart.split(':')[0]);
+  const nightStartMinutes = parseInt(waitNightStart.split(':')[1]);
+  const nightEndHours = parseInt(waitNightEnd.split(':')[0]);
+  const nightEndMinutes = parseInt(waitNightEnd.split(':')[1]);
   
-  // On considère que l'attente commence après l'arrivée estimée
-  // (qui est l'heure de départ + durée du trajet, mais ici on utilise simplement l'heure de départ)
-  const waitStartTime = new Date(tripStartTime);
+  const nightStartDate = new Date(date);
+  nightStartDate.setHours(nightStartHours, nightStartMinutes, 0, 0);
   
-  // Créer les limites de période de nuit
-  const nightStart = new Date(date);
-  const [nightStartHours, nightStartMinutes] = nightStartStr.split(':').map(Number);
-  nightStart.setHours(nightStartHours, nightStartMinutes, 0, 0);
-  
-  const nightEnd = new Date(date);
-  const [nightEndHours, nightEndMinutes] = nightEndStr.split(':').map(Number);
-  nightEnd.setHours(nightEndHours, nightEndMinutes, 0, 0);
+  const nightEndDate = new Date(date);
+  nightEndDate.setHours(nightEndHours, nightEndMinutes, 0, 0);
   
   // Si la fin de nuit est avant le début, cela signifie qu'elle est le jour suivant
-  if (nightEnd <= nightStart) {
-    nightEnd.setDate(nightEnd.getDate() + 1);
+  if (nightEndDate <= nightStartDate) {
+    nightEndDate.setDate(nightEndDate.getDate() + 1);
   }
   
-  // Calculer combien du temps d'attente tombe pendant la nuit
+  // Calculer la répartition des minutes d'attente entre jour et nuit
+  let dayMinutes = 0;
   let nightMinutes = 0;
-  const waitEndTime = new Date(waitStartTime.getTime() + waitingTimeMinutes * 60 * 1000);
   
-  // Cas 1: L'attente commence avant la période de nuit et finit après le début de la nuit
-  if (waitStartTime < nightStart && waitEndTime > nightStart) {
-    const nightPortionEnd = waitEndTime < nightEnd ? waitEndTime : nightEnd;
-    nightMinutes += (nightPortionEnd.getTime() - nightStart.getTime()) / (60 * 1000);
-  }
-  
-  // Cas 2: L'attente commence pendant la période de nuit
-  if (waitStartTime >= nightStart && waitStartTime < nightEnd) {
-    const nightPortionEnd = waitEndTime < nightEnd ? waitEndTime : nightEnd;
-    nightMinutes += (nightPortionEnd.getTime() - waitStartTime.getTime()) / (60 * 1000);
-  }
-  
-  // Cas 3: L'attente chevauche minuit et le lendemain matin
-  if (nightEnd < nightStart && waitEndTime > nightEnd) {
-    // Si l'attente commence après minuit mais avant la fin de la nuit
-    if (waitStartTime < nightEnd) {
-      nightMinutes += (nightEnd.getTime() - waitStartTime.getTime()) / (60 * 1000);
+  // Vérifier minute par minute pour plus de précision
+  for (let i = 0; i < waitingTimeMinutes; i++) {
+    const currentMinute = new Date(waitStartDate.getTime() + i * 60000);
+    let isNight = false;
+    
+    if (nightEndDate > nightStartDate) {
+      // Cas simple : nuit dans la même journée
+      isNight = currentMinute >= nightStartDate && currentMinute < nightEndDate;
+    } else {
+      // Cas où la nuit chevauche minuit
+      const currentHour = currentMinute.getHours();
+      const currentMin = currentMinute.getMinutes();
+      const totalCurrentMinutes = currentHour * 60 + currentMin;
+      const totalNightStartMinutes = nightStartHours * 60 + nightStartMinutes;
+      const totalNightEndMinutes = nightEndHours * 60 + nightEndMinutes;
+      
+      isNight = totalCurrentMinutes >= totalNightStartMinutes || totalCurrentMinutes < totalNightEndMinutes;
     }
     
-    // La portion après minuit jusqu'à nightEnd 
-    const nextNightStart = new Date(nightStart);
-    nextNightStart.setDate(nextNightStart.getDate() + 1);
-    
-    if (waitEndTime > nextNightStart) {
-      const nextNightEnd = new Date(nightEnd);
-      nextNightEnd.setDate(nextNightEnd.getDate() + 1);
-      const endNightPortion = waitEndTime < nextNightEnd ? waitEndTime : nextNightEnd;
-      nightMinutes += (endNightPortion.getTime() - nextNightStart.getTime()) / (60 * 1000);
+    if (isNight) {
+      nightMinutes++;
+    } else {
+      dayMinutes++;
     }
   }
   
-  // S'assurer que les valeurs sont positives
-  nightMinutes = Math.max(0, Math.round(nightMinutes));
-  const dayMinutes = Math.max(0, waitingTimeMinutes - nightMinutes);
+  // Calculer les prix en fonction des minutes
+  const pricePerMinute = (vehicleSettings?.wait_price_per_15min || pricingSettings?.wait_price_per_15min || 7.5) / 15;
+  const dayPrice = dayMinutes * pricePerMinute;
+  const nightPrice = nightMinutes * pricePerMinute * (1 + (waitNightPercentage / 100));
+  const totalPrice = dayPrice + nightPrice;
   
-  // Calculer le prix de l'attente jour et nuit
-  const dayQuarters = Math.ceil(dayMinutes / 15);
-  const nightQuarters = Math.ceil(nightMinutes / 15);
-  
-  const waitPriceDay = dayQuarters * pricePerQuarter;
-  const waitPriceNight = nightQuarters * pricePerQuarter * (1 + nightPercentage / 100);
-  
-  const totalWaitPrice = waitPriceDay + waitPriceNight;
-  
-  // Log pour débogage
-  console.log('Wait time calculation:', {
-    waitTimeDay: dayMinutes,
-    waitTimeNight: nightMinutes,
-    waitPriceDay: waitPriceDay,
-    waitPriceNight: waitPriceNight,
-    totalWaitPrice: totalWaitPrice,
-    nightStart: nightStartStr,
-    nightEnd: nightEndStr,
-    percentageNight: nightPercentage
+  console.log('Waiting time calculation:', {
+    waitingTimeMinutes,
+    dayMinutes,
+    nightMinutes,
+    pricePerMinute,
+    dayPrice,
+    nightPrice,
+    totalPrice
   });
   
   return {
     waitTimeDay: dayMinutes,
     waitTimeNight: nightMinutes,
-    waitPriceDay: Math.round(waitPriceDay * 100) / 100,
-    waitPriceNight: Math.round(waitPriceNight * 100) / 100,
-    totalWaitPrice: Math.round(totalWaitPrice * 100) / 100
+    waitPriceDay: dayPrice,
+    waitPriceNight: nightPrice,
+    totalWaitPrice: totalPrice
   };
+};
+
+/**
+ * Version simplifiée pour le calcul du prix d'attente (compatibilité ancienne)
+ */
+export const calculateWaitingTimePrice = (
+  hasWaitingTime: boolean,
+  waitingTimeMinutes: number,
+  pricingSettings: any,
+  time: string,
+  date: Date,
+  vehicleSettings: any
+): number => {
+  const details = calculateDetailedWaitingPrice(
+    hasWaitingTime,
+    waitingTimeMinutes,
+    pricingSettings,
+    time,
+    date,
+    vehicleSettings
+  );
+  
+  return details.totalWaitPrice;
 };

@@ -30,6 +30,18 @@ export const calculateQuoteDetails = (
   
   const basePrice = selectedVehicleInfo.basePrice;
   
+  // Paramètres pour les tests et débogage
+  console.log('Quote calculation input:', {
+    estimatedDistance,
+    returnDistance,
+    hasReturnTrip,
+    returnToSameAddress,
+    time,
+    date: date.toISOString(),
+    basePrice,
+    selectedVehicleId: selectedVehicle
+  });
+  
   const minDistance = selectedVehicleInfo.min_trip_distance || 0;
   const adjustedDistance = Math.max(estimatedDistance, minDistance);
   const adjustedReturnDistance = Math.max(returnDistance, minDistance);
@@ -37,7 +49,7 @@ export const calculateQuoteDetails = (
   const hasMinDistanceWarning = estimatedDistance < minDistance && minDistance > 0;
   
   const isNightRateEnabled = selectedVehicleInfo.night_rate_enabled || pricingSettings?.night_rate_enabled;
-  const isNightRate = isNightRateEnabled && isNightTime(date, time, selectedVehicleInfo, pricingSettings);
+  const isNightRateActive = isNightRateEnabled && isNightTime(date, time, selectedVehicleInfo, pricingSettings);
   
   const isSundayRate = isSunday(date);
   
@@ -51,8 +63,10 @@ export const calculateQuoteDetails = (
   
   const rideTime = time || "12:00";
   
-  // Calculate one-way trip duration and night portion
-  const oneWayDuration = estimatedDistance > 0 ? Math.max(10, estimatedDistance * 2) : 0;
+  // Calculer la durée du trajet en minutes (approx. 2 min par km)
+  const oneWayDuration = estimatedDistance > 0 ? Math.max(10, Math.ceil(estimatedDistance * 2)) : 0;
+  
+  // Calculer la proportion jour/nuit pour le trajet aller
   const nightDurationResult = 
     calculateNightDuration(date, rideTime, oneWayDuration, selectedVehicleInfo, pricingSettings);
   
@@ -61,7 +75,7 @@ export const calculateQuoteDetails = (
   const nightStartDisplay = nightDurationResult.nightStartDisplay;
   const nightEndDisplay = nightDurationResult.nightEndDisplay;
   
-  // Calculate return trip night duration if applicable
+  // Calculer la durée du trajet de retour si applicable
   let returnNightMinutes = 0;
   let returnTotalMinutes = 0;
   let returnNightStartDisplay = '';
@@ -73,8 +87,8 @@ export const calculateQuoteDetails = (
     returnStartTime.setHours(hours);
     returnStartTime.setMinutes(minutes + oneWayDuration);
     
-    const returnTimeStr = `${returnStartTime.getHours()}:${returnStartTime.getMinutes()}`;
-    const returnDuration = returnToSameAddress ? oneWayDuration : (returnDistance > 0 ? Math.max(10, returnDistance * 2) : 0);
+    const returnTimeStr = `${returnStartTime.getHours().toString().padStart(2, '0')}:${returnStartTime.getMinutes().toString().padStart(2, '0')}`;
+    const returnDuration = returnToSameAddress ? oneWayDuration : (returnDistance > 0 ? Math.max(10, Math.ceil(returnDistance * 2)) : 0);
     
     const returnNightDuration = calculateNightDuration(
       returnStartTime, 
@@ -90,7 +104,7 @@ export const calculateQuoteDetails = (
     returnNightEndDisplay = returnNightDuration.nightEndDisplay;
   }
   
-  // Calculate day/night km split based on night minutes proportion
+  // Répartir les kilomètres en fonction de la proportion de temps
   const oneWaySplit = calculateDayNightKmSplit(adjustedDistance, oneWayNightMinutes, oneWayTotalMinutes);
   let returnSplit = { dayKm: 0, nightKm: 0, totalKm: 0 };
   
@@ -99,7 +113,7 @@ export const calculateQuoteDetails = (
     returnSplit = calculateDayNightKmSplit(returnAdjustedDistance, returnNightMinutes, returnTotalMinutes);
   }
   
-  // Calculate day and night prices
+  // Calculer le prix total pour le jour et la nuit
   const dayKm = oneWaySplit.dayKm + returnSplit.dayKm;
   const nightKm = oneWaySplit.nightKm + returnSplit.nightKm;
   const totalKm = oneWaySplit.totalKm + returnSplit.totalKm;
@@ -107,7 +121,7 @@ export const calculateQuoteDetails = (
   const dayPrice = dayKm * basePrice;
   const nightPrice = nightKm * basePrice * (1 + (nightRatePercentage / 100));
   
-  // Calculate waiting time with day/night split
+  // Calculer le temps d'attente avec répartition jour/nuit
   const waitingTimeDetails = hasWaitingTime ? 
     calculateDetailedWaitingPrice(
       hasWaitingTime, 
@@ -119,12 +133,12 @@ export const calculateQuoteDetails = (
     ) : 
     { waitTimeDay: 0, waitTimeNight: 0, waitPriceDay: 0, waitPriceNight: 0, totalWaitPrice: 0 };
   
-  // Apply Sunday/holiday surcharge if applicable
+  // Appliquer majoration dimanche/jour férié si applicable
   const sundaySurcharge = isSundayRate ? 
     (dayPrice + nightPrice + waitingTimeDetails.totalWaitPrice) * (holidaySundayPercentage / 100) : 
     0;
   
-  // Calculate one-way and return prices separately
+  // Calculer les prix aller et retour séparément
   const oneWayDayPrice = oneWaySplit.dayKm * basePrice;
   const oneWayNightPrice = oneWaySplit.nightKm * basePrice * (1 + (nightRatePercentage / 100));
   const oneWayPrice = oneWayDayPrice + oneWayNightPrice;
@@ -133,7 +147,7 @@ export const calculateQuoteDetails = (
   const returnNightPrice = returnSplit.nightKm * basePrice * (1 + (nightRatePercentage / 100));
   const returnPrice = returnDayPrice + returnNightPrice;
   
-  // Calculate VAT and final prices
+  // Calculer la TVA et les prix finaux
   const rideVatRate = pricingSettings?.ride_vat_rate !== undefined ? pricingSettings.ride_vat_rate : 10;
   const waitingVatRate = pricingSettings?.waiting_vat_rate !== undefined ? pricingSettings.waiting_vat_rate : 20;
   
@@ -143,13 +157,32 @@ export const calculateQuoteDetails = (
   const totalVat = rideVat + waitingVat;
   const totalTTC = subTotalHT + totalVat;
   
-  // Apply minimum trip fare if applicable
+  // Appliquer le tarif minimum si applicable
   const minimumTripFare = selectedVehicleInfo.minimum_trip_fare || (pricingSettings?.minimum_trip_fare || 0);
   const finalTotalTTC = Math.max(totalTTC, minimumTripFare);
   
-  // Calculate night hours
+  // Calcul des heures de jour et de nuit
   const nightHours = (oneWayNightMinutes + returnNightMinutes) / 60;
   const dayHours = (oneWayTotalMinutes + returnTotalMinutes - oneWayNightMinutes - returnNightMinutes) / 60;
+  
+  // Log détaillé des calculs pour débogage
+  console.log('Quote calculation details:', {
+    dayKm,
+    nightKm,
+    totalKm,
+    dayPrice,
+    nightPrice,
+    waitingTimePrice: waitingTimeDetails.totalWaitPrice,
+    sundaySurcharge,
+    totalHT: subTotalHT,
+    totalVAT: totalVat,
+    totalTTC: finalTotalTTC,
+    isNightRateActive,
+    oneWayNightMinutes,
+    returnNightMinutes,
+    nightHours,
+    dayHours
+  });
   
   return {
     basePrice,
