@@ -381,7 +381,7 @@ export const calculateQuoteDetails = (
   
   // Application de la majoration de nuit uniquement sur la portion de nuit
   let nightSurcharge = 0;
-  if (nightRatePercentage > 0) {
+  if (nightRatePercentage > 0 && (oneWayNightMinutes > 0 || returnNightMinutes > 0)) {
     const nightSurchargeAmount = (oneWayNightPriceHT + returnNightPriceHT) * (nightRatePercentage / 100);
     nightSurcharge = nightSurchargeAmount;
     
@@ -431,9 +431,21 @@ export const calculateQuoteDetails = (
   const combinedNightStartDisplay = nightStartDisplay + (returnNightStartDisplay ? ` / ${returnNightStartDisplay}` : '');
   const combinedNightEndDisplay = nightEndDisplay + (returnNightEndDisplay ? ` / ${returnNightEndDisplay}` : '');
   
+  console.log('Night calculation details:', {
+    oneWayNightMinutes,
+    oneWayTotalMinutes,
+    oneWayNightProportion,
+    oneWayNightPriceHT,
+    nightRatePercentage,
+    nightSurcharge,
+    oneWayPriceHT,
+    returnPriceHT,
+    totalPriceHT
+  });
+  
   return {
     basePrice,
-    isNightRate,
+    isNightRate: oneWayNightMinutes > 0 || returnNightMinutes > 0,
     isSunday: isSundayRate,
     oneWayPriceHT,
     oneWayPrice,
