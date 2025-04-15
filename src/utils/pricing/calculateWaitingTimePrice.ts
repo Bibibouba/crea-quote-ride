@@ -1,4 +1,3 @@
-
 /**
  * Calcule le prix du temps d'attente en tenant compte des tarifs de jour et de nuit
  */
@@ -8,7 +7,8 @@ export const calculateDetailedWaitingPrice = (
   pricingSettings: any,
   startTime: string,
   date: Date,
-  vehicleSettings: any
+  vehicleSettings: any,
+  waitNightEnabled?: boolean
 ) => {
   if (!hasWaitingTime || waitingTimeMinutes <= 0) {
     return {
@@ -21,9 +21,9 @@ export const calculateDetailedWaitingPrice = (
   }
   
   // Déterminer si la majoration de nuit est activée
-  const waitNightEnabled = vehicleSettings?.wait_night_enabled || pricingSettings?.wait_night_enabled || false;
+  const enableNightRates = waitNightEnabled || vehicleSettings?.wait_night_enabled || pricingSettings?.wait_night_enabled || false;
   
-  if (!waitNightEnabled) {
+  if (!enableNightRates) {
     // Si pas de majoration de nuit, tout le temps d'attente est au tarif de jour
     const pricePerMinute = (vehicleSettings?.wait_price_per_15min || pricingSettings?.wait_price_per_15min || 7.5) / 15;
     const totalPrice = waitingTimeMinutes * pricePerMinute;
@@ -130,7 +130,8 @@ export const calculateWaitingTimePrice = (
   pricingSettings: any,
   time: string,
   date: Date,
-  vehicleSettings: any
+  vehicleSettings: any,
+  waitNightEnabled?: boolean
 ): number => {
   const details = calculateDetailedWaitingPrice(
     hasWaitingTime,
@@ -138,7 +139,8 @@ export const calculateWaitingTimePrice = (
     pricingSettings,
     time,
     date,
-    vehicleSettings
+    vehicleSettings,
+    waitNightEnabled
   );
   
   return details.totalWaitPrice;

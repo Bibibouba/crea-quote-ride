@@ -111,7 +111,9 @@ export const useQuoteForm = () => {
       waitingTimeMinutes,
       pricingSettings,
       time,
-      selectedVehicleInfo
+      date,
+      selectedVehicleInfo,
+      selectedVehicleInfo?.wait_night_enabled || false
     );
     
     setWaitingTimePrice(price);
