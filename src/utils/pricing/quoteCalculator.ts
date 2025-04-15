@@ -7,6 +7,7 @@ import { applyMinimumFare } from './minFareCalculator';
 import { calculateVatAndTotalPrices } from './vatCalculator';
 import { calculateDetailedWaitingPrice } from './calculateWaitingTimePrice';
 import { calculateNewQuoteDetails, QuoteCalculationInput } from './newQuoteCalculator';
+import { VehiclePricingSettings } from '@/types/vehiclePricing';
 
 /**
  * Calculates detailed quote information based on trip parameters
@@ -44,7 +45,7 @@ export const calculateQuoteDetails = (
   });
   
   // Récupérer les valeurs de configuration pour le véhicule sélectionné
-  const vehicleSettings = {
+  const vehicleSettings: VehiclePricingSettings = {
     price_per_km: basePrice,
     minimum_trip_fare: selectedVehicleInfo.minimum_trip_fare || (pricingSettings?.minimum_trip_fare || 0),
     min_trip_distance: selectedVehicleInfo.min_trip_distance || 0,
@@ -57,7 +58,9 @@ export const calculateQuoteDetails = (
     wait_night_start: selectedVehicleInfo.wait_night_start || pricingSettings?.wait_night_start || "20:00",
     wait_night_end: selectedVehicleInfo.wait_night_end || pricingSettings?.wait_night_end || "06:00",
     wait_night_percentage: selectedVehicleInfo.wait_night_percentage || pricingSettings?.wait_night_percentage || 0,
-    holiday_sunday_percentage: selectedVehicleInfo.holiday_sunday_percentage || pricingSettings?.holiday_sunday_percentage || 0
+    holiday_sunday_percentage: selectedVehicleInfo.holiday_sunday_percentage || pricingSettings?.holiday_sunday_percentage || 0,
+    vehicle_id: selectedVehicle,
+    driver_id: ""  // This will be set by the backend
   };
   
   // Calculer la durée du trajet en minutes (approx. 2 min par km)
