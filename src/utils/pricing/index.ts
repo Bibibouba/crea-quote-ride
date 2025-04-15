@@ -1,9 +1,9 @@
 
-// Export all pricing utilities for easy imports
-export * from './calculateWaitingTimePrice';
-export * from './timeUtils';
-export * from './quoteCalculator';
-export * from './nightRateCalculator';
-export * from './sundayRateCalculator';
-export * from './minFareCalculator';
-export * from './vatCalculator';
+// Exporter toutes les fonctions liées au calcul de prix
+export { calculateQuoteDetails } from './quoteCalculator';
+export { calculateWaitingTimePrice, calculateDetailedWaitingPrice } from './calculateWaitingTimePrice';
+export { isNightTime, isSunday, calculateNightDuration, calculateDayNightKmSplit } from './timeUtils';
+export { calculateNightSurcharge } from './nightRateCalculator';
+export { calculateSundaySurcharge } from './sundayRateCalculator';
+export { applyMinimumFare } from './minFareCalculator';
+export { calculateVatAndTotalPrices } from './vatCalculator';

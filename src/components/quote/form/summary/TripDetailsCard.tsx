@@ -3,10 +3,10 @@ import { Separator } from '@/components/ui/separator';
 import { Vehicle } from '@/types/quoteForm';
 import { ArrowRight } from 'lucide-react';
 import { PriceFormatter } from './PriceFormatter';
-import { WaitingTimeDisplay } from './WaitingTimeDisplay';
 import { ReturnTripDisplay } from './ReturnTripDisplay';
-import { QuoteDetailsType } from '@/types/quoteForm'; // Updated import
+import { QuoteDetailsType } from '@/types/quoteForm';
 import { TripTimeInfo, NightRateInfo, SundayRateInfo } from './TripTimeInfo';
+import { WaitingTimeDetailDisplay } from './WaitingTimeDetailDisplay';
 
 interface TripDetailsCardProps {
   selectedVehicle: string;
@@ -123,11 +123,12 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
           sundayRateInfo={sundayRateInfo}
         />
         
-        {/* Display waiting time information */}
-        <WaitingTimeDisplay 
+        {/* Display detailed waiting time information */}
+        <WaitingTimeDetailDisplay 
           hasWaitingTime={hasWaitingTime}
           waitingTimeMinutes={waitingTimeMinutes}
           waitingTimePrice={waitingTimePrice}
+          quoteDetails={quoteDetails}
         />
         
         {/* Display return trip information */}

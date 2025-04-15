@@ -44,7 +44,7 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
   // Get basePrice, prioritizing data from the selected vehicle since vehicles table doesn't have basePrice
   const basePrice = selectedVehicle?.basePrice || 0;
   
-  // Ensure coordinates are properly formatted as [number, number]
+  // Prepare coordinates variables
   const departureCoords = quote.departure_coordinates ? 
     (Array.isArray(quote.departure_coordinates) && quote.departure_coordinates.length >= 2 ? 
       [quote.departure_coordinates[0], quote.departure_coordinates[1]] as [number, number] : 
@@ -84,7 +84,13 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
     totalKm: quote.total_km || quote.distance_km || 0,
     dayPrice: quote.day_price || 0,
     nightPrice: quote.night_price || 0,
-    waitingTimePriceHT: quote.waiting_time_price || 0
+    waitingTimePriceHT: quote.waiting_time_price || 0,
+    
+    // Ajout des données détaillées pour le temps d'attente jour/nuit
+    waitTimeDay: quote.wait_time_day || 0,
+    waitTimeNight: quote.wait_time_night || 0,
+    waitPriceDay: quote.wait_price_day || 0,
+    waitPriceNight: quote.wait_price_night || 0
   };
   
   const handleDownloadPDF = async () => {

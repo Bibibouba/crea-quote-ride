@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useMapbox, Address } from '@/hooks/useMapbox';
-import { calculateWaitingTimePrice, calculateQuoteDetails } from '@/utils/pricing';
+import { calculateWaitingTimePrice, calculateQuoteDetails, calculateDetailedWaitingPrice } from '@/utils/pricing';
 import { usePricing } from '@/hooks/use-pricing';
 import { VehicleType } from '@/types/vehicle';
 import { Vehicle, QuoteDetails } from '@/types/quoteForm';
@@ -276,6 +276,28 @@ export const useQuoteForm = () => {
         return;
       }
       
+      let waitTimeDay = 0;
+      let waitTimeNight = 0;
+      let waitPriceDay = 0;
+      let waitPriceNight = 0;
+      
+      if (hasWaitingTime && waitingTimeMinutes > 0) {
+        const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
+        const waitingTimeDetails = calculateDetailedWaitingPrice(
+          hasWaitingTime,
+          waitingTimeMinutes,
+          pricingSettings,
+          time,
+          date,
+          selectedVehicleInfo
+        );
+        
+        waitTimeDay = waitingTimeDetails.waitTimeDay;
+        waitTimeNight = waitingTimeDetails.waitTimeNight;
+        waitPriceDay = waitingTimeDetails.waitPriceDay;
+        waitPriceNight = waitingTimeDetails.waitPriceNight;
+      }
+      
       const quoteData = {
         driver_id: driverId,
         client_id: "", // This needs to be set depending on your app flow
@@ -306,7 +328,11 @@ export const useQuoteForm = () => {
         night_surcharge: quoteDetails?.nightSurcharge,
         is_sunday_holiday: quoteDetails?.isSunday,
         sunday_holiday_percentage: quoteDetails?.sundayRate,
-        sunday_holiday_surcharge: quoteDetails?.sundaySurcharge
+        sunday_holiday_surcharge: quoteDetails?.sundaySurcharge,
+        wait_time_day: waitTimeDay,
+        wait_time_night: waitTimeNight,
+        wait_price_day: waitPriceDay,
+        wait_price_night: waitPriceNight
       };
       
       const { data, error } = await supabase
