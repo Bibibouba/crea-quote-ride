@@ -1,4 +1,3 @@
-
 import { useQuoteForm } from "@/hooks/useQuoteForm";
 
 export interface Vehicle {
@@ -89,7 +88,6 @@ export interface QuoteFormStateProps {
 }
 
 export interface QuoteDetailsType {
-  // Examples of existing fields
   estimatedDistance: number;
   estimatedDuration: number;
   amount: number;
