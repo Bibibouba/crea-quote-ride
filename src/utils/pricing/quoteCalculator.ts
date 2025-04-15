@@ -35,7 +35,8 @@ export const calculateQuoteDetails = (
   
   const hasMinDistanceWarning = estimatedDistance < minDistance && minDistance > 0;
   
-  const isNightRate = isNightTime(date, time, selectedVehicleInfo, pricingSettings);
+  const isNightRateEnabled = selectedVehicleInfo.night_rate_enabled || pricingSettings?.night_rate_enabled;
+  const isNightRate = isNightRateEnabled && isNightTime(date, time, selectedVehicleInfo, pricingSettings);
   
   const isSundayRate = isSunday(date);
   

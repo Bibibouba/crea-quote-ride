@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -67,26 +66,37 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
   
   // Prepare data for QuoteSummary - using types that actually exist in QuoteDetailsType
   const quoteDetails: Partial<QuoteDetailsType> = {
-    estimatedDistance: quote.distance_km || 0,
-    estimatedDuration: quote.duration_minutes || 0,
-    amount: quote.amount,
-    departureAddress: quote.departure_location,
-    destinationAddress: quote.arrival_location,
-    departureCoordinates: departureCoords || ([0, 0] as [number, number]),
-    destinationCoordinates: destinationCoords || ([0, 0] as [number, number]),
-    time: formattedTime,
-    date: rideDate,
     basePrice: basePrice,
-    totalPriceHT: quote.amount, // This is an approximation
-    nightSurcharge: quote.night_price ? (quote.night_price - (quote.day_price || 0)) : 0,
+    isNightRate: quote.has_night_rate || false,
+    isSunday: quote.is_sunday_holiday || false,
+    oneWayPriceHT: quote.one_way_price_ht || 0,
+    oneWayPrice: quote.one_way_price || 0,
+    returnPriceHT: quote.return_price_ht || 0,
+    returnPrice: quote.return_price || 0,
+    waitingTimePriceHT: quote.waiting_time_price || 0,
+    waitingTimePrice: quote.waiting_time_price ? quote.waiting_time_price * 1.2 : 0, // Approximation with 20% VAT
+    totalPriceHT: quote.amount_ht || 0,
+    totalVAT: quote.amount_ht ? quote.amount - quote.amount_ht : 0,
+    totalPrice: quote.amount,
+    nightSurcharge: quote.night_surcharge || 0,
+    sundaySurcharge: quote.sunday_holiday_surcharge || 0,
+    rideVatRate: 10, // Default VAT rate for rides in France
+    waitingVatRate: 20, // Default VAT rate for waiting time in France
+    hasMinDistanceWarning: false,
+    minDistance: 0,
+    nightMinutes: quote.night_hours ? quote.night_hours * 60 : 0,
+    totalMinutes: (quote.night_hours || 0 + quote.day_hours || 0) * 60,
+    nightRatePercentage: quote.night_rate_percentage || 0,
+    nightHours: quote.night_hours || 0,
+    dayHours: quote.day_hours || 0,
+    nightStartDisplay: '',
+    nightEndDisplay: '',
     dayKm: quote.day_km || 0,
     nightKm: quote.night_km || 0,
     totalKm: quote.total_km || quote.distance_km || 0,
     dayPrice: quote.day_price || 0,
     nightPrice: quote.night_price || 0,
-    waitingTimePriceHT: quote.waiting_time_price || 0,
-    
-    // Ajout des données détaillées pour le temps d'attente jour/nuit
+    sundayRate: quote.sunday_holiday_percentage || 0,
     waitTimeDay: quote.wait_time_day || 0,
     waitTimeNight: quote.wait_time_night || 0,
     waitPriceDay: quote.wait_price_day || 0,
@@ -122,14 +132,14 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Détails du devis #{quote.id.substring(0, 8)}</DialogTitle>
+          <DialogTitle>Détail du Devis</DialogTitle>
         </DialogHeader>
         
-        <div className="py-4">
-          <QuoteSummary
+        <div className="flex-grow overflow-auto">
+          <QuoteSummary 
             departureAddress={quote.departure_location}
             destinationAddress={quote.arrival_location}
             departureCoordinates={departureCoords}
@@ -141,7 +151,7 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
             selectedVehicle={quote.vehicle_id || ''}
             passengers="4" // Default value as it might not be stored
             basePrice={basePrice}
-            estimatedPrice={quote.amount / 2} // Approximation for display
+            estimatedPrice={quote.amount} // Use the real amount
             isSubmitting={false}
             onSaveQuote={() => {}}
             onEditQuote={() => {}}
@@ -156,15 +166,14 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
             returnDistance={quote.return_distance_km || 0}
             returnDuration={quote.return_duration_minutes || 0}
             returnCoordinates={returnCoords}
-            quoteDetails={quoteDetails as QuoteDetailsType} // Cast is needed here to satisfy type requirements
+            quoteDetails={quoteDetails}
           />
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Fermer</Button>
-          <Button onClick={handleDownloadPDF} className="gap-2">
-            <Download className="h-4 w-4" />
-            Télécharger en PDF
+          <Button onClick={handleDownloadPDF} className="w-full sm:w-auto">
+            <Download className="h-4 w-4 mr-2" />
+            Télécharger le devis (PDF)
           </Button>
         </DialogFooter>
       </DialogContent>
