@@ -3,9 +3,9 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import QuoteSummary, { QuoteDetailsType } from './QuoteSummary';
+import QuoteSummary from './QuoteSummary';
 import ClientInfoSection from './ClientInfoSection';
-import { Vehicle } from '@/types/quoteForm';
+import { Vehicle, QuoteDetailsType } from '@/types/quoteForm'; // Updated import
 import { calculateQuoteDetails } from '@/utils/pricing';
 import { usePricing } from '@/hooks/use-pricing';
 

@@ -164,22 +164,22 @@ const QuoteSummary: React.FC<QuoteSummaryProps> = ({
         }
       }
     } else {
-      if (tripEndMinutesActual <= nightStartTotalMinutes || tripStartMinutes >= nightEndTotalMinutes) {
+      if (tripEndMinutes <= nightStartTotalMinutes || tripStartMinutes >= nightEndTotalMinutes) {
         isNightRateApplied = false;
-      } else if (tripStartMinutes >= nightStartTotalMinutes && tripEndMinutesActual <= nightEndTotalMinutes) {
+      } else if (tripStartMinutes >= nightStartTotalMinutes && tripEndMinutes <= nightEndTotalMinutes) {
         nightHours = tripDurationMinutes / 60;
         isNightRateApplied = true;
-      } else if (tripStartMinutes < nightStartTotalMinutes && tripEndMinutesActual <= nightEndTotalMinutes) {
+      } else if (tripStartMinutes < nightStartTotalMinutes && tripEndMinutes <= nightEndTotalMinutes) {
         const dayMinutes = nightStartTotalMinutes - tripStartMinutes;
         dayHours = dayMinutes / 60;
         nightHours = (tripDurationMinutes - dayMinutes) / 60;
         isNightRateApplied = true;
-      } else if (tripStartMinutes >= nightStartTotalMinutes && tripEndMinutesActual > nightEndTotalMinutes) {
+      } else if (tripStartMinutes >= nightStartTotalMinutes && tripEndMinutes > nightEndTotalMinutes) {
         const nightMinutes = nightEndTotalMinutes - tripStartMinutes;
         nightHours = nightMinutes / 60;
         dayHours = (tripDurationMinutes - nightMinutes) / 60;
         isNightRateApplied = true;
-      } else if (tripStartMinutes < nightStartTotalMinutes && tripEndMinutesActual > nightEndTotalMinutes) {
+      } else if (tripStartMinutes < nightStartTotalMinutes && tripEndMinutes > nightEndTotalMinutes) {
         const nightMinutes = nightEndTotalMinutes - nightStartTotalMinutes;
         nightHours = nightMinutes / 60;
         dayHours = (tripDurationMinutes - nightMinutes) / 60;

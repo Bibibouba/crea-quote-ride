@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -14,7 +13,7 @@ import { Download } from 'lucide-react';
 import { Quote } from '@/types/quote';
 import QuoteSummary from '@/components/quote/form/QuoteSummary';
 import { useVehicles } from '@/hooks/useVehicles';
-import { Vehicle } from '@/types/quoteForm';
+import { Vehicle, QuoteDetailsType } from '@/types/quoteForm';
 import { useToast } from '@/hooks/use-toast';
 import { generateQuotePDF } from '@/utils/quotePDF';
 
@@ -45,12 +44,21 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
   const basePrice = selectedVehicle?.basePrice || 0;
   
   // Prepare data for QuoteSummary
-  const quoteDetails = {
+  const quoteDetails: Partial<QuoteDetailsType> = {
     oneWayPrice: quote.amount,
     totalPrice: quote.amount,
     basePrice: basePrice,
     returnPrice: quote.has_return_trip ? (quote.amount / 2) : 0,
-    waitingTimePrice: quote.waiting_time_price || 0
+    waitingTimePrice: quote.waiting_time_price || 0,
+    estimatedDistance: quote.distance_km || 0,
+    estimatedDuration: quote.duration_minutes || 0,
+    amount: quote.amount,
+    departureAddress: quote.departure_location,
+    destinationAddress: quote.arrival_location,
+    departureCoordinates: departureCoords || [0, 0],
+    destinationCoordinates: destinationCoords || [0, 0],
+    time: formattedTime,
+    date: rideDate,
   };
 
   // Ensure coordinates are properly formatted as [number, number]

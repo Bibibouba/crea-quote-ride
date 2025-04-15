@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react';
 import { PriceFormatter } from './PriceFormatter';
 import { WaitingTimeDisplay } from './WaitingTimeDisplay';
 import { ReturnTripDisplay } from './ReturnTripDisplay';
-import { QuoteDetailsType } from '../QuoteSummary';
+import { QuoteDetailsType } from '@/types/quoteForm'; // Updated import
 import { TripTimeInfo, NightRateInfo, SundayRateInfo } from './TripTimeInfo';
 
 interface TripDetailsCardProps {
