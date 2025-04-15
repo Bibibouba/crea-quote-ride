@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchVehicles } from '@/utils/vehicleUtils';
-import { Vehicle, VehicleType } from '@/types/quoteForm';
+import { Vehicle } from '@/types/quoteForm';
+import { VehicleType } from '@/types/vehicle'; // Updated import
 import { useToast } from '@/hooks/use-toast';
 
 export const useVehicleData = () => {
