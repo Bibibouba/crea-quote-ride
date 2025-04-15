@@ -141,7 +141,7 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
             selectedVehicle={quote.vehicle_id || ''}
             passengers="4" // Default value as it might not be stored
             basePrice={basePrice}
-            estimatedPrice={quote.amount}
+            estimatedPrice={quote.amount / 2} // Approximation for display
             isSubmitting={false}
             onSaveQuote={() => {}}
             onEditQuote={() => {}}

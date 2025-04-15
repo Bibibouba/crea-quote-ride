@@ -104,8 +104,20 @@ export const calculateQuoteDetails = (
   );
   
   let oneWayPriceHT = nightSurchargeResult.oneWayDayPriceHT + nightSurchargeResult.oneWayNightPriceHT;
-  let returnPriceHT = hasReturnTrip ? 
-    (nightSurchargeResult.returnDayPriceHT + nightSurchargeResult.returnNightPriceHT * (1 + nightRatePercentage / 100)) : 0;
+  // Apply night surcharge to one-way price
+  if (nightSurchargeResult.oneWayNightPriceHT > 0) {
+    oneWayPriceHT += (nightSurchargeResult.oneWayNightPriceHT * (nightRatePercentage / 100));
+  }
+  
+  let returnPriceHT = 0;
+  if (hasReturnTrip) {
+    returnPriceHT = nightSurchargeResult.returnDayPriceHT;
+    // Apply night surcharge to return price
+    if (nightSurchargeResult.returnNightPriceHT > 0) {
+      returnPriceHT += nightSurchargeResult.returnNightPriceHT;
+      returnPriceHT += (nightSurchargeResult.returnNightPriceHT * (nightRatePercentage / 100));
+    }
+  }
   
   // Apply Sunday/holiday surcharge if applicable
   const sundaySurchargeResult = calculateSundaySurcharge(

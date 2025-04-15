@@ -137,16 +137,20 @@ export const calculateDetailedWaitingPrice = (
   let waitPriceNight = 0;
   
   if (isNightWaiting) {
+    // Pour le prix d'attente de nuit, on applique le prix de base + la majoration
     waitPriceNight = basePrice * (1 + nightPercentage / 100);
   } else {
     waitPriceDay = basePrice;
   }
+  
+  // Le prix total d'attente est la somme du prix jour et du prix nuit
+  const totalWaitPrice = waitPriceDay + waitPriceNight;
   
   return {
     waitTimeDay,
     waitTimeNight,
     waitPriceDay: Math.round(waitPriceDay * 100) / 100,
     waitPriceNight: Math.round(waitPriceNight * 100) / 100,
-    totalWaitPrice: Math.round((waitPriceDay + waitPriceNight) * 100) / 100
+    totalWaitPrice: Math.round(totalWaitPrice * 100) / 100
   };
 };

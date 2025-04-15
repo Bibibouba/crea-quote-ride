@@ -51,6 +51,7 @@ export const calculateNightSurcharge = (
   
   // Calculer les prix de jour et de nuit pour le détail
   const dayPrice = totalDayDistance * basePrice;
+  // Pour le prix de nuit, on inclut le prix de base + la surcharge
   const nightPrice = (totalNightDistance * basePrice) + totalNightSurcharge;
   
   return {
