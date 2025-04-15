@@ -64,10 +64,10 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
 
   const vehicleName = quote.vehicles?.name || selectedVehicle?.name || 'Véhicule inconnu';
   
-  // Prepare data for QuoteSummary - using types that actually exist in QuoteDetailsType
+  // Prepare data for QuoteSummary
   const quoteDetails: Partial<QuoteDetailsType> = {
     basePrice: basePrice,
-    isNightRate: quote.has_night_rate || false,
+    hasNightRate: quote.has_night_rate || false,
     isSunday: quote.is_sunday_holiday || false,
     oneWayPriceHT: quote.one_way_price_ht || 0,
     oneWayPrice: quote.one_way_price || 0,

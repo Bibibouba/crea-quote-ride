@@ -1,4 +1,3 @@
-
 export type Quote = {
   id: string;
   driver_id: string;
@@ -22,11 +21,9 @@ export type Quote = {
   custom_return_address?: string;
   return_distance_km?: number;
   return_duration_minutes?: number;
-  // Update these coordinate types to be more flexible
   return_coordinates?: number[] | [number, number];
   departure_coordinates?: number[] | [number, number];
   arrival_coordinates?: number[] | [number, number];
-  // Add new day/night rate fields
   day_km?: number;
   night_km?: number;
   total_km?: number;
@@ -39,7 +36,6 @@ export type Quote = {
   is_sunday_holiday?: boolean;
   sunday_holiday_percentage?: number;
   sunday_holiday_surcharge?: number;
-  // Waiting time detailed fields
   wait_time_day?: number;
   wait_time_night?: number;
   wait_price_day?: number;
