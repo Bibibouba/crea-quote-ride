@@ -45,11 +45,6 @@ export interface PricingSettings {
 }
 
 export interface QuoteDetails {
-  oneWayPrice: number;
-  returnPrice: number;
-  waitingTimePrice: number;
-  totalPrice: number;
-  nightSurcharge: number;
   basePrice?: number;
   isNightRate?: boolean;
   isSunday?: boolean;
@@ -58,6 +53,11 @@ export interface QuoteDetails {
   waitingTimePriceHT?: number;
   totalPriceHT?: number;
   totalVAT?: number;
+  oneWayPrice: number;
+  returnPrice: number;
+  waitingTimePrice: number;
+  totalPrice: number;
+  nightSurcharge: number;
   sundaySurcharge?: number;
   rideVatRate?: number;
   waitingVatRate?: number;
@@ -70,16 +70,22 @@ export interface QuoteDetails {
   dayHours?: number;
   nightStartDisplay?: string;
   nightEndDisplay?: string;
-  sundayRate?: number;
   dayKm?: number;
   nightKm?: number;
   totalKm?: number;
   dayPrice?: number;
   nightPrice?: number;
+  sundayRate?: number;
   waitTimeDay?: number;
   waitTimeNight?: number;
   waitPriceDay?: number;
   waitPriceNight?: number;
+  // New fields for compatibility with database schema
+  amount_ht?: number;
+  one_way_price_ht?: number;
+  return_price_ht?: number;
+  one_way_price?: number;
+  return_price?: number;
 }
 
 export interface WaitingTimeOption {
@@ -102,7 +108,7 @@ export interface QuoteDetailsType {
   destinationCoordinates: [number, number];
   time: string;
   date: Date;
-  // Added fields to match Quote type
+  // Fields matching database schema
   dayKm?: number;
   nightKm?: number;
   totalKm?: number;
@@ -134,12 +140,16 @@ export interface QuoteDetailsType {
   waitTimeNight?: number;
   waitPriceDay?: number;
   waitPriceNight?: number;
-  // Add mappings for fields in QuoteDetails to ensure compatibility
+  // Fields for compatibility with QuoteDetails
   oneWayPrice?: number;
   returnPrice?: number;
   waitingTimePrice?: number;
   totalPrice?: number;
   amount_ht?: number;
+  one_way_price_ht?: number;
+  return_price_ht?: number;
+  one_way_price?: number;
+  return_price?: number;
 }
 
 export type QuoteFormState = ReturnType<typeof useQuoteForm>;

@@ -40,9 +40,17 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
     return null;
   }
 
+  // Vérifier si la majoration de nuit est réellement applicable
+  // (il existe une portion de nuit et des km de nuit positifs)
+  const hasNightRate = nightRateInfo?.isApplied && 
+                      nightRateInfo.nightHours && 
+                      nightRateInfo.nightHours > 0 && 
+                      nightRateInfo.nightKm && 
+                      nightRateInfo.nightKm > 0;
+
   return (
     <div className="space-y-2">
-      {nightRateInfo?.isApplied && nightRateInfo.nightHours && nightRateInfo.nightHours > 0 && (
+      {hasNightRate && (
         <div className="bg-muted/40 p-2 rounded-md space-y-1">
           <div className="flex items-center gap-2 mb-1">
             <GanttChart className="h-4 w-4 text-blue-500" />
@@ -57,7 +65,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
           {nightRateInfo.dayKm !== undefined && nightRateInfo.dayPrice !== undefined && (
             <div className="flex items-center gap-2 text-sm">
               <Sun className="h-3.5 w-3.5 text-yellow-500" />
-              <span>Tarif jour : {nightRateInfo.dayKm} km × <PriceFormatter price={nightRateInfo.dayPrice / nightRateInfo.dayKm} /></span>
+              <span>Tarif jour : {nightRateInfo.dayKm} km × <PriceFormatter price={nightRateInfo.dayKm > 0 ? nightRateInfo.dayPrice / nightRateInfo.dayKm : 0} /></span>
               <span className="ml-auto font-medium">
                 <PriceFormatter price={nightRateInfo.dayPrice} />
               </span>
@@ -68,7 +76,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
             <div className="flex items-center gap-2 text-sm">
               <Moon className="h-3.5 w-3.5 text-indigo-400" />
               <span>
-                Tarif nuit : {nightRateInfo.nightKm} km × <PriceFormatter price={nightRateInfo.dayPrice / nightRateInfo.dayKm} /> 
+                Tarif nuit : {nightRateInfo.nightKm} km × <PriceFormatter price={nightRateInfo.dayKm && nightRateInfo.dayKm > 0 ? nightRateInfo.dayPrice / nightRateInfo.dayKm : 0} /> 
                 {nightRateInfo.percentage > 0 && ` (+${nightRateInfo.percentage}%)`}
               </span>
               <span className="ml-auto font-medium">
