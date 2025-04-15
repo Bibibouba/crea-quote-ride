@@ -325,6 +325,7 @@ export const calculateQuoteDetails = (
   
   const rideTime = time || "12:00";
   
+  // Calcul de la durée du trajet aller et de la partie en tarif de nuit
   const oneWayDuration = estimatedDistance > 0 ? Math.max(10, estimatedDistance * 2) : 0;
   const nightDurationResult = 
     calculateNightDuration(date, rideTime, oneWayDuration, selectedVehicleInfo, pricingSettings);
@@ -334,6 +335,7 @@ export const calculateQuoteDetails = (
   const nightStartDisplay = nightDurationResult.nightStartDisplay;
   const nightEndDisplay = nightDurationResult.nightEndDisplay;
   
+  // Calcul de la durée du trajet retour et de la partie en tarif de nuit si applicable
   let returnNightMinutes = 0;
   let returnTotalMinutes = 0;
   let returnNightStartDisplay = '';
@@ -362,27 +364,33 @@ export const calculateQuoteDetails = (
     returnNightEndDisplay = returnNightDuration.nightEndDisplay;
   }
   
+  // Calcul de la proportion du trajet aller en tarif de nuit
   const oneWayNightProportion = oneWayTotalMinutes > 0 ? oneWayNightMinutes / oneWayTotalMinutes : 0;
   const returnNightProportion = returnTotalMinutes > 0 ? returnNightMinutes / returnTotalMinutes : 0;
   
+  // Calcul des prix HT pour les trajets aller et retour
   let oneWayPriceHT = adjustedDistance * basePrice;
   let returnPriceHT = hasReturnTrip ? (returnToSameAddress ? adjustedDistance * basePrice : adjustedReturnDistance * basePrice) : 0;
   
+  // Répartition du prix entre jour et nuit pour appliquer la majoration uniquement sur la partie nuit
   const oneWayNightPriceHT = oneWayPriceHT * oneWayNightProportion;
   const oneWayDayPriceHT = oneWayPriceHT - oneWayNightPriceHT;
   
   const returnNightPriceHT = returnPriceHT * returnNightProportion;
   const returnDayPriceHT = returnPriceHT - returnNightPriceHT;
   
+  // Application de la majoration de nuit uniquement sur la portion de nuit
   let nightSurcharge = 0;
   if (nightRatePercentage > 0) {
     const nightSurchargeAmount = (oneWayNightPriceHT + returnNightPriceHT) * (nightRatePercentage / 100);
     nightSurcharge = nightSurchargeAmount;
     
+    // Recalcul des prix avec la majoration de nuit
     oneWayPriceHT = oneWayDayPriceHT + oneWayNightPriceHT * (1 + nightRatePercentage / 100);
     returnPriceHT = returnDayPriceHT + returnNightPriceHT * (1 + nightRatePercentage / 100);
   }
   
+  // Application de la majoration dimanche/jour férié sur l'ensemble du trajet
   let sundaySurcharge = 0;
   if (isSundayRate && holidaySundayPercentage > 0) {
     const sundayPercentage = holidaySundayPercentage / 100;
@@ -391,6 +399,7 @@ export const calculateQuoteDetails = (
     returnPriceHT += returnPriceHT * sundayPercentage;
   }
   
+  // Application du tarif minimum si nécessaire
   const minimumTripFare = selectedVehicleInfo.minimum_trip_fare || (pricingSettings?.minimum_trip_fare || 0);
   if (minimumTripFare > 0 && (oneWayPriceHT + returnPriceHT) < minimumTripFare) {
     const ratio = oneWayPriceHT / (oneWayPriceHT + returnPriceHT || 1);
@@ -400,6 +409,7 @@ export const calculateQuoteDetails = (
   
   const waitingTimePriceHT = hasWaitingTime ? waitingTimePrice : 0;
   
+  // Application de la TVA
   const rideVatRate = pricingSettings?.ride_vat_rate !== undefined ? pricingSettings.ride_vat_rate : 10;
   const waitingVatRate = pricingSettings?.waiting_vat_rate !== undefined ? pricingSettings.waiting_vat_rate : 20;
   
