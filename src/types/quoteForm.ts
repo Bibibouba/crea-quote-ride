@@ -69,8 +69,11 @@ export interface QuoteDetails {
   nightRatePercentage?: number;
   // Champs pour l'affichage détaillé des tarifs de nuit
   nightHours?: number;
+  dayHours?: number;
   nightStartDisplay?: string;
   nightEndDisplay?: string;
+  // Champs pour le dimanche/jour férié
+  sundayRate?: number;
 }
 
 export interface WaitingTimeOption {
