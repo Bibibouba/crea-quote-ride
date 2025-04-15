@@ -14,6 +14,7 @@ interface SimulatorTabsProps {
   handleSubmit: () => Promise<void>;
   handleNextStep: () => void;
   handlePreviousStep: () => void;
+  children?: React.ReactNode; // Added children prop
 }
 
 const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
@@ -23,7 +24,8 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
   isSubmitting,
   handleSubmit,
   handleNextStep,
-  handlePreviousStep
+  handlePreviousStep,
+  children
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'step1' | 'step2' | 'step3')} className="space-y-6">
@@ -61,7 +63,9 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
           destinationAddress={formState.destinationAddress}
           setDestinationAddress={formState.setDestinationAddress}
           departureCoordinates={formState.departureCoordinates}
+          setDepartureCoordinates={formState.setDepartureCoordinates}
           destinationCoordinates={formState.destinationCoordinates}
+          setDestinationCoordinates={formState.setDestinationCoordinates}
           date={formState.date}
           setDate={formState.setDate}
           time={formState.time}
@@ -139,6 +143,8 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
           handlePreviousStep={handlePreviousStep}
         />
       </TabsContent>
+      
+      {children}
     </Tabs>
   );
 };
