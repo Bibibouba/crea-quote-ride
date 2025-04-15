@@ -144,7 +144,7 @@ export const calculateQuoteDetails = (
   const rideVatRate = pricingSettings?.ride_vat_rate || 10;
   const waitingVatRate = pricingSettings?.waiting_vat_rate || 20;
   
-  const { totalPriceTTC, totalVAT } = calculateVatAndTotalPrices(
+  const { totalPrice, totalVAT } = calculateVatAndTotalPrices(
     oneWayPriceHT,
     returnPriceHT,
     waitingTimePriceHT,
@@ -177,7 +177,7 @@ export const calculateQuoteDetails = (
     oneWayPrice: oneWayPriceHT * (1 + rideVatRate / 100),
     returnPrice: returnPriceHT * (1 + rideVatRate / 100),
     waitingTimePrice: waitingTimePriceHT * (1 + waitingVatRate / 100),
-    totalPrice: totalPriceTTC,
+    totalPrice,
     nightSurcharge,
     sundaySurcharge,
     rideVatRate,

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -16,6 +17,7 @@ import RouteMap from '@/components/map/RouteMap';
 import { formatDuration } from '@/lib/formatDuration';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { TripTimeInfo, NightRateInfo, SundayRateInfo } from './summary/TripTimeInfo';
 
 interface TripSummaryStepProps {
   departureAddress: string;
@@ -80,9 +82,17 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
   const nightStartDisplay = quoteDetails?.nightStartDisplay || '';
   const nightEndDisplay = quoteDetails?.nightEndDisplay || '';
 
-  const formatPrice = (price?: number) => {
-    if (price === undefined) return "0.0";
-    return price.toFixed(1);
+  // FIX: Ensure price is a number before calling toFixed
+  const formatPrice = (price?: number | string | null) => {
+    if (price === undefined || price === null) return "0.0";
+    
+    // Convert to number if it's a string
+    const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
+    
+    // Check if it's a valid number
+    if (isNaN(numericPrice) || typeof numericPrice !== 'number') return "0.0";
+    
+    return numericPrice.toFixed(1);
   };
   
   return (
