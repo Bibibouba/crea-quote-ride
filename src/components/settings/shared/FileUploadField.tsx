@@ -33,9 +33,9 @@ const FileUploadField = ({
   const [isUploading, setIsUploading] = useState(false);
 
   const getBucketName = (prefix: string) => {
-    if (prefix === 'logo') return 'logo';
+    if (prefix === 'logo') return 'logos'; // Changed 'logo' to 'logos' to match the actual bucket name
     if (prefix === 'banner') return 'imageheader';
-    return 'logo'; // Default bucket
+    return 'logos'; // Default bucket also changed to 'logos'
   };
 
   const uploadFile = async (file: File) => {
