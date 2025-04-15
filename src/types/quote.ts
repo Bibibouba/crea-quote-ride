@@ -41,6 +41,13 @@ export type Quote = {
   wait_time_night?: number;
   wait_price_day?: number;
   wait_price_night?: number;
+  // New fields to match database structure
+  one_way_price_ht?: number;
+  return_price_ht?: number;
+  one_way_price?: number;
+  return_price?: number;
+  amount_ht?: number;
+  day_hours?: number;
   clients?: {
     first_name: string;
     last_name: string;

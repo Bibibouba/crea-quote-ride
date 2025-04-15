@@ -65,18 +65,18 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
 
   const vehicleName = quote.vehicles?.name || selectedVehicle?.name || 'Véhicule inconnu';
   
-  // Prepare data for QuoteSummary
+  // Prepare data for QuoteSummary - use Partial type to avoid TypeScript errors
   const quoteDetails: Partial<QuoteDetailsType> = {
     basePrice: basePrice,
     isNightRate: quote.has_night_rate || false,
     isSunday: quote.is_sunday_holiday || false,
-    oneWayPriceHT: 0, // These will be calculated from other values
-    oneWayPrice: 0,   // These will be calculated from other values
-    returnPriceHT: 0, // These will be calculated from other values
-    returnPrice: 0,   // These will be calculated from other values
+    oneWayPriceHT: quote.one_way_price_ht || 0,
+    oneWayPrice: quote.one_way_price || 0,
+    returnPriceHT: quote.return_price_ht || 0, 
+    returnPrice: quote.return_price || 0,
     waitingTimePriceHT: quote.waiting_time_price || 0,
     waitingTimePrice: quote.waiting_time_price ? quote.waiting_time_price * 1.2 : 0, // Approximation with 20% VAT
-    totalPriceHT: Math.round(quote.amount / 1.1), // Approximation with 10% VAT
+    totalPriceHT: quote.amount_ht || Math.round(quote.amount / 1.1), // Approximation with 10% VAT
     totalVAT: Math.round(quote.amount - (quote.amount / 1.1)), // Approximation
     totalPrice: quote.amount,
     nightSurcharge: quote.night_surcharge || 0,

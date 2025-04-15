@@ -1,3 +1,4 @@
+
 import { useQuoteForm } from "@/hooks/useQuoteForm";
 
 export interface Vehicle {
@@ -101,7 +102,7 @@ export interface QuoteDetailsType {
   destinationCoordinates: [number, number];
   time: string;
   date: Date;
-
+  // Added fields to match Quote type
   dayKm?: number;
   nightKm?: number;
   totalKm?: number;
@@ -133,6 +134,12 @@ export interface QuoteDetailsType {
   waitTimeNight?: number;
   waitPriceDay?: number;
   waitPriceNight?: number;
+  // Add mappings for fields in QuoteDetails to ensure compatibility
+  oneWayPrice?: number;
+  returnPrice?: number;
+  waitingTimePrice?: number;
+  totalPrice?: number;
+  amount_ht?: number;
 }
 
 export type QuoteFormState = ReturnType<typeof useQuoteForm>;
