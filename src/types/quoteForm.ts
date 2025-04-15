@@ -106,6 +106,11 @@ export interface QuoteDetailsType {
   totalKm?: number;
   dayPrice?: number;
   nightPrice?: number;
+  nightSurcharge?: number;
+  isNightRate?: boolean;
+  nightRatePercentage?: number;
+  nightHours?: number;
+  dayHours?: number;
 }
 
 export type QuoteFormState = ReturnType<typeof useQuoteForm>;
