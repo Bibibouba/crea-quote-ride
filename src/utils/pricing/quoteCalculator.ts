@@ -101,13 +101,23 @@ export const calculateQuoteDetails = (
   const oneWayNightProportion = oneWayTotalMinutes > 0 ? oneWayNightMinutes / oneWayTotalMinutes : 0;
   const returnNightProportion = returnTotalMinutes > 0 ? returnNightMinutes / returnTotalMinutes : 0;
   
+  // Calcul des distances en tarif jour et nuit
+  const dayKm = Math.round((1 - oneWayNightProportion) * adjustedDistance);
+  const nightKm = Math.round(oneWayNightProportion * adjustedDistance);
+  const totalKm = adjustedDistance;
+  
   // Calcul des prix HT pour les trajets aller et retour
-  let oneWayPriceHT = adjustedDistance * basePrice;
+  const dayPrice = dayKm * basePrice;
+  const nightPriceBase = nightKm * basePrice;
+  const nightPriceWithSurcharge = nightPriceBase * (1 + nightRatePercentage / 100);
+  const nightPrice = nightPriceWithSurcharge;
+  
+  let oneWayPriceHT = dayPrice + nightPrice;
   let returnPriceHT = hasReturnTrip ? (returnToSameAddress ? adjustedDistance * basePrice : adjustedReturnDistance * basePrice) : 0;
   
   // Répartition du prix entre jour et nuit pour appliquer la majoration uniquement sur la partie nuit
-  const oneWayNightPriceHT = oneWayPriceHT * oneWayNightProportion;
-  const oneWayDayPriceHT = oneWayPriceHT - oneWayNightPriceHT;
+  const oneWayNightPriceHT = oneWayNightProportion > 0 ? nightPrice : 0;
+  const oneWayDayPriceHT = dayPrice;
   
   const returnNightPriceHT = returnPriceHT * returnNightProportion;
   const returnDayPriceHT = returnPriceHT - returnNightPriceHT;
@@ -115,11 +125,11 @@ export const calculateQuoteDetails = (
   // Application de la majoration de nuit uniquement sur la portion de nuit
   let nightSurcharge = 0;
   if (nightRatePercentage > 0 && (oneWayNightMinutes > 0 || returnNightMinutes > 0)) {
-    const nightSurchargeAmount = (oneWayNightPriceHT + returnNightPriceHT) * (nightRatePercentage / 100);
-    nightSurcharge = nightSurchargeAmount;
+    // La surcharge est la différence entre le prix de nuit avec majoration et le prix de nuit sans majoration
+    nightSurcharge = nightPriceWithSurcharge - nightPriceBase;
     
     // Recalcul des prix avec la majoration de nuit
-    oneWayPriceHT = oneWayDayPriceHT + oneWayNightPriceHT * (1 + nightRatePercentage / 100);
+    oneWayPriceHT = oneWayDayPriceHT + oneWayNightPriceHT;
     returnPriceHT = returnDayPriceHT + returnNightPriceHT * (1 + nightRatePercentage / 100);
     
     // Log des calculs pour debug
@@ -130,7 +140,11 @@ export const calculateQuoteDetails = (
       returnNightProportion,
       returnNightPriceHT,
       returnDayPriceHT,
-      nightSurchargeAmount,
+      nightSurcharge,
+      dayKm,
+      nightKm,
+      dayPrice,
+      nightPrice,
       updatedOneWayPriceHT: oneWayPriceHT,
       updatedReturnPriceHT: returnPriceHT
     });
@@ -194,7 +208,11 @@ export const calculateQuoteDetails = (
     totalPrice,
     nightHours,
     dayHours,
-    isNightRate: oneWayNightMinutes > 0 || returnNightMinutes > 0
+    isNightRate: oneWayNightMinutes > 0 || returnNightMinutes > 0,
+    dayKm,
+    nightKm,
+    dayPrice,
+    nightPrice
   });
   
   return {
@@ -222,6 +240,12 @@ export const calculateQuoteDetails = (
     nightHours,
     dayHours,
     nightStartDisplay: combinedNightStartDisplay,
-    nightEndDisplay: combinedNightEndDisplay
+    nightEndDisplay: combinedNightEndDisplay,
+    dayKm,
+    nightKm, 
+    totalKm,
+    dayPrice,
+    nightPrice,
+    sundayRate: holidaySundayPercentage
   };
 };

@@ -74,6 +74,12 @@ export interface QuoteDetails {
   nightEndDisplay?: string;
   // Champs pour le dimanche/jour férié
   sundayRate?: number;
+  // Nouveaux champs pour le détail du calcul du tarif de nuit
+  dayKm?: number;
+  nightKm?: number;
+  totalKm?: number;
+  dayPrice?: number;
+  nightPrice?: number;
 }
 
 export interface WaitingTimeOption {

@@ -1,6 +1,6 @@
 
 import { Separator } from '@/components/ui/separator';
-import { Clock, Moon, Calendar, AlertCircle, Info } from 'lucide-react';
+import { Clock, Moon, Calendar, AlertCircle, Info, ArrowDownRight, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
@@ -12,6 +12,11 @@ export interface NightRateInfo {
   nightStart: string;
   nightEnd: string;
   nightSurcharge?: number;
+  dayKm?: number;
+  nightKm?: number;
+  totalKm?: number;
+  dayPrice?: number;
+  nightPrice?: number;
 }
 
 export interface SundayRateInfo {
@@ -94,6 +99,49 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
                   </p>
                 </div>
               </div>
+              
+              {nightRateInfo.dayKm !== undefined && nightRateInfo.nightKm !== undefined && (
+                <div className="bg-white p-3 rounded-md mt-3 border border-yellow-200">
+                  <h4 className="font-bold text-yellow-800 mb-2">Détail de la tarification</h4>
+                  
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <ArrowRight className="h-4 w-4 text-yellow-600 mr-1.5" />
+                        <span className="text-sm font-medium">{startTime} à {nightRateInfo.nightStart}</span>
+                      </div>
+                      <span className="text-sm font-semibold">
+                        {nightRateInfo.dayKm.toFixed(0)} km
+                      </span>
+                    </div>
+                    
+                    {nightRateInfo.dayPrice !== undefined && (
+                      <div className="text-sm ml-6 text-gray-600">
+                        Prix: {nightRateInfo.dayPrice.toFixed(2)}€
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="flex items-center">
+                        <ArrowRight className="h-4 w-4 text-yellow-600 mr-1.5" />
+                        <span className="text-sm font-medium">{nightRateInfo.nightStart} à {endTime}</span>
+                        <Badge variant="outline" className="ml-2 bg-yellow-100 text-yellow-800 border-yellow-300 text-xs">
+                          +{nightRateInfo.percentage}%
+                        </Badge>
+                      </div>
+                      <span className="text-sm font-semibold">
+                        {nightRateInfo.nightKm.toFixed(0)} km
+                      </span>
+                    </div>
+                    
+                    {nightRateInfo.nightPrice !== undefined && (
+                      <div className="text-sm ml-6 text-gray-600">
+                        Prix: {nightRateInfo.nightPrice.toFixed(2)}€ (majoration incluse)
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </AlertDescription>
         </Alert>

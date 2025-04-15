@@ -77,7 +77,12 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
     totalHours: nightHours + dayHours,
     nightStart: nightRateStart,
     nightEnd: nightRateEnd,
-    nightSurcharge: quoteDetails?.nightSurcharge
+    nightSurcharge: quoteDetails?.nightSurcharge,
+    dayKm: quoteDetails?.dayKm,
+    nightKm: quoteDetails?.nightKm,
+    totalKm: quoteDetails?.totalKm,
+    dayPrice: quoteDetails?.dayPrice,
+    nightPrice: quoteDetails?.nightPrice
   } : undefined;
 
   const sundayRateInfo: SundayRateInfo | undefined = isSunday && sundayRate > 0 ? {
