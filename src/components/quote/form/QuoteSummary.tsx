@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -36,8 +35,15 @@ export interface QuoteDetailsType {
   totalMinutes?: number;
   nightRatePercentage?: number;
   nightHours?: number;
+  dayHours?: number;
   nightStartDisplay?: string;
   nightEndDisplay?: string;
+  sundayRate?: number;
+  dayKm?: number;
+  nightKm?: number;
+  totalKm?: number;
+  dayPrice?: number;
+  nightPrice?: number;
 }
 
 interface QuoteSummaryProps {
