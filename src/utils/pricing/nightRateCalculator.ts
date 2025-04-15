@@ -12,6 +12,24 @@ export const calculateNightSurcharge = (
   nightRatePercentage: number,
   hasReturnTrip: boolean
 ) => {
+  // Vérifiez s'il y a une proportion de nuit à appliquer
+  const hasNightPortion = oneWayNightProportion > 0 || returnNightProportion > 0;
+  
+  if (!hasNightPortion || nightRatePercentage <= 0) {
+    return {
+      nightSurcharge: 0,
+      oneWayDayPriceHT: oneWayDistance * basePrice,
+      oneWayNightPriceHT: 0,
+      returnDayPriceHT: hasReturnTrip ? returnDistance * basePrice : 0,
+      returnNightPriceHT: 0,
+      dayKm: oneWayDistance + (hasReturnTrip ? returnDistance : 0),
+      nightKm: 0,
+      totalKm: oneWayDistance + (hasReturnTrip ? returnDistance : 0),
+      dayPrice: (oneWayDistance + (hasReturnTrip ? returnDistance : 0)) * basePrice,
+      nightPrice: 0
+    };
+  }
+  
   // Calculer les kilomètres de jour et de nuit pour l'aller
   const oneWayDayDistance = oneWayDistance * (1 - oneWayNightProportion);
   const oneWayNightDistance = oneWayDistance * oneWayNightProportion;

@@ -1,3 +1,4 @@
+
 /**
  * Vérifie si la date et l'heure spécifiées se situent pendant les heures de nuit
  */
@@ -121,6 +122,19 @@ export const calculateNightDuration = (
     
     // Ajouter les minutes de nuit pour chaque jour complet
     nightMinutes += fullDays * nightDurationInMinutes;
+  }
+  
+  // Cas 4: Un trajet qui chevauche la période de nuit sur un autre jour
+  // Par exemple, si le trajet commence à 22h un jour et se termine à 7h le lendemain
+  if (tripStartDate >= nightStartDate && tripEndDate > nightEndDate && tripEndDate.getDate() > tripStartDate.getDate()) {
+    // Calculer la portion de nuit entre minuit et la fin de la période de nuit
+    const nextDayNightEndDate = new Date(nightEndDate);
+    nextDayNightEndDate.setDate(tripStartDate.getDate() + 1);
+    
+    if (tripEndDate > nextDayNightEndDate) {
+      // Ajouter les minutes de la période de nuit jusqu'à la fin
+      nightMinutes += (nextDayNightEndDate.getTime() - nightEndDate.getTime()) / 60000;
+    }
   }
   
   // Retourner le résultat en arrondissant pour éviter des fractions

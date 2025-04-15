@@ -42,7 +42,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
 
   return (
     <div className="space-y-2">
-      {nightRateInfo?.isApplied && (
+      {nightRateInfo?.isApplied && nightRateInfo.nightHours && nightRateInfo.nightHours > 0 && (
         <div className="bg-muted/40 p-2 rounded-md space-y-1">
           <div className="flex items-center gap-2 mb-1">
             <GanttChart className="h-4 w-4 text-blue-500" />
