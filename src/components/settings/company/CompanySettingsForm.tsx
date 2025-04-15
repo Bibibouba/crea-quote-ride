@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -58,6 +59,14 @@ const companySettingsSchema = z.object({
   discount_conditions: z.string().optional(),
   bank_details: z.string().optional(),
   legal_notices: z.string().optional(),
+  
+  company_type: z.string().optional().nullable(),
+  company_address: z.string().optional().nullable(),
+  siret: z.string().optional().nullable(),
+  vat_number: z.string().optional().nullable(),
+  registration_city: z.string().optional().nullable(),
+  rcs_number: z.string().optional().nullable(),
+  is_vat_exempt: z.boolean().optional().nullable(),
 });
 
 export type CompanySettingsFormValues = z.infer<typeof companySettingsSchema>;
@@ -92,6 +101,14 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
       discount_conditions: companySettings?.discount_conditions || "",
       bank_details: companySettings?.bank_details || "",
       legal_notices: companySettings?.legal_notices || "TVA non applicable, art. 293 B du CGI",
+      
+      company_type: companySettings?.company_type || "",
+      company_address: companySettings?.company_address || "",
+      siret: companySettings?.siret || "",
+      vat_number: companySettings?.vat_number || "",
+      registration_city: companySettings?.registration_city || "",
+      rcs_number: companySettings?.rcs_number || "",
+      is_vat_exempt: companySettings?.is_vat_exempt || false,
     },
   });
 
@@ -208,7 +225,7 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
                     <FormLabel>Type d'entreprise</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      defaultValue={field.value || undefined}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -331,7 +348,7 @@ const CompanySettingsForm = ({ companySettings, onSubmit, saving }: CompanySetti
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
                       <Checkbox
-                        checked={field.value}
+                        checked={field.value || false}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>

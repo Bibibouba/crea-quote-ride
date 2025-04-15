@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -19,6 +20,13 @@ type CompanySettings = Database['public']['Tables']['company_settings']['Row'] &
   contact_first_name?: string | null;
   contact_last_name?: string | null;
   contact_email?: string | null;
+  company_type?: string | null;
+  company_address?: string | null;
+  siret?: string | null;
+  vat_number?: string | null;
+  registration_city?: string | null;
+  rcs_number?: string | null;
+  is_vat_exempt?: boolean | null;
 };
 
 const CompanySettingsManager = () => {
