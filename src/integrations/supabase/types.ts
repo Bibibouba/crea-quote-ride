@@ -504,6 +504,7 @@ export type Database = {
           night_rate_end: string | null
           night_rate_percentage: number | null
           night_rate_start: string | null
+          price_per_km: number | null
           updated_at: string
           vehicle_id: string
           wait_night_enabled: boolean | null
@@ -523,6 +524,7 @@ export type Database = {
           night_rate_end?: string | null
           night_rate_percentage?: number | null
           night_rate_start?: string | null
+          price_per_km?: number | null
           updated_at?: string
           vehicle_id: string
           wait_night_enabled?: boolean | null
@@ -542,6 +544,7 @@ export type Database = {
           night_rate_end?: string | null
           night_rate_percentage?: number | null
           night_rate_start?: string | null
+          price_per_km?: number | null
           updated_at?: string
           vehicle_id?: string
           wait_night_enabled?: boolean | null
