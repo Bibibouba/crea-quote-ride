@@ -55,7 +55,9 @@ const SimulatorContainer = () => {
       isSunday: formState.quoteDetails.isSunday,
       sundaySurcharge: formState.quoteDetails.sundaySurcharge,
       totalPriceHT: formState.quoteDetails.totalPriceHT,
-      totalVAT: formState.quoteDetails.totalVAT
+      totalVAT: formState.quoteDetails.totalVAT,
+      nightStartDisplay: formState.quoteDetails.nightStartDisplay,
+      nightEndDisplay: formState.quoteDetails.nightEndDisplay
     });
 
     const quoteData = {

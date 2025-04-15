@@ -8,6 +8,7 @@ import { QuoteDetailsType } from '@/types/quoteForm';
 import { TripTimeInfo, NightRateInfo, SundayRateInfo } from './TripTimeInfo';
 import { WaitingTimeDetailDisplay } from './WaitingTimeDetailDisplay';
 import { ExactPriceDetails } from './ExactPriceDetails';
+import { DayNightSplit } from './DayNightSplit';
 
 interface TripDetailsCardProps {
   selectedVehicle: string;
@@ -119,17 +120,29 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
         
         {/* Afficher soit ExactPriceDetails, soit le détail standard basé sur le trip */}
         {hasCompleteDetails ? (
-          <ExactPriceDetails 
-            dayKm={quoteDetails.dayKm}
-            nightKm={quoteDetails.nightKm}
-            dayPrice={quoteDetails.dayPrice}
-            nightPrice={quoteDetails.nightPrice}
-            basePrice={basePrice}
-            nightPercentage={nightRatePercentage}
-            totalHT={quoteDetails.totalPriceHT}
-            totalVAT={quoteDetails.totalVAT}
-            totalTTC={quoteDetails.totalPrice}
-          />
+          <>
+            {/* New component for day/night split visualization */}
+            <DayNightSplit 
+              dayKm={quoteDetails.dayKm}
+              nightKm={quoteDetails.nightKm}
+              totalKm={quoteDetails.totalKm}
+              nightRatePercentage={nightRatePercentage}
+              nightStartTime={nightRateStart}
+              nightEndTime={nightRateEnd}
+            />
+            
+            <ExactPriceDetails 
+              dayKm={quoteDetails.dayKm}
+              nightKm={quoteDetails.nightKm}
+              dayPrice={quoteDetails.dayPrice}
+              nightPrice={quoteDetails.nightPrice}
+              basePrice={basePrice}
+              nightPercentage={nightRatePercentage}
+              totalHT={quoteDetails.totalPriceHT}
+              totalVAT={quoteDetails.totalVAT}
+              totalTTC={quoteDetails.totalPrice}
+            />
+          </>
         ) : (
           <>
             {/* Trajet aller */}
