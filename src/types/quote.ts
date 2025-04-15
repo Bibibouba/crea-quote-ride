@@ -26,6 +26,12 @@ export type Quote = {
   return_coordinates?: number[] | [number, number];
   departure_coordinates?: number[] | [number, number];
   arrival_coordinates?: number[] | [number, number];
+  // Add new day/night rate fields
+  day_km?: number;
+  night_km?: number;
+  total_km?: number;
+  day_price?: number;
+  night_price?: number;
   clients?: {
     first_name: string;
     last_name: string;

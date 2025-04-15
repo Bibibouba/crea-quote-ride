@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -65,11 +64,12 @@ export const useClientSimulator = () => {
       }
       
       // Log quote details before submission
-      console.log('Submitting quote with night rate details:', {
-        has_night_rate: quoteData.has_night_rate,
-        night_hours: quoteData.night_hours,
-        night_rate_percentage: quoteData.night_rate_percentage,
-        night_surcharge: quoteData.night_surcharge
+      console.log('Submitting quote with day/night rate details:', {
+        day_km: quoteData.dayKm,
+        night_km: quoteData.nightKm,
+        total_km: quoteData.totalKm,
+        day_price: quoteData.dayPrice,
+        night_price: quoteData.nightPrice
       });
       
       // Create the quote
@@ -97,6 +97,11 @@ export const useClientSimulator = () => {
           return_coordinates: quoteData.return_coordinates,
           return_distance_km: quoteData.return_distance_km,
           return_duration_minutes: quoteData.return_duration_minutes,
+          day_km: quoteData.dayKm,
+          night_km: quoteData.nightKm,
+          total_km: quoteData.totalKm,
+          day_price: quoteData.dayPrice,
+          night_price: quoteData.nightPrice,
           has_night_rate: quoteData.has_night_rate,
           night_hours: quoteData.night_hours,
           night_rate_percentage: quoteData.night_rate_percentage,

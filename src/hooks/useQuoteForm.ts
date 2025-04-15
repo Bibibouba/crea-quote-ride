@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,13 +51,11 @@ export const useQuoteForm = () => {
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
   const [quoteDetails, setQuoteDetails] = useState<QuoteDetails | null>(null);
   
-  // Load vehicles and vehicle types from Supabase
   useEffect(() => {
     const loadVehicleData = async () => {
       setIsLoadingVehicles(true);
       
       try {
-        // Get current authenticated driver
         const { data: { session } } = await supabase.auth.getSession();
         const driverId = session?.user?.id;
         
@@ -68,7 +65,6 @@ export const useQuoteForm = () => {
           return;
         }
         
-        // Fetch vehicle types
         const { data: types, error: typesError } = await supabase
           .from('vehicle_types')
           .select('*')
@@ -78,7 +74,6 @@ export const useQuoteForm = () => {
         
         setVehicleTypes(types || []);
         
-        // Fetch vehicles with pricing settings
         await fetchVehicles(driverId, types || [], selectedVehicle, setVehiclesWithPricing);
       } catch (error) {
         console.error('Error loading vehicle data:', error);
@@ -104,7 +99,6 @@ export const useQuoteForm = () => {
     }
   }, [selectedVehicle]);
   
-  // Calculate waiting time price when params change
   useEffect(() => {
     if (!hasWaitingTime) {
       setWaitingTimePrice(0);
@@ -123,7 +117,6 @@ export const useQuoteForm = () => {
     setWaitingTimePrice(price);
   }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time, vehicles, selectedVehicle]);
   
-  // Calculate return distance when needed
   useEffect(() => {
     const calculateReturnRoute = async () => {
       if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
@@ -144,7 +137,6 @@ export const useQuoteForm = () => {
     calculateReturnRoute();
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
   
-  // Calculate detailed quote when parameters change
   useEffect(() => {
     if (!selectedVehicle || estimatedDistance === 0 || vehicles.length === 0) {
       setQuoteDetails(null);
@@ -248,10 +240,8 @@ export const useQuoteForm = () => {
     }
   };
   
-  // Get basic price for current vehicle
   const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
   
-  // Create waiting time options (15 min intervals up to 6 hours)
   const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
     const minutes = (i + 1) * 15;
     const hours = Math.floor(minutes / 60);
@@ -272,6 +262,85 @@ export const useQuoteForm = () => {
       label
     };
   });
+  
+  const handleSaveQuote = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const driverId = session?.user?.id;
+      
+      if (!driverId) {
+        console.log('No authenticated driver found');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      const quoteData = {
+        driver_id: driverId,
+        departure_address: departureAddress,
+        destination_address: destinationAddress,
+        departure_coordinates: departureCoordinates,
+        destination_coordinates: destinationCoordinates,
+        date: date.toISOString(),
+        time: time,
+        passengers: parseInt(passengers),
+        selected_vehicle: selectedVehicle,
+        estimated_distance: estimatedDistance,
+        estimated_duration: estimatedDuration,
+        has_return_trip: hasReturnTrip,
+        return_to_same_address: returnToSameAddress,
+        return_distance: returnDistance,
+        return_duration: returnDuration,
+        has_waiting_time: hasWaitingTime,
+        waiting_time_minutes: waitingTimeMinutes,
+        waiting_time_price: waitingTimePrice,
+        base_price: basePrice,
+        day_km: quoteDetails?.dayKm,
+        night_km: quoteDetails?.nightKm,
+        total_km: quoteDetails?.totalKm,
+        day_price: quoteDetails?.dayPrice,
+        night_price: quoteDetails?.nightPrice,
+        has_night_rate: quoteDetails?.isNightRate,
+        night_hours: quoteDetails?.nightHours,
+        night_rate_percentage: quoteDetails?.nightRatePercentage,
+        night_surcharge: quoteDetails?.nightSurcharge,
+        is_sunday_holiday: quoteDetails?.isSunday,
+        sunday_holiday_percentage: quoteDetails?.sundayRate,
+        sunday_holiday_surcharge: quoteDetails?.sundaySurcharge
+      };
+      
+      const { data, error } = await supabase
+        .from('quotes')
+        .insert(quoteData)
+        .select();
+      
+      if (error) {
+        console.error('Error saving quote:', error);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de sauvegarder la demande',
+          variant: 'destructive',
+        });
+      } else {
+        setIsQuoteSent(true);
+        toast({
+          title: 'Demande sauvegardée',
+          description: 'Votre demande a été enregistrée avec succès',
+          variant: 'success',
+        });
+      }
+    } catch (error) {
+      console.error('Error saving quote:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de sauvegarder la demande',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return {
     departureAddress,
@@ -339,6 +408,7 @@ export const useQuoteForm = () => {
     handleReturnAddressSelect,
     handleRouteCalculated,
     handleCalculateQuote,
-    resetForm
+    resetForm,
+    handleSaveQuote
   };
 };

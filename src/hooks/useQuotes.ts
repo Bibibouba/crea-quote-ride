@@ -147,6 +147,12 @@ export const useQuotes = (clientId?: string) => {
         const quoteWithDriverId = {
           ...newQuote,
           driver_id: userId,
+          // Add day/night rate fields if they exist in the quote details
+          day_km: newQuote.day_km,
+          night_km: newQuote.night_km,
+          total_km: newQuote.total_km,
+          day_price: newQuote.day_price,
+          night_price: newQuote.night_price
         };
 
         // Create the quote
