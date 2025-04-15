@@ -3,11 +3,12 @@ import React from 'react';
 
 interface PriceFormatterProps {
   price: number | string | null | undefined;
+  showDecimals?: boolean;
 }
 
-export const PriceFormatter = ({ price }: PriceFormatterProps) => {
+export const PriceFormatter = ({ price, showDecimals = true }: PriceFormatterProps) => {
   if (price === undefined || price === null) {
-    return <span>0.0€</span>;
+    return <span>0{showDecimals ? '.0' : ''}€</span>;
   }
   
   // Convert to number if it's a string
@@ -15,8 +16,8 @@ export const PriceFormatter = ({ price }: PriceFormatterProps) => {
   
   // Check if it's a valid number
   if (isNaN(numericPrice) || typeof numericPrice !== 'number') {
-    return <span>0.0€</span>;
+    return <span>0{showDecimals ? '.0' : ''}€</span>;
   }
   
-  return <span>{numericPrice.toFixed(1)}€</span>;
+  return <span>{showDecimals ? numericPrice.toFixed(1) : Math.round(numericPrice)}€</span>;
 };

@@ -1,13 +1,13 @@
 
 /**
- * Calculates night rate surcharge
+ * Calcule la majoration pour tarif de nuit
  * 
- * @param basePrice The base price before surcharge
- * @param isNightRateEnabled Whether night rate is enabled
- * @param nightKm Kilometers traveled during night hours
- * @param totalKm Total kilometers traveled
- * @param nightRatePercentage The percentage increase for night hours
- * @returns The night surcharge amount
+ * @param basePrice Prix de base avant majoration
+ * @param isNightRateEnabled Si le tarif de nuit est activé
+ * @param nightKm Kilomètres parcourus pendant les heures de nuit
+ * @param totalKm Total des kilomètres parcourus
+ * @param nightRatePercentage Pourcentage d'augmentation pour les heures de nuit
+ * @returns Montant de la majoration de nuit
  */
 export const calculateNightSurcharge = (
   basePrice: number,
@@ -16,16 +16,17 @@ export const calculateNightSurcharge = (
   totalKm: number,
   nightRatePercentage: number
 ): number => {
+  // Si le tarif de nuit n'est pas activé ou si aucun des paramètres n'est valide, retourne 0
   if (!isNightRateEnabled || nightRatePercentage <= 0 || nightKm <= 0 || totalKm <= 0) {
     return 0;
   }
 
-  // Calculate the base price for the night portion
+  // Calcule le prix de base pour la portion de nuit
   const nightPortion = nightKm / totalKm;
   const nightBasePrice = basePrice * nightPortion;
   
-  // Calculate the surcharge as a percentage of the night portion base price
+  // Calcule la majoration en pourcentage du prix de base pour la portion de nuit
   const surcharge = nightBasePrice * (nightRatePercentage / 100);
   
-  return surcharge;
+  return Number(surcharge.toFixed(2));
 };

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Moon, Calendar } from 'lucide-react';
 import { DayNightGauge } from './DayNightGauge';
+import { formatHours } from '@/lib/formatHours';
 
 export interface NightRateInfo {
   isApplied: boolean;
@@ -38,6 +39,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
 }) => {
   if (!nightRateInfo && !sundayRateInfo) return null;
   
+  // Calculate day and night percentages
   const dayPercentage = nightRateInfo && nightRateInfo.totalKm && nightRateInfo.dayKm
     ? (nightRateInfo.dayKm / nightRateInfo.totalKm) * 100
     : nightRateInfo?.totalHours 
@@ -45,28 +47,36 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
       : 100;
   
   const nightPercentage = 100 - dayPercentage;
+
+  // Format the night hours for display
+  const formattedNightHours = nightRateInfo?.nightHours 
+    ? formatHours(nightRateInfo.nightHours)
+    : '';
   
   return (
-    <div className="bg-secondary/20 p-2 rounded-md mt-2 text-sm space-y-2">
+    <div className="bg-secondary/20 p-3 rounded-md mt-2 text-sm space-y-3">
       {nightRateInfo && nightRateInfo.isApplied && (
         <>
-          <div className="flex items-center text-xs text-muted-foreground">
+          <div className="flex items-center text-xs text-muted-foreground mb-1">
             <Moon className="h-3 w-3 mr-1" />
             <span>
               Tarif de nuit appliqué ({nightRateInfo.percentage}% de majoration entre {nightRateInfo.nightStart} et {nightRateInfo.nightEnd})
+              {formattedNightHours && <span className="ml-1">- {formattedNightHours} en horaires de nuit</span>}
             </span>
           </div>
           
-          {/* Add the gauge here */}
+          {/* Add the improved gauge here */}
           <DayNightGauge 
             dayPercentage={dayPercentage} 
-            nightPercentage={nightPercentage} 
+            nightPercentage={nightPercentage}
+            dayKm={nightRateInfo.dayKm}
+            nightKm={nightRateInfo.nightKm}
           />
           
-          {nightRateInfo.dayKm !== undefined && nightRateInfo.nightKm !== undefined && (
-            <div className="flex justify-between text-xs">
-              <span>{nightRateInfo.dayKm.toFixed(1)} km (jour)</span>
-              <span>{nightRateInfo.nightKm.toFixed(1)} km (nuit)</span>
+          {nightRateInfo.dayPrice !== undefined && nightRateInfo.nightPrice !== undefined && (
+            <div className="flex justify-between text-xs mt-1">
+              <span>{nightRateInfo.dayPrice.toFixed(1)}€ (tarif jour)</span>
+              <span>{nightRateInfo.nightPrice.toFixed(1)}€ + {nightRateInfo.nightSurcharge?.toFixed(1) || '0.0'}€ de majoration (tarif nuit)</span>
             </div>
           )}
         </>

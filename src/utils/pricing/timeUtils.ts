@@ -14,11 +14,11 @@ export const isNightTime = (timestamp, nightStartTime, nightEndTime) => {
   const nightStart = timeStringToMinutes(nightStartTime);
   const nightEnd = timeStringToMinutes(nightEndTime);
   
-  // If night hours cross midnight (e.g., 20:00 to 06:00)
+  // Si les heures de nuit traversent minuit (par exemple, 20:00 à 06:00)
   if (nightStart > nightEnd) {
     return totalMinutes >= nightStart || totalMinutes <= nightEnd;
   } else {
-    // Night hours within the same day (e.g., 00:00 to 06:00)
+    // Heures de nuit dans la même journée (par exemple, 00:00 à 06:00)
     return totalMinutes >= nightStart && totalMinutes <= nightEnd;
   }
 };
@@ -143,6 +143,8 @@ export const calculateDayNightKmSplit = (
   return {
     dayKm,
     nightKm,
-    totalKm: totalDistance
+    totalKm: totalDistance,
+    dayPercentage: ((totalDistance - nightKm) / totalDistance) * 100,
+    nightPercentage: (nightKm / totalDistance) * 100
   };
 };
