@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -43,24 +44,6 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
   // Get basePrice, prioritizing data from the selected vehicle since vehicles table doesn't have basePrice
   const basePrice = selectedVehicle?.basePrice || 0;
   
-  // Prepare data for QuoteSummary
-  const quoteDetails: Partial<QuoteDetailsType> = {
-    oneWayPrice: quote.amount,
-    totalPrice: quote.amount,
-    basePrice: basePrice,
-    returnPrice: quote.has_return_trip ? (quote.amount / 2) : 0,
-    waitingTimePrice: quote.waiting_time_price || 0,
-    estimatedDistance: quote.distance_km || 0,
-    estimatedDuration: quote.duration_minutes || 0,
-    amount: quote.amount,
-    departureAddress: quote.departure_location,
-    destinationAddress: quote.arrival_location,
-    departureCoordinates: departureCoords || [0, 0],
-    destinationCoordinates: destinationCoords || [0, 0],
-    time: formattedTime,
-    date: rideDate,
-  };
-
   // Ensure coordinates are properly formatted as [number, number]
   const departureCoords = quote.departure_coordinates ? 
     (Array.isArray(quote.departure_coordinates) && quote.departure_coordinates.length >= 2 ? 
@@ -81,6 +64,30 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
     undefined;
 
   const vehicleName = quote.vehicles?.name || selectedVehicle?.name || 'Véhicule inconnu';
+  
+  // Prepare data for QuoteSummary - using types that actually exist in QuoteDetailsType
+  const quoteDetails: Partial<QuoteDetailsType> = {
+    estimatedDistance: quote.distance_km || 0,
+    estimatedDuration: quote.duration_minutes || 0,
+    amount: quote.amount,
+    departureAddress: quote.departure_location,
+    destinationAddress: quote.arrival_location,
+    departureCoordinates: departureCoords || ([0, 0] as [number, number]),
+    destinationCoordinates: destinationCoords || ([0, 0] as [number, number]),
+    time: formattedTime,
+    date: rideDate,
+    basePrice: basePrice,
+    totalPrice: quote.amount,
+    // Add other fields that might be needed
+    totalPriceHT: quote.amount, // This is an approximation
+    nightSurcharge: quote.night_surcharge || 0,
+    dayKm: quote.day_km || 0,
+    nightKm: quote.night_km || 0,
+    totalKm: quote.total_km || quote.distance_km || 0,
+    dayPrice: quote.day_price || 0,
+    nightPrice: quote.night_price || 0,
+    waitingTimePrice: quote.waiting_time_price || 0
+  };
   
   const handleDownloadPDF = async () => {
     try {
@@ -145,7 +152,7 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
             returnDistance={quote.return_distance_km || 0}
             returnDuration={quote.return_duration_minutes || 0}
             returnCoordinates={returnCoords}
-            quoteDetails={quoteDetails}
+            quoteDetails={quoteDetails as QuoteDetailsType} // Cast is needed here to satisfy type requirements
           />
         </div>
         
