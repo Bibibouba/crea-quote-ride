@@ -278,24 +278,23 @@ export const useQuoteForm = () => {
       
       const quoteData = {
         driver_id: driverId,
-        departure_address: departureAddress,
-        destination_address: destinationAddress,
+        client_id: "", // This needs to be set depending on your app flow
+        departure_location: departureAddress,
+        arrival_location: destinationAddress,
         departure_coordinates: departureCoordinates,
-        destination_coordinates: destinationCoordinates,
-        date: date.toISOString(),
-        time: time,
-        passengers: parseInt(passengers),
-        selected_vehicle: selectedVehicle,
-        estimated_distance: estimatedDistance,
-        estimated_duration: estimatedDuration,
+        arrival_coordinates: destinationCoordinates,
+        ride_date: date.toISOString(),
+        amount: quoteDetails?.totalPrice || 0,
+        status: "pending",
+        distance_km: estimatedDistance,
+        duration_minutes: estimatedDuration,
         has_return_trip: hasReturnTrip,
         return_to_same_address: returnToSameAddress,
-        return_distance: returnDistance,
-        return_duration: returnDuration,
+        return_distance_km: returnDistance,
+        return_duration_minutes: returnDuration,
         has_waiting_time: hasWaitingTime,
         waiting_time_minutes: waitingTimeMinutes,
         waiting_time_price: waitingTimePrice,
-        base_price: basePrice,
         day_km: quoteDetails?.dayKm,
         night_km: quoteDetails?.nightKm,
         total_km: quoteDetails?.totalKm,
@@ -327,7 +326,7 @@ export const useQuoteForm = () => {
         toast({
           title: 'Demande sauvegardée',
           description: 'Votre demande a été enregistrée avec succès',
-          variant: 'success',
+          variant: 'default',
         });
       }
     } catch (error) {
