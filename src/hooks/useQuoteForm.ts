@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useMapbox, Address } from '@/hooks/useMapbox';
-import { calculateWaitingTimePrice, calculateQuoteDetails } from '@/utils/pricingUtils';
+import { calculateWaitingTimePrice, calculateQuoteDetails } from '@/utils/pricing';
 import { usePricing } from '@/hooks/use-pricing';
 import { VehicleType } from '@/types/vehicle';
 import { Vehicle, QuoteDetails } from '@/types/quoteForm';

@@ -6,7 +6,7 @@ import { fr } from 'date-fns/locale';
 import QuoteSummary, { QuoteDetailsType } from './QuoteSummary';
 import ClientInfoSection from './ClientInfoSection';
 import { Vehicle } from '@/types/quoteForm';
-import { calculateQuoteDetails } from '@/utils/pricingUtils';
+import { calculateQuoteDetails } from '@/utils/pricing';
 import { usePricing } from '@/hooks/use-pricing';
 
 interface QuoteDisplayProps {
