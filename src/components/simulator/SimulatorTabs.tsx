@@ -14,7 +14,7 @@ interface SimulatorTabsProps {
   handleSubmit: () => Promise<void>;
   handleNextStep: () => void;
   handlePreviousStep: () => void;
-  children?: React.ReactNode; // Added children prop
+  children?: React.ReactNode; // Keep the children prop for flexibility
 }
 
 const SimulatorTabs: React.FC<SimulatorTabsProps> = ({

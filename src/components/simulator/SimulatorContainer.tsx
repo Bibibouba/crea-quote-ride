@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import QuoteStateContainer from '@/components/quote/form/QuoteStateContainer';
 import { useClientSimulator } from '@/hooks/useClientSimulator';
 import SimulatorLoading from './SimulatorLoading';
 import SimulatorHeader from './steps/SimulatorHeader';
@@ -129,15 +127,7 @@ const SimulatorContainer = () => {
             handleSubmit={handleSubmit}
             handleNextStep={handleNextStep}
             handlePreviousStep={handlePreviousStep}
-          >
-            <QuoteStateContainer 
-              showDashboardLink={false}
-              onSuccess={() => {
-                // Function that will be called when the quote is successfully submitted
-                // This is handled by the useClientSimulator hook
-              }}
-            />
-          </SimulatorTabs>
+          />
         </div>
       )}
     </div>
