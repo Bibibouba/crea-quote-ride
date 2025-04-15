@@ -14,24 +14,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import CompanySettingsForm, { CompanySettingsFormValues } from './CompanySettingsForm';
 
-// Create a custom type that extends the company_settings table Row type
-// and explicitly adds the new fields we've added to the database
 type CompanySettings = Database['public']['Tables']['company_settings']['Row'] & {
   banner_url?: string | null;
-  // Added fields
-  siret?: string | null;
-  company_address?: string | null;
-  vat_number?: string | null;
+  company_name?: string | null;
+  contact_first_name?: string | null;
+  contact_last_name?: string | null;
+  contact_email?: string | null;
   company_type?: string | null;
+  company_address?: string | null;
+  siret?: string | null;
+  vat_number?: string | null;
   registration_city?: string | null;
   rcs_number?: string | null;
-  invoice_prefix?: string | null;
-  next_invoice_number?: number | null;
-  payment_delay_days?: number | null;
-  late_payment_rate?: number | null;
-  discount_conditions?: string | null;
-  bank_details?: string | null;
-  legal_notices?: string | null;
   is_vat_exempt?: boolean | null;
 };
 
@@ -96,14 +90,12 @@ const CompanySettingsManager = () => {
       const { error } = await supabase
         .from('company_settings')
         .update({
-          // Style fields
           logo_url: values.logo_url,
           banner_url: values.banner_url,
           primary_color: values.primary_color,
           secondary_color: values.secondary_color,
           font_family: values.font_family,
           
-          // Company information fields
           company_type: values.company_type,
           company_address: values.company_address,
           siret: values.siret,
@@ -112,7 +104,6 @@ const CompanySettingsManager = () => {
           rcs_number: values.rcs_number,
           is_vat_exempt: values.is_vat_exempt,
           
-          // Invoice settings fields
           invoice_prefix: values.invoice_prefix,
           next_invoice_number: values.next_invoice_number,
           payment_delay_days: values.payment_delay_days,
@@ -120,6 +111,11 @@ const CompanySettingsManager = () => {
           discount_conditions: values.discount_conditions,
           bank_details: values.bank_details,
           legal_notices: values.legal_notices,
+          
+          company_name: values.company_name,
+          contact_first_name: values.contact_first_name,
+          contact_last_name: values.contact_last_name,
+          contact_email: values.contact_email,
           
           updated_at: new Date().toISOString(),
         })
@@ -129,17 +125,14 @@ const CompanySettingsManager = () => {
       
       toast.success('Paramètres d\'entreprise enregistrés');
       
-      // Update local state with the new values
       setCompanySettings({
         ...companySettings,
-        // Style fields
         logo_url: values.logo_url,
         banner_url: values.banner_url,
         primary_color: values.primary_color,
         secondary_color: values.secondary_color,
         font_family: values.font_family,
         
-        // Company information fields
         company_type: values.company_type,
         company_address: values.company_address,
         siret: values.siret,
@@ -148,7 +141,6 @@ const CompanySettingsManager = () => {
         rcs_number: values.rcs_number,
         is_vat_exempt: values.is_vat_exempt,
         
-        // Invoice settings fields
         invoice_prefix: values.invoice_prefix,
         next_invoice_number: values.next_invoice_number,
         payment_delay_days: values.payment_delay_days,
@@ -156,6 +148,11 @@ const CompanySettingsManager = () => {
         discount_conditions: values.discount_conditions,
         bank_details: values.bank_details,
         legal_notices: values.legal_notices,
+        
+        company_name: values.company_name,
+        contact_first_name: values.contact_first_name,
+        contact_last_name: values.contact_last_name,
+        contact_email: values.contact_email,
         
         updated_at: new Date().toISOString(),
       });

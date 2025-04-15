@@ -22,10 +22,32 @@ export type Quote = {
   custom_return_address?: string;
   return_distance_km?: number;
   return_duration_minutes?: number;
-  // Update these coordinate types to be more flexible
   return_coordinates?: number[] | [number, number];
   departure_coordinates?: number[] | [number, number];
   arrival_coordinates?: number[] | [number, number];
+  day_km?: number;
+  night_km?: number;
+  total_km?: number;
+  day_price?: number;
+  night_price?: number;
+  night_surcharge?: number;
+  has_night_rate?: boolean;
+  night_hours?: number;
+  night_rate_percentage?: number;
+  is_sunday_holiday?: boolean;
+  sunday_holiday_percentage?: number;
+  sunday_holiday_surcharge?: number;
+  wait_time_day?: number;
+  wait_time_night?: number;
+  wait_price_day?: number;
+  wait_price_night?: number;
+  // New fields to match database structure
+  one_way_price_ht?: number;
+  return_price_ht?: number;
+  one_way_price?: number;
+  return_price?: number;
+  amount_ht?: number;
+  day_hours?: number;
   clients?: {
     first_name: string;
     last_name: string;

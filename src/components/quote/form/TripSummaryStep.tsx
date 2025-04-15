@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -158,13 +157,13 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
         </Alert>
       )}
       
-      {isNightRate && quoteDetails?.nightMinutes && quoteDetails?.totalMinutes && (
+      {isNightRate && quoteDetails?.nightMinutes && quoteDetails?.totalMinutes && quoteDetails.nightMinutes > 0 && (
         <Alert variant="default" className="bg-indigo-50 border-indigo-200">
           <Moon className="h-4 w-4 text-indigo-600" />
           <AlertTitle className="text-indigo-800">Tarif de nuit applicable</AlertTitle>
           <AlertDescription className="text-indigo-700">
             Ce trajet inclut {Math.round((quoteDetails.nightMinutes / quoteDetails.totalMinutes) * 100)}% de 
-            parcours en horaires de nuit ({Math.round(nightHours * 10) / 10} heures).
+            parcours en horaires de nuit.
             {nightStartDisplay && nightEndDisplay && (
               <span> La majoration de {nightRatePercentage}% s'applique entre {nightStartDisplay} et {nightEndDisplay}.</span>
             )}
