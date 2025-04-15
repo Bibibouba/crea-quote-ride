@@ -172,6 +172,18 @@ export const calculateDetailedWaitingPrice = (
   
   const totalWaitPrice = waitPriceDay + waitPriceNight;
   
+  // Log pour débogage
+  console.log('Wait time calculation:', {
+    waitTimeDay: dayMinutes,
+    waitTimeNight: nightMinutes,
+    waitPriceDay: waitPriceDay,
+    waitPriceNight: waitPriceNight,
+    totalWaitPrice: totalWaitPrice,
+    nightStart: nightStartStr,
+    nightEnd: nightEndStr,
+    percentageNight: nightPercentage
+  });
+  
   return {
     waitTimeDay: dayMinutes,
     waitTimeNight: nightMinutes,

@@ -39,6 +39,23 @@ const SimulatorContainer = () => {
   const handleSubmit = async () => {
     if (!formState.quoteDetails) return Promise.reject(new Error("Quote details not available"));
 
+    // Log quote details for debugging
+    console.log('Submitting quote with details:', {
+      dayKm: formState.quoteDetails.dayKm,
+      nightKm: formState.quoteDetails.nightKm,
+      dayPrice: formState.quoteDetails.dayPrice,
+      nightPrice: formState.quoteDetails.nightPrice,
+      isNightRate: formState.quoteDetails.isNightRate,
+      nightHours: formState.quoteDetails.nightHours,
+      nightRatePercentage: formState.quoteDetails.nightRatePercentage,
+      waitTimeDay: formState.quoteDetails.waitTimeDay,
+      waitTimeNight: formState.quoteDetails.waitTimeNight,
+      waitPriceDay: formState.quoteDetails.waitPriceDay,
+      waitPriceNight: formState.quoteDetails.waitPriceNight,
+      isSunday: formState.quoteDetails.isSunday,
+      sundaySurcharge: formState.quoteDetails.sundaySurcharge
+    });
+
     const quoteData = {
       vehicle_id: formState.selectedVehicle,
       departure_location: formState.departureAddress,
@@ -64,8 +81,22 @@ const SimulatorContainer = () => {
       night_surcharge: formState.quoteDetails.nightSurcharge || 0,
       is_sunday_holiday: formState.quoteDetails.isSunday || false,
       sunday_holiday_percentage: formState.quoteDetails.sundayRate || 0,
-      sunday_holiday_surcharge: formState.quoteDetails.sundaySurcharge || 0
+      sunday_holiday_surcharge: formState.quoteDetails.sundaySurcharge || 0,
+      day_km: formState.quoteDetails.dayKm || 0,
+      night_km: formState.quoteDetails.nightKm || 0,
+      day_price: formState.quoteDetails.dayPrice || 0,
+      night_price: formState.quoteDetails.nightPrice || 0,
+      wait_time_day: formState.quoteDetails.waitTimeDay || 0,
+      wait_time_night: formState.quoteDetails.waitTimeNight || 0,
+      wait_price_day: formState.quoteDetails.waitPriceDay || 0,
+      wait_price_night: formState.quoteDetails.waitPriceNight || 0,
+      total_ht: formState.quoteDetails.totalPriceHT || 0,
+      vat: formState.quoteDetails.totalVAT || 0,
+      total_ttc: formState.quoteDetails.totalPrice || 0
     };
+
+    // Assurons-nous que tous les champs sont inclus dans la requête
+    console.log('Submitting with data:', quoteData);
 
     const clientData = {
       firstName: formState.firstName,

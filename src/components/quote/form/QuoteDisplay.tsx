@@ -115,7 +115,18 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
     nightRatePercentage: displayDetails?.nightRatePercentage,
     nightStartTime: displayDetails?.nightStartDisplay,
     nightEndTime: displayDetails?.nightEndDisplay,
-    nightSurcharge: displayDetails?.nightSurcharge
+    nightSurcharge: displayDetails?.nightSurcharge,
+    dayKm: displayDetails?.dayKm,
+    nightKm: displayDetails?.nightKm,
+    dayPrice: displayDetails?.dayPrice,
+    nightPrice: displayDetails?.nightPrice,
+    waitTimeDay: displayDetails?.waitTimeDay,
+    waitTimeNight: displayDetails?.waitTimeNight,
+    waitPriceDay: displayDetails?.waitPriceDay,
+    waitPriceNight: displayDetails?.waitPriceNight,
+    totalHT: displayDetails?.totalPriceHT,
+    vat: displayDetails?.totalVAT,
+    totalTTC: displayDetails?.totalPrice
   });
   
   return (
