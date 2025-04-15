@@ -87,6 +87,26 @@ export interface QuoteFormStateProps {
   onSuccess?: () => void;
 }
 
+export interface QuoteDetailsType {
+  // Examples of existing fields
+  estimatedDistance: number;
+  estimatedDuration: number;
+  amount: number;
+  departureAddress: string;
+  destinationAddress: string;
+  departureCoordinates: [number, number];
+  destinationCoordinates: [number, number];
+  time: string;
+  date: Date;
+
+  // New fields for day/night rate details
+  dayKm?: number;
+  nightKm?: number;
+  totalKm?: number;
+  dayPrice?: number;
+  nightPrice?: number;
+}
+
 export type QuoteFormState = ReturnType<typeof useQuoteForm>;
 
-export type QuoteDetailsType = Partial<QuoteDetails>;
+export type QuoteDetailsTypeOptional = Partial<QuoteDetailsType>;
