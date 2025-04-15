@@ -88,3 +88,5 @@ export interface QuoteFormStateProps {
 }
 
 export type QuoteFormState = ReturnType<typeof useQuoteForm>;
+
+export type QuoteDetailsType = Partial<QuoteDetails>;
