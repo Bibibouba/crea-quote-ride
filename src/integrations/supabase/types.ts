@@ -383,6 +383,7 @@ export type Database = {
           distance_km: number | null
           driver_id: string
           duration_minutes: number | null
+          has_night_rate: boolean | null
           has_return_trip: boolean | null
           has_waiting_time: boolean | null
           id: string
@@ -415,6 +416,7 @@ export type Database = {
           distance_km?: number | null
           driver_id: string
           duration_minutes?: number | null
+          has_night_rate?: boolean | null
           has_return_trip?: boolean | null
           has_waiting_time?: boolean | null
           id?: string
@@ -447,6 +449,7 @@ export type Database = {
           distance_km?: number | null
           driver_id?: string
           duration_minutes?: number | null
+          has_night_rate?: boolean | null
           has_return_trip?: boolean | null
           has_waiting_time?: boolean | null
           id?: string

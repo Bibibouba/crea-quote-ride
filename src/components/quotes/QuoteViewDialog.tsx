@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -67,16 +68,16 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
   // Prepare data for QuoteSummary
   const quoteDetails: Partial<QuoteDetailsType> = {
     basePrice: basePrice,
-    hasNightRate: quote.has_night_rate || false,
+    isNightRate: quote.has_night_rate || false,
     isSunday: quote.is_sunday_holiday || false,
-    oneWayPriceHT: quote.one_way_price_ht || 0,
-    oneWayPrice: quote.one_way_price || 0,
-    returnPriceHT: quote.return_price_ht || 0,
-    returnPrice: quote.return_price || 0,
+    oneWayPriceHT: 0, // These will be calculated from other values
+    oneWayPrice: 0,   // These will be calculated from other values
+    returnPriceHT: 0, // These will be calculated from other values
+    returnPrice: 0,   // These will be calculated from other values
     waitingTimePriceHT: quote.waiting_time_price || 0,
     waitingTimePrice: quote.waiting_time_price ? quote.waiting_time_price * 1.2 : 0, // Approximation with 20% VAT
-    totalPriceHT: quote.amount_ht || 0,
-    totalVAT: quote.amount_ht ? quote.amount - quote.amount_ht : 0,
+    totalPriceHT: Math.round(quote.amount / 1.1), // Approximation with 10% VAT
+    totalVAT: Math.round(quote.amount - (quote.amount / 1.1)), // Approximation
     totalPrice: quote.amount,
     nightSurcharge: quote.night_surcharge || 0,
     sundaySurcharge: quote.sunday_holiday_surcharge || 0,
@@ -85,7 +86,7 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
     hasMinDistanceWarning: false,
     minDistance: 0,
     nightMinutes: quote.night_hours ? quote.night_hours * 60 : 0,
-    totalMinutes: (quote.night_hours || 0 + quote.day_hours || 0) * 60,
+    totalMinutes: ((quote.night_hours || 0) + (quote.day_hours || 0)) * 60,
     nightRatePercentage: quote.night_rate_percentage || 0,
     nightHours: quote.night_hours || 0,
     dayHours: quote.day_hours || 0,
@@ -166,7 +167,7 @@ const QuoteViewDialog: React.FC<QuoteViewDialogProps> = ({
             returnDistance={quote.return_distance_km || 0}
             returnDuration={quote.return_duration_minutes || 0}
             returnCoordinates={returnCoords}
-            quoteDetails={quoteDetails}
+            quoteDetails={quoteDetails as QuoteDetailsType}
           />
         </div>
         

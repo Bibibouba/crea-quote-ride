@@ -1,3 +1,4 @@
+
 export type Quote = {
   id: string;
   driver_id: string;

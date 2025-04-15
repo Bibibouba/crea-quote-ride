@@ -1,4 +1,3 @@
-
 import { PricingSettings, QuoteDetails } from '@/types/quoteForm';
 import { isNightTime, isSunday, calculateNightDuration, calculateDayNightKmSplit } from './timeUtils';
 import { calculateNightSurcharge } from './nightRateCalculator';
@@ -191,6 +190,10 @@ export const calculateQuoteDetails = (
     totalKm: nightSurchargeResult.totalKm,
     dayPrice: nightSurchargeResult.dayPrice,
     nightPrice: nightSurchargeResult.nightPrice,
-    sundayRate: holidaySundayPercentage
+    sundayRate: holidaySundayPercentage,
+    waitTimeDay: 0,
+    waitTimeNight: 0,
+    waitPriceDay: 0,
+    waitPriceNight: 0
   };
 };
