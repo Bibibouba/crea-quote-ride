@@ -1,6 +1,10 @@
 
 import { PricingSettings, QuoteDetails } from '@/types/quoteForm';
 import { isNightTime, isSunday, calculateNightDuration } from './timeUtils';
+import { calculateNightSurcharge } from './nightRateCalculator';
+import { calculateSundaySurcharge } from './sundayRateCalculator';
+import { applyMinimumFare } from './minFareCalculator';
+import { calculateVatAndTotalPrices } from './vatCalculator';
 
 /**
  * Calculates detailed quote information based on trip parameters
@@ -45,7 +49,7 @@ export const calculateQuoteDetails = (
   
   const rideTime = time || "12:00";
   
-  // Calcul de la durée du trajet aller et de la partie en tarif de nuit
+  // Calculate one-way trip duration and night portion
   const oneWayDuration = estimatedDistance > 0 ? Math.max(10, estimatedDistance * 2) : 0;
   const nightDurationResult = 
     calculateNightDuration(date, rideTime, oneWayDuration, selectedVehicleInfo, pricingSettings);
@@ -55,20 +59,7 @@ export const calculateQuoteDetails = (
   const nightStartDisplay = nightDurationResult.nightStartDisplay;
   const nightEndDisplay = nightDurationResult.nightEndDisplay;
   
-  // Amélioration des logs pour le debug
-  console.log('Night rate calculation details:', {
-    date: date.toISOString(),
-    time: rideTime,
-    oneWayDuration,
-    oneWayNightMinutes,
-    oneWayTotalMinutes,
-    nightStartDisplay,
-    nightEndDisplay,
-    isNightRate,
-    nightRatePercentage
-  });
-  
-  // Calcul de la durée du trajet retour et de la partie en tarif de nuit si applicable
+  // Calculate return trip night duration if applicable
   let returnNightMinutes = 0;
   let returnTotalMinutes = 0;
   let returnNightStartDisplay = '';
@@ -97,139 +88,80 @@ export const calculateQuoteDetails = (
     returnNightEndDisplay = returnNightDuration.nightEndDisplay;
   }
   
-  // Calcul de la proportion du trajet aller en tarif de nuit
+  // Calculate night proportions
   const oneWayNightProportion = oneWayTotalMinutes > 0 ? oneWayNightMinutes / oneWayTotalMinutes : 0;
   const returnNightProportion = returnTotalMinutes > 0 ? returnNightMinutes / returnTotalMinutes : 0;
   
-  // Calcul des distances en tarif jour et nuit
-  const dayKm = Math.round((1 - oneWayNightProportion) * adjustedDistance);
-  const nightKm = Math.round(oneWayNightProportion * adjustedDistance);
-  const totalKm = adjustedDistance;
+  // Calculate night surcharge and price components
+  const nightSurchargeResult = calculateNightSurcharge(
+    oneWayNightProportion,
+    returnNightProportion,
+    adjustedDistance,
+    adjustedReturnDistance,
+    basePrice,
+    nightRatePercentage,
+    hasReturnTrip
+  );
   
-  // Calcul des prix HT pour les trajets aller et retour
-  const dayPrice = dayKm * basePrice;
-  const nightPriceBase = nightKm * basePrice;
-  const nightPriceWithSurcharge = nightPriceBase * (1 + nightRatePercentage / 100);
-  const nightPrice = nightPriceWithSurcharge;
+  let oneWayPriceHT = nightSurchargeResult.oneWayDayPriceHT + nightSurchargeResult.oneWayNightPriceHT;
+  let returnPriceHT = hasReturnTrip ? 
+    (nightSurchargeResult.returnDayPriceHT + nightSurchargeResult.returnNightPriceHT * (1 + nightRatePercentage / 100)) : 0;
   
-  let oneWayPriceHT = dayPrice + nightPrice;
-  let returnPriceHT = hasReturnTrip ? (returnToSameAddress ? adjustedDistance * basePrice : adjustedReturnDistance * basePrice) : 0;
+  // Apply Sunday/holiday surcharge if applicable
+  const sundaySurchargeResult = calculateSundaySurcharge(
+    isSundayRate,
+    holidaySundayPercentage,
+    oneWayPriceHT,
+    returnPriceHT
+  );
   
-  // Répartition du prix entre jour et nuit pour appliquer la majoration uniquement sur la partie nuit
-  const oneWayNightPriceHT = oneWayNightProportion > 0 ? nightPrice : 0;
-  const oneWayDayPriceHT = dayPrice;
+  oneWayPriceHT = sundaySurchargeResult.updatedOneWayPriceHT;
+  returnPriceHT = sundaySurchargeResult.updatedReturnPriceHT;
   
-  const returnNightPriceHT = returnPriceHT * returnNightProportion;
-  const returnDayPriceHT = returnPriceHT - returnNightPriceHT;
-  
-  // Application de la majoration de nuit uniquement sur la portion de nuit
-  let nightSurcharge = 0;
-  if (nightRatePercentage > 0 && (oneWayNightMinutes > 0 || returnNightMinutes > 0)) {
-    // La surcharge est la différence entre le prix de nuit avec majoration et le prix de nuit sans majoration
-    nightSurcharge = nightPriceWithSurcharge - nightPriceBase;
-    
-    // Recalcul des prix avec la majoration de nuit
-    oneWayPriceHT = oneWayDayPriceHT + oneWayNightPriceHT;
-    returnPriceHT = returnDayPriceHT + returnNightPriceHT * (1 + nightRatePercentage / 100);
-    
-    // Log des calculs pour debug
-    console.log('Night surcharge calculations:', {
-      oneWayNightProportion,
-      oneWayNightPriceHT,
-      oneWayDayPriceHT,
-      returnNightProportion,
-      returnNightPriceHT,
-      returnDayPriceHT,
-      nightSurcharge,
-      dayKm,
-      nightKm,
-      dayPrice,
-      nightPrice,
-      updatedOneWayPriceHT: oneWayPriceHT,
-      updatedReturnPriceHT: returnPriceHT
-    });
-  }
-  
-  // Application de la majoration dimanche/jour férié sur l'ensemble du trajet
-  let sundaySurcharge = 0;
-  if (isSundayRate && holidaySundayPercentage > 0) {
-    const sundayPercentage = holidaySundayPercentage / 100;
-    sundaySurcharge = (oneWayPriceHT + returnPriceHT) * sundayPercentage;
-    oneWayPriceHT += oneWayPriceHT * sundayPercentage;
-    returnPriceHT += returnPriceHT * sundayPercentage;
-  }
-  
-  // Application du tarif minimum si nécessaire
+  // Apply minimum trip fare if applicable
   const minimumTripFare = selectedVehicleInfo.minimum_trip_fare || (pricingSettings?.minimum_trip_fare || 0);
-  if (minimumTripFare > 0 && (oneWayPriceHT + returnPriceHT) < minimumTripFare) {
-    const ratio = oneWayPriceHT / (oneWayPriceHT + returnPriceHT || 1);
-    oneWayPriceHT = minimumTripFare * ratio;
-    returnPriceHT = minimumTripFare * (1 - ratio);
-  }
+  const minFareResult = applyMinimumFare(oneWayPriceHT, returnPriceHT, minimumTripFare);
+  
+  oneWayPriceHT = minFareResult.updatedOneWayPriceHT;
+  returnPriceHT = minFareResult.updatedReturnPriceHT;
   
   const waitingTimePriceHT = hasWaitingTime ? waitingTimePrice : 0;
   
-  // Application de la TVA
+  // Calculate VAT and final prices
   const rideVatRate = pricingSettings?.ride_vat_rate !== undefined ? pricingSettings.ride_vat_rate : 10;
   const waitingVatRate = pricingSettings?.waiting_vat_rate !== undefined ? pricingSettings.waiting_vat_rate : 20;
   
-  const oneWayPrice = oneWayPriceHT * (1 + (rideVatRate / 100));
-  const returnPrice = returnPriceHT * (1 + (rideVatRate / 100));
-  const waitingTimePriceTTC = waitingTimePriceHT * (1 + (waitingVatRate / 100));
+  const priceResult = calculateVatAndTotalPrices(
+    oneWayPriceHT,
+    returnPriceHT,
+    waitingTimePriceHT,
+    rideVatRate,
+    waitingVatRate
+  );
   
-  const totalPriceHT = oneWayPriceHT + returnPriceHT + waitingTimePriceHT;
-  
-  const rideVAT = (oneWayPriceHT + returnPriceHT) * (rideVatRate / 100);
-  const waitingVAT = waitingTimePriceHT * (waitingVatRate / 100);
-  const totalVAT = rideVAT + waitingVAT;
-  
-  const totalPrice = totalPriceHT + totalVAT;
-  
+  // Calculate night and day hours
   const nightHours = (oneWayNightMinutes + returnNightMinutes) / 60;
   const dayHours = (oneWayTotalMinutes + returnTotalMinutes - oneWayNightMinutes - returnNightMinutes) / 60;
   
-  // Create a combined night start/end display that includes both one-way and return
+  // Create combined night start/end display
   const combinedNightStartDisplay = nightStartDisplay + (returnNightStartDisplay ? ` / ${returnNightStartDisplay}` : '');
   const combinedNightEndDisplay = nightEndDisplay + (returnNightEndDisplay ? ` / ${returnNightEndDisplay}` : '');
-  
-  // Final debugging log with all calculated values
-  console.log('Final quote calculation details:', {
-    oneWayNightMinutes,
-    oneWayTotalMinutes,
-    returnNightMinutes,
-    returnTotalMinutes,
-    oneWayNightProportion,
-    oneWayNightPriceHT,
-    nightRatePercentage,
-    nightSurcharge,
-    oneWayPriceHT,
-    returnPriceHT,
-    totalPriceHT,
-    totalPrice,
-    nightHours,
-    dayHours,
-    isNightRate: oneWayNightMinutes > 0 || returnNightMinutes > 0,
-    dayKm,
-    nightKm,
-    dayPrice,
-    nightPrice
-  });
   
   return {
     basePrice,
     isNightRate: oneWayNightMinutes > 0 || returnNightMinutes > 0,
     isSunday: isSundayRate,
     oneWayPriceHT,
-    oneWayPrice,
+    oneWayPrice: priceResult.oneWayPrice,
     returnPriceHT,
-    returnPrice,
+    returnPrice: priceResult.returnPrice,
     waitingTimePriceHT,
-    waitingTimePrice: waitingTimePriceTTC,
-    totalPriceHT,
-    totalVAT,
-    totalPrice,
-    nightSurcharge,
-    sundaySurcharge,
+    waitingTimePrice: priceResult.waitingTimePrice,
+    totalPriceHT: priceResult.totalPriceHT,
+    totalVAT: priceResult.totalVAT,
+    totalPrice: priceResult.totalPrice,
+    nightSurcharge: nightSurchargeResult.nightSurcharge,
+    sundaySurcharge: sundaySurchargeResult.sundaySurcharge,
     rideVatRate,
     waitingVatRate,
     hasMinDistanceWarning,
@@ -241,11 +173,11 @@ export const calculateQuoteDetails = (
     dayHours,
     nightStartDisplay: combinedNightStartDisplay,
     nightEndDisplay: combinedNightEndDisplay,
-    dayKm,
-    nightKm, 
-    totalKm,
-    dayPrice,
-    nightPrice,
+    dayKm: nightSurchargeResult.dayKm,
+    nightKm: nightSurchargeResult.nightKm, 
+    totalKm: nightSurchargeResult.totalKm,
+    dayPrice: nightSurchargeResult.dayPrice,
+    nightPrice: nightSurchargeResult.nightPrice,
     sundayRate: holidaySundayPercentage
   };
 };

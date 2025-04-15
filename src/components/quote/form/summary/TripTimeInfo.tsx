@@ -1,8 +1,6 @@
 
-import { Separator } from '@/components/ui/separator';
-import { Clock, Moon, Calendar, AlertCircle, Info, ArrowDownRight, ArrowRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import React from 'react';
+import { Moon, Calendar } from 'lucide-react';
 
 export interface NightRateInfo {
   isApplied: boolean;
@@ -22,6 +20,7 @@ export interface NightRateInfo {
 export interface SundayRateInfo {
   isApplied: boolean;
   percentage: number;
+  sundaySurcharge?: number;
 }
 
 interface TripTimeInfoProps {
@@ -41,125 +40,83 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
     return null;
   }
 
-  // Format night hours for display
-  const formatNightHours = (hours: number) => {
-    const fullHours = Math.floor(hours);
-    const minutes = Math.round((hours - fullHours) * 60);
-    
-    if (minutes === 0) {
-      return `${fullHours}h`;
-    } else if (fullHours === 0) {
-      return `${minutes} min`;
-    } else {
-      return `${fullHours}h${minutes.toString().padStart(2, '0')}`;
-    }
-  };
-
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {nightRateInfo?.isApplied && (
-        <Alert variant="warning" className="bg-yellow-50 border-yellow-200 shadow-sm">
-          <Moon className="h-5 w-5 text-yellow-600" />
-          <AlertTitle className="text-yellow-800 text-base font-bold">
-            Majoration tarif de nuit : +{nightRateInfo.percentage}%
-          </AlertTitle>
-          <AlertDescription className="text-yellow-700">
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <Clock className="h-4 w-4 text-yellow-600 mt-1 flex-shrink-0" />
-                <p>
-                  <span className="font-bold">{formatNightHours(nightRateInfo.nightHours)}</span> de 
-                  votre trajet (sur un total de {Math.round(nightRateInfo.totalHours * 10) / 10}h) 
-                  se déroule en période de nuit.
-                </p>
-              </div>
+        <div className="bg-indigo-50 border border-indigo-100 rounded-md p-3">
+          <div className="flex items-start gap-2">
+            <Moon className="h-4 w-4 text-indigo-600 mt-1 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-indigo-800">
+                Tarif de nuit
+              </p>
+              <p className="text-xs text-indigo-700 mt-1">
+                <span className="font-medium">
+                  {Math.round(nightRateInfo.nightHours * 10) / 10}h
+                </span> de trajet en tarif de nuit (+{nightRateInfo.percentage}%)
+                {nightRateInfo.nightStart && nightRateInfo.nightEnd && (
+                  <span className="block mt-1">
+                    Tarif de nuit de {nightRateInfo.nightStart} à {nightRateInfo.nightEnd}
+                  </span>
+                )}
+              </p>
               
-              <div className="flex items-start gap-2">
-                <Info className="h-4 w-4 text-yellow-600 mt-1 flex-shrink-0" />
-                <p>
-                  <span className="font-semibold">Période de nuit :</span> De {nightRateInfo.nightStart} à {nightRateInfo.nightEnd}
-                </p>
-              </div>
-              
-              {nightRateInfo.nightSurcharge && nightRateInfo.nightSurcharge > 0 && (
-                <div className="flex items-start gap-2 mt-1">
-                  <AlertCircle className="h-4 w-4 text-yellow-600 mt-1 flex-shrink-0" />
-                  <p>
-                    <span className="font-semibold">Supplément :</span> {nightRateInfo.nightSurcharge.toFixed(2)}€
+              {nightRateInfo.dayKm !== undefined && 
+               nightRateInfo.nightKm !== undefined && 
+               nightRateInfo.totalKm !== undefined && (
+                <div className="mt-2 text-xs text-indigo-700 border-t border-indigo-100 pt-2">
+                  <p className="flex justify-between">
+                    <span>Trajet en journée:</span>
+                    <span className="font-medium">{nightRateInfo.dayKm} km</span>
                   </p>
-                </div>
-              )}
-              
-              <div className="bg-yellow-100 p-3 rounded-md mt-2 border border-yellow-300">
-                <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-yellow-700 mr-2 mt-0.5 flex-shrink-0" />
-                  <p className="font-bold text-yellow-800">
-                    Une majoration de {nightRateInfo.percentage}% est appliquée uniquement 
-                    sur la portion du trajet effectuée entre {nightRateInfo.nightStart} et {nightRateInfo.nightEnd}
+                  <p className="flex justify-between">
+                    <span>Trajet de nuit:</span>
+                    <span className="font-medium">{nightRateInfo.nightKm} km</span>
                   </p>
-                </div>
-              </div>
-              
-              {nightRateInfo.dayKm !== undefined && nightRateInfo.nightKm !== undefined && (
-                <div className="bg-white p-3 rounded-md mt-3 border border-yellow-200">
-                  <h4 className="font-bold text-yellow-800 mb-2">Détail de la tarification</h4>
-                  
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <ArrowRight className="h-4 w-4 text-yellow-600 mr-1.5" />
-                        <span className="text-sm font-medium">{startTime} à {nightRateInfo.nightStart}</span>
-                      </div>
-                      <span className="text-sm font-semibold">
-                        {nightRateInfo.dayKm.toFixed(0)} km
-                      </span>
-                    </div>
-                    
-                    {nightRateInfo.dayPrice !== undefined && (
-                      <div className="text-sm ml-6 text-gray-600">
-                        Prix: {nightRateInfo.dayPrice.toFixed(2)}€
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between items-center mt-2">
-                      <div className="flex items-center">
-                        <ArrowRight className="h-4 w-4 text-yellow-600 mr-1.5" />
-                        <span className="text-sm font-medium">{nightRateInfo.nightStart} à {endTime}</span>
-                        <Badge variant="outline" className="ml-2 bg-yellow-100 text-yellow-800 border-yellow-300 text-xs">
-                          +{nightRateInfo.percentage}%
-                        </Badge>
-                      </div>
-                      <span className="text-sm font-semibold">
-                        {nightRateInfo.nightKm.toFixed(0)} km
-                      </span>
-                    </div>
-                    
-                    {nightRateInfo.nightPrice !== undefined && (
-                      <div className="text-sm ml-6 text-gray-600">
-                        Prix: {nightRateInfo.nightPrice.toFixed(2)}€ (majoration incluse)
-                      </div>
-                    )}
-                  </div>
+                  {nightRateInfo.dayPrice !== undefined && nightRateInfo.nightPrice !== undefined && (
+                    <>
+                      <p className="flex justify-between mt-1">
+                        <span>Prix journée:</span>
+                        <span className="font-medium">{nightRateInfo.dayPrice.toFixed(2)}€</span>
+                      </p>
+                      <p className="flex justify-between">
+                        <span>Prix nuit (majoré):</span>
+                        <span className="font-medium">{nightRateInfo.nightPrice.toFixed(2)}€</span>
+                      </p>
+                      {nightRateInfo.nightSurcharge !== undefined && (
+                        <p className="flex justify-between mt-1 font-medium text-indigo-800">
+                          <span>Supplément nuit:</span>
+                          <span>+{nightRateInfo.nightSurcharge.toFixed(2)}€</span>
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
             </div>
-          </AlertDescription>
-        </Alert>
+          </div>
+        </div>
       )}
-      
+
       {sundayRateInfo?.isApplied && (
-        <Alert variant="default" className="bg-orange-50 border-orange-200">
-          <Calendar className="h-5 w-5 text-orange-600" />
-          <AlertTitle className="text-orange-800 text-base font-bold">
-            Majoration dimanche/jour férié : +{sundayRateInfo.percentage}%
-          </AlertTitle>
-          <AlertDescription className="text-orange-700">
-            <p>
-              Une majoration de {sundayRateInfo.percentage}% est appliquée à l'ensemble de votre trajet
-              (dimanche ou jour férié).
-            </p>
-          </AlertDescription>
-        </Alert>
+        <div className="bg-orange-50 border border-orange-100 rounded-md p-3">
+          <div className="flex items-start gap-2">
+            <Calendar className="h-4 w-4 text-orange-600 mt-1 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-orange-800">
+                Majoration dimanche/jour férié
+              </p>
+              <p className="text-xs text-orange-700 mt-1">
+                Majoration de {sundayRateInfo.percentage}% sur l'ensemble du trajet
+              </p>
+              {sundayRateInfo.sundaySurcharge !== undefined && (
+                <p className="text-xs font-medium text-orange-800 mt-1">
+                  Supplément: +{sundayRateInfo.sundaySurcharge.toFixed(2)}€
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
