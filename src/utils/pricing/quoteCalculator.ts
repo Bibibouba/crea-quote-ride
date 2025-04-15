@@ -55,6 +55,19 @@ export const calculateQuoteDetails = (
   const nightStartDisplay = nightDurationResult.nightStartDisplay;
   const nightEndDisplay = nightDurationResult.nightEndDisplay;
   
+  // Amélioration des logs pour le debug
+  console.log('Night rate calculation details:', {
+    date: date.toISOString(),
+    time: rideTime,
+    oneWayDuration,
+    oneWayNightMinutes,
+    oneWayTotalMinutes,
+    nightStartDisplay,
+    nightEndDisplay,
+    isNightRate,
+    nightRatePercentage
+  });
+  
   // Calcul de la durée du trajet retour et de la partie en tarif de nuit si applicable
   let returnNightMinutes = 0;
   let returnTotalMinutes = 0;
@@ -108,6 +121,19 @@ export const calculateQuoteDetails = (
     // Recalcul des prix avec la majoration de nuit
     oneWayPriceHT = oneWayDayPriceHT + oneWayNightPriceHT * (1 + nightRatePercentage / 100);
     returnPriceHT = returnDayPriceHT + returnNightPriceHT * (1 + nightRatePercentage / 100);
+    
+    // Log des calculs pour debug
+    console.log('Night surcharge calculations:', {
+      oneWayNightProportion,
+      oneWayNightPriceHT,
+      oneWayDayPriceHT,
+      returnNightProportion,
+      returnNightPriceHT,
+      returnDayPriceHT,
+      nightSurchargeAmount,
+      updatedOneWayPriceHT: oneWayPriceHT,
+      updatedReturnPriceHT: returnPriceHT
+    });
   }
   
   // Application de la majoration dimanche/jour férié sur l'ensemble du trajet
@@ -146,21 +172,29 @@ export const calculateQuoteDetails = (
   const totalPrice = totalPriceHT + totalVAT;
   
   const nightHours = (oneWayNightMinutes + returnNightMinutes) / 60;
+  const dayHours = (oneWayTotalMinutes + returnTotalMinutes - oneWayNightMinutes - returnNightMinutes) / 60;
   
   // Create a combined night start/end display that includes both one-way and return
   const combinedNightStartDisplay = nightStartDisplay + (returnNightStartDisplay ? ` / ${returnNightStartDisplay}` : '');
   const combinedNightEndDisplay = nightEndDisplay + (returnNightEndDisplay ? ` / ${returnNightEndDisplay}` : '');
   
-  console.log('Night calculation details:', {
+  // Final debugging log with all calculated values
+  console.log('Final quote calculation details:', {
     oneWayNightMinutes,
     oneWayTotalMinutes,
+    returnNightMinutes,
+    returnTotalMinutes,
     oneWayNightProportion,
     oneWayNightPriceHT,
     nightRatePercentage,
     nightSurcharge,
     oneWayPriceHT,
     returnPriceHT,
-    totalPriceHT
+    totalPriceHT,
+    totalPrice,
+    nightHours,
+    dayHours,
+    isNightRate: oneWayNightMinutes > 0 || returnNightMinutes > 0
   });
   
   return {
@@ -186,6 +220,7 @@ export const calculateQuoteDetails = (
     totalMinutes: oneWayTotalMinutes + returnTotalMinutes,
     nightRatePercentage,
     nightHours,
+    dayHours,
     nightStartDisplay: combinedNightStartDisplay,
     nightEndDisplay: combinedNightEndDisplay
   };

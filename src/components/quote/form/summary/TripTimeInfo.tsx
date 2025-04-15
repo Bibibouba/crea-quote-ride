@@ -1,6 +1,8 @@
 
-import { Clock, Moon } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Clock, Moon, Calendar, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export interface NightRateInfo {
   isApplied: boolean;
@@ -34,45 +36,49 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {nightRateInfo?.isApplied && (
-        <div className="ml-6 bg-yellow-50 border border-yellow-200 p-3 rounded-md">
-          <div className="flex items-center mb-2">
-            <Moon className="h-5 w-5 mr-2 text-yellow-600" />
-            <p className="text-sm font-semibold text-yellow-800">
-              Supplément tarif de nuit
-            </p>
-          </div>
-          <div className="text-xs text-yellow-700 space-y-1">
-            <p>
-              <strong>Période de nuit :</strong> De {nightRateInfo.nightStart} à {nightRateInfo.nightEnd}
-            </p>
-            <p>
-              <strong>Durée en tarif de nuit :</strong> {Math.round(nightRateInfo.nightHours * 10) / 10}h 
-              sur un total de {Math.round(nightRateInfo.totalHours * 10) / 10}h
-            </p>
-            <p>
-              <strong>Majoration :</strong> +{nightRateInfo.percentage}% uniquement sur la portion de nuit
-            </p>
-            <div className="bg-yellow-100 p-2 rounded mt-2">
-              <p className="font-bold text-yellow-900">
-                ⚠️ Attention : Supplément de {nightRateInfo.percentage}% appliqué 
-                entre {nightRateInfo.nightStart} et {nightRateInfo.nightEnd}
+        <Alert variant="warning" className="bg-yellow-50 border-yellow-200 shadow-sm">
+          <Moon className="h-5 w-5 text-yellow-600" />
+          <AlertTitle className="text-yellow-800 text-base font-bold">
+            Majoration tarif de nuit : +{nightRateInfo.percentage}%
+          </AlertTitle>
+          <AlertDescription className="text-yellow-700">
+            <div className="space-y-2">
+              <p>
+                Votre trajet inclut <span className="font-bold">{Math.round(nightRateInfo.nightHours * 10) / 10} heures</span> en 
+                tarif de nuit (sur un total de {Math.round(nightRateInfo.totalHours * 10) / 10}h).
               </p>
+              <p>
+                <span className="font-semibold">Période de nuit :</span> De {nightRateInfo.nightStart} à {nightRateInfo.nightEnd}
+              </p>
+              <div className="bg-yellow-100 p-3 rounded-md mt-2 border border-yellow-300">
+                <div className="flex items-start">
+                  <AlertCircle className="h-5 w-5 text-yellow-700 mr-2 mt-0.5 flex-shrink-0" />
+                  <p className="font-bold text-yellow-800">
+                    Une majoration de {nightRateInfo.percentage}% est appliquée uniquement 
+                    sur la portion du trajet effectuée entre {nightRateInfo.nightStart} et {nightRateInfo.nightEnd}
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </AlertDescription>
+        </Alert>
       )}
       
       {sundayRateInfo?.isApplied && (
-        <div className="ml-6 bg-muted/40 p-2 rounded-md mt-2">
-          <div className="flex items-center mb-1">
-            <Badge variant="outline" className="h-5 text-xs">Dimanche</Badge>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Majoration dimanche/jour férié de {sundayRateInfo.percentage}% appliquée sur l'ensemble du trajet.
-          </p>
-        </div>
+        <Alert variant="default" className="bg-orange-50 border-orange-200">
+          <Calendar className="h-5 w-5 text-orange-600" />
+          <AlertTitle className="text-orange-800 text-base font-bold">
+            Majoration dimanche/jour férié : +{sundayRateInfo.percentage}%
+          </AlertTitle>
+          <AlertDescription className="text-orange-700">
+            <p>
+              Une majoration de {sundayRateInfo.percentage}% est appliquée à l'ensemble de votre trajet
+              (dimanche ou jour férié).
+            </p>
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   );

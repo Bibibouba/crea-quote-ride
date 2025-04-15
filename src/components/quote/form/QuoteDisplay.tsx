@@ -89,7 +89,7 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
   // Get the selected vehicle details
   const selectedVehicleDetails = vehicles.find(v => v.id === selectedVehicle);
   
-  // Use quoteDetails if provided, otherwise calculate on the fly
+  // Calculate quote details if not provided
   const displayDetails = quoteDetails || calculateQuoteDetails(
     selectedVehicle,
     estimatedDistance,
@@ -106,6 +106,17 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
   
   // Use precise pricing from quoteDetails if available
   const displayEstimatedPrice = displayDetails?.totalPrice || estimatedPrice;
+  
+  // Log the quote details to verify night rate calculations
+  console.log('QuoteDisplay - Quote details:', {
+    nightRateApplied: displayDetails?.isNightRate,
+    nightHours: displayDetails?.nightHours,
+    dayHours: displayDetails?.dayHours,
+    nightRatePercentage: displayDetails?.nightRatePercentage,
+    nightStartTime: displayDetails?.nightStartDisplay,
+    nightEndTime: displayDetails?.nightEndDisplay,
+    nightSurcharge: displayDetails?.nightSurcharge
+  });
   
   return (
     <Card>

@@ -1,146 +1,83 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuoteForm } from '@/hooks/useQuoteForm';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import QuoteStateContainer from '@/components/quote/form/QuoteStateContainer';
 import { useClientSimulator } from '@/hooks/useClientSimulator';
-import SimulatorHeader from './steps/SimulatorHeader';
 import SimulatorLoading from './SimulatorLoading';
-import SuccessMessageStep from '@/components/quote/form/SuccessMessageStep';
+import SimulatorHeader from './steps/SimulatorHeader';
 import SimulatorTabs from './SimulatorTabs';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const SimulatorContainer = () => {
-  const [activeTab, setActiveTab] = useState<'step1' | 'step2' | 'step3'>('step1');
-  const { toast } = useToast();
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
-  
-  const {
-    isSubmitting,
-    isQuoteSent,
-    submitQuote,
-    resetForm,
-    navigateToDashboard
-  } = useClientSimulator();
-  
-  const quoteFormState = useQuoteForm();
-  
-  // Check if user is authenticated
-  useEffect(() => {
-    const checkAuth = async () => {
-      setIsAuthChecking(true);
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.log('No active session found in client simulator');
-          toast({
-            title: 'Authentification requise',
-            description: 'Vous devez être connecté pour utiliser le simulateur client',
-            variant: 'destructive',
-          });
-        } else {
-          console.log('Active session found for user:', session.user.id);
-        }
-      } catch (error) {
-        console.error('Error checking auth:', error);
-      } finally {
-        setIsAuthChecking(false);
-      }
-    };
-    
-    checkAuth();
-  }, [toast]);
-  
-  // Navigation functions
-  const handleNextStep = () => {
-    if (activeTab === 'step1') {
-      setActiveTab('step2');
-    } else if (activeTab === 'step2') {
-      setActiveTab('step3');
-    }
-  };
+  const { isSubmitting, isQuoteSent, submitQuote, resetForm, navigateToDashboard } = useClientSimulator();
+  const [simulatorReady, setSimulatorReady] = useState(true);
 
-  const handlePreviousStep = () => {
-    if (activeTab === 'step3') {
-      setActiveTab('step2');
-    } else if (activeTab === 'step2') {
-      setActiveTab('step1');
-    }
-  };
+  // Simulate loading for a more engaging experience
+  React.useEffect(() => {
+    setSimulatorReady(false);
+    const timeout = setTimeout(() => {
+      setSimulatorReady(true);
+    }, 1500);
+    
+    return () => clearTimeout(timeout);
+  }, []);
 
-  const handleSubmit = async () => {
-    // Use the calculated quote details for more precise pricing
-    const totalAmount = quoteFormState.quoteDetails?.totalPrice || 
-                       (quoteFormState.estimatedDistance * quoteFormState.basePrice);
-                       
-    // Get the selected vehicle details
-    const selectedVehicleDetails = quoteFormState.vehicles.find(v => v.id === quoteFormState.selectedVehicle);
-    
-    // Use the correct price per km from the selected vehicle
-    const currentBasePrice = selectedVehicleDetails?.basePrice || quoteFormState.basePrice;
-    
-    // Préparer les données du devis
-    const quoteData = {
-      departure_location: quoteFormState.departureAddress,
-      arrival_location: quoteFormState.destinationAddress,
-      departure_coordinates: quoteFormState.departureCoordinates,
-      arrival_coordinates: quoteFormState.destinationCoordinates,
-      distance_km: quoteFormState.estimatedDistance,
-      duration_minutes: quoteFormState.estimatedDuration,
-      ride_date: new Date(quoteFormState.date).toISOString(),
-      amount: totalAmount,
-      vehicle_id: quoteFormState.selectedVehicle,
-      has_return_trip: quoteFormState.hasReturnTrip,
-      has_waiting_time: quoteFormState.hasWaitingTime,
-      waiting_time_minutes: quoteFormState.hasWaitingTime ? quoteFormState.waitingTimeMinutes : 0,
-      waiting_time_price: quoteFormState.hasWaitingTime ? quoteFormState.waitingTimePrice : 0,
-      return_to_same_address: quoteFormState.returnToSameAddress,
-      custom_return_address: quoteFormState.customReturnAddress,
-      return_coordinates: quoteFormState.customReturnCoordinates,
-      return_distance_km: quoteFormState.returnDistance,
-      return_duration_minutes: quoteFormState.returnDuration
-    };
-    
-    // Préparer les données du client
-    const clientData = {
-      firstName: quoteFormState.firstName,
-      lastName: quoteFormState.lastName,
-      email: quoteFormState.email,
-      phone: quoteFormState.phone
-    };
-    
-    // Soumettre le devis
-    await submitQuote(quoteData, clientData);
-  };
-  
-  if (isAuthChecking || quoteFormState.isLoadingVehicles) {
-    return <SimulatorLoading />;
-  }
-  
   return (
-    <div className="container mx-auto py-8">
-      <Card className="max-w-4xl mx-auto">
-        <SimulatorHeader />
-        <CardContent>
-          {isQuoteSent ? (
-            <SuccessMessageStep 
-              email={quoteFormState.email}
-              resetForm={resetForm}
-              navigateToDashboard={navigateToDashboard}
+    <div className="container max-w-5xl mx-auto py-8 px-4">
+      <SimulatorHeader />
+      
+      <div className="mb-6">
+        <Alert variant="default" className="bg-blue-50 border-blue-200">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-800">Simulateur de tarification</AlertTitle>
+          <AlertDescription className="text-blue-700">
+            Ce simulateur vous permet d'obtenir un devis instantané pour votre trajet. 
+            Les tarifs affichés incluent toutes les charges, y compris les majorations pour les trajets de nuit 
+            et les dimanches/jours fériés le cas échéant.
+          </AlertDescription>
+        </Alert>
+      </div>
+      
+      {!simulatorReady ? (
+        <SimulatorLoading />
+      ) : isQuoteSent ? (
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader>
+            <CardTitle className="text-green-800">Devis envoyé avec succès</CardTitle>
+            <CardDescription className="text-green-700">
+              Votre demande de devis a été envoyée. Vous recevrez une confirmation par email.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-green-700">
+              Merci d'avoir utilisé notre simulateur de tarification. Notre équipe va traiter votre demande dans les plus brefs délais.
+            </p>
+          </CardContent>
+          <CardFooter className="flex flex-col sm:flex-row gap-4">
+            <Button onClick={resetForm} variant="outline" className="w-full sm:w-auto">
+              Créer un nouveau devis
+            </Button>
+            <Button onClick={navigateToDashboard} className="w-full sm:w-auto">
+              Retour à l'accueil
+            </Button>
+          </CardFooter>
+        </Card>
+      ) : (
+        <div>
+          <SimulatorTabs>
+            <QuoteStateContainer 
+              showDashboardLink={false}
+              onSuccess={() => {
+                // Function that will be called when the quote is successfully submitted
+                // This is handled by the useClientSimulator hook
+              }}
             />
-          ) : (
-            <SimulatorTabs 
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              formState={quoteFormState}
-              isSubmitting={isSubmitting}
-              handleSubmit={handleSubmit}
-              handleNextStep={handleNextStep}
-              handlePreviousStep={handlePreviousStep}
-            />
-          )}
-        </CardContent>
-      </Card>
+          </SimulatorTabs>
+        </div>
+      )}
     </div>
   );
 };

@@ -64,6 +64,14 @@ export const useClientSimulator = () => {
         throw new Error("Impossible de créer ou retrouver le client");
       }
       
+      // Log quote details before submission
+      console.log('Submitting quote with night rate details:', {
+        has_night_rate: quoteData.has_night_rate,
+        night_hours: quoteData.night_hours,
+        night_rate_percentage: quoteData.night_rate_percentage,
+        night_surcharge: quoteData.night_surcharge
+      });
+      
       // Create the quote
       const { error: quoteError } = await supabase
         .from('quotes')
@@ -88,7 +96,14 @@ export const useClientSimulator = () => {
           custom_return_address: quoteData.custom_return_address,
           return_coordinates: quoteData.return_coordinates,
           return_distance_km: quoteData.return_distance_km,
-          return_duration_minutes: quoteData.return_duration_minutes
+          return_duration_minutes: quoteData.return_duration_minutes,
+          has_night_rate: quoteData.has_night_rate,
+          night_hours: quoteData.night_hours,
+          night_rate_percentage: quoteData.night_rate_percentage,
+          night_surcharge: quoteData.night_surcharge,
+          is_sunday_holiday: quoteData.is_sunday_holiday,
+          sunday_holiday_percentage: quoteData.sunday_holiday_percentage,
+          sunday_holiday_surcharge: quoteData.sunday_holiday_surcharge
         });
         
       if (quoteError) throw quoteError;

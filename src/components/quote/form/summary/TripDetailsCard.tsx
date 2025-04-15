@@ -109,7 +109,7 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
           <PriceFormatter price={estimatedPrice} />
         </div>
         
-        {/* Afficher les infos de tarif de nuit et dimanche si applicable */}
+        {/* Afficher les infos de tarif de nuit et dimanche avant waiting time et return trip */}
         <TripTimeInfo 
           startTime={time} 
           endTime={formatTimeDisplay(tripEndTime)}
