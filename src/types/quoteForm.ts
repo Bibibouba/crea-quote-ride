@@ -109,6 +109,23 @@ export interface QuoteDetailsType {
   nightRatePercentage?: number;
   nightHours?: number;
   dayHours?: number;
+  basePrice?: number;
+  isSunday?: boolean;
+  oneWayPriceHT?: number;
+  returnPriceHT?: number;
+  waitingTimePriceHT?: number;
+  totalPriceHT?: number;
+  totalVAT?: number;
+  sundaySurcharge?: number;
+  rideVatRate?: number;
+  waitingVatRate?: number;
+  hasMinDistanceWarning?: boolean;
+  minDistance?: number;
+  nightMinutes?: number;
+  totalMinutes?: number;
+  nightStartDisplay?: string;
+  nightEndDisplay?: string;
+  sundayRate?: number;
 }
 
 export type QuoteFormState = ReturnType<typeof useQuoteForm>;
