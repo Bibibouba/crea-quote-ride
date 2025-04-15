@@ -70,12 +70,17 @@ export const fetchVehicles = async (
         // Get the distance pricing tier for this vehicle (first tier or default)
         const vehicleTier = distanceTiersData?.find(t => t.vehicle_id === vehicle.id);
         
-        // Calculate base price from distance tier if available, otherwise fall back to global pricing
+        // Calculate base price from pricing_settings if available, then distance tier, then global pricing
         let basePrice = 1.8; // Default fallback
         
-        if (vehicleTier) {
+        if (vehiclePricing.price_per_km && vehiclePricing.price_per_km > 0) {
+          // Use the price_per_km from vehicle_pricing_settings
+          basePrice = vehiclePricing.price_per_km;
+        } else if (vehicleTier) {
+          // Fallback to distance tier
           basePrice = vehicleTier.price_per_km;
         } else if (globalPricing) {
+          // Fallback to global pricing
           basePrice = globalPricing.price_per_km || 1.8;
         }
         
