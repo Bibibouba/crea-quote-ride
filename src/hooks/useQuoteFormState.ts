@@ -1,455 +1,194 @@
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { useQuotes } from '@/hooks/useQuotes';
-import { useClients } from '@/hooks/useClients';
-import { supabase } from '@/integrations/supabase/client';
-import { useMapbox, Address } from '@/hooks/useMapbox';
-import { Quote } from '@/types/quote';
-import { Vehicle } from '@/types/quoteForm';
-import { usePricing } from '@/hooks/use-pricing';
-import { calculateQuoteDetails } from '@/utils/pricing/quoteCalculator';
+
+import { useAddressForm } from './quote/useAddressForm';
+import { useClientData } from './quote/useClientData';
+import { useFormState } from './quote/useFormState';
+import { usePricing } from './use-pricing';
+import { useQuoteDetails } from './quote/useQuoteDetails';
+import { useRouteCalculation } from './quote/useRouteCalculation';
+import { useSaveQuote } from './quote/useSaveQuote';
+import { useTripOptions } from './quote/useTripOptions';
+import { useVehicleData } from './quote/useVehicleData';
+import { useWaitingTimeCalculation } from './quote/useWaitingTimeCalculation';
+import { waitingTimeOptions as generateWaitingTimeOptions } from '@/utils/waitingTimeOptions';
 
 export interface UseQuoteFormStateProps {
   clientId?: string;
   onSuccess?: () => void;
 }
 
-export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProps) => {
-  const { user } = useAuth();
-  const { addQuote } = useQuotes();
-  const { clients } = useClients();
-  const { toast } = useToast();
+export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProps = {}) => {
+  // Load pricing settings
   const { pricingSettings } = usePricing();
-  const { getRoute } = useMapbox();
   
-  const [departureAddress, setDepartureAddress] = useState('');
-  const [destinationAddress, setDestinationAddress] = useState('');
-  const [departureCoordinates, setDepartureCoordinates] = useState<[number, number] | undefined>(undefined);
-  const [destinationCoordinates, setDestinationCoordinates] = useState<[number, number] | undefined>(undefined);
+  // Get vehicle data
+  const {
+    vehicles,
+    vehicleTypes,
+    isLoadingVehicles,
+    selectedVehicle,
+    setSelectedVehicle
+  } = useVehicleData();
   
-  const [date, setDate] = useState<Date>(new Date());
-  const [time, setTime] = useState('12:00');
-  const [selectedVehicle, setSelectedVehicle] = useState('');
-  const [passengers, setPassengers] = useState('1');
+  // Generate waiting time options
+  const waitingTimeOptions = generateWaitingTimeOptions();
   
-  const [showQuote, setShowQuote] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isQuoteSent, setIsQuoteSent] = useState(false);
+  // Address form state
+  const addressForm = useAddressForm();
   
-  const [selectedClient, setSelectedClient] = useState(clientId || '');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  // Trip options state
+  const tripOptions = useTripOptions({ waitingTimeOptions });
   
-  const [estimatedDistance, setEstimatedDistance] = useState(0);
-  const [estimatedDuration, setEstimatedDuration] = useState(0);
+  // Client data state
+  const clientData = useClientData({ clientId });
   
-  const [hasReturnTrip, setHasReturnTrip] = useState(false);
-  const [hasWaitingTime, setHasWaitingTime] = useState(false);
-  const [waitingTimeMinutes, setWaitingTimeMinutes] = useState(15);
-  const [waitingTimePrice, setWaitingTimePrice] = useState(0);
-  const [returnToSameAddress, setReturnToSameAddress] = useState(true);
-  const [customReturnAddress, setCustomReturnAddress] = useState('');
-  const [customReturnCoordinates, setCustomReturnCoordinates] = useState<[number, number] | undefined>(undefined);
-  const [returnDistance, setReturnDistance] = useState(0);
-  const [returnDuration, setReturnDuration] = useState(0);
+  // Form UI state
+  const formState = useFormState();
   
-  const vehicles: Vehicle[] = [
-    { id: "sedan", name: "Berline", basePrice: 1.8, capacity: 4, description: "Mercedes Classe E ou équivalent" },
-    { id: "van", name: "Van", basePrice: 2.2, capacity: 6, description: "Mercedes Classe V ou équivalent" },
-    { id: "luxury", name: "Luxe", basePrice: 2.5, capacity: 4, description: "Mercedes Classe S ou équivalent" }
-  ];
-  
-  const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
-  const estimatedPrice = Math.round(estimatedDistance * basePrice);
-  
-  const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
-    const minutes = (i + 1) * 15;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    
-    let label = "";
-    if (hours > 0) {
-      label += `${hours} heure${hours > 1 ? 's' : ''}`;
-      if (remainingMinutes > 0) {
-        label += ` et ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
-      }
-    } else {
-      label = `${minutes} minutes`;
-    }
-    
-    return {
-      value: minutes,
-      label
-    };
+  // Route calculation
+  const {
+    returnDistance,
+    returnDuration,
+    handleRouteCalculated: routeHandler
+  } = useRouteCalculation({
+    hasReturnTrip: tripOptions.hasReturnTrip,
+    returnToSameAddress: tripOptions.returnToSameAddress,
+    destinationCoordinates: addressForm.destinationCoordinates,
+    customReturnCoordinates: addressForm.customReturnCoordinates
   });
   
-  useEffect(() => {
-    const calculateReturnRoute = async () => {
-      if (!hasReturnTrip || returnToSameAddress || !customReturnCoordinates || !destinationCoordinates) {
-        return;
-      }
-      
-      try {
-        const route = await getRoute(destinationCoordinates, customReturnCoordinates);
-        if (route) {
-          setReturnDistance(Math.round(route.distance));
-          setReturnDuration(Math.round(route.duration));
-        }
-      } catch (error) {
-        console.error("Erreur lors du calcul de l'itinéraire de retour:", error);
-      }
-    };
-    
-    calculateReturnRoute();
-  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
-  
-  useEffect(() => {
-    if (!hasWaitingTime || !pricingSettings) return;
-    
-    const pricePerMin = pricingSettings.waiting_fee_per_minute || 0.5;
-    const pricePerQuarter = pricingSettings.wait_price_per_15min || 7.5;
-    
-    const quarters = Math.ceil(waitingTimeMinutes / 15);
-    let price = quarters * pricePerQuarter;
-    
-    if (pricingSettings.wait_night_enabled && pricingSettings.wait_night_percentage && time) {
-      const [hours, minutes] = time.split(':').map(Number);
-      const tripTime = new Date();
-      tripTime.setHours(hours);
-      tripTime.setMinutes(minutes);
-      
-      const startTime = new Date();
-      const [startHours, startMinutes] = pricingSettings.wait_night_start?.split(':').map(Number) || [0, 0];
-      startTime.setHours(startHours);
-      startTime.setMinutes(startMinutes);
-      
-      const endTime = new Date();
-      const [endHours, endMinutes] = pricingSettings.wait_night_end?.split(':').map(Number) || [0, 0];
-      endTime.setHours(endHours);
-      endTime.setMinutes(endMinutes);
-      
-      const isNight = (
-        (startTime > endTime && (tripTime >= startTime || tripTime <= endTime)) ||
-        (startTime < endTime && tripTime >= startTime && tripTime <= endTime)
-      );
-      
-      if (isNight) {
-        const nightPercentage = pricingSettings.wait_night_percentage || 0;
-        price += price * (nightPercentage / 100);
-      }
-    }
-    
-    setWaitingTimePrice(Math.round(price));
-  }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time]);
-  
-  useEffect(() => {
-    if (clientId && clients.length > 0) {
-      const client = clients.find(c => c.id === clientId);
-      if (client) {
-        setSelectedClient(client.id);
-        setFirstName(client.first_name);
-        setLastName(client.last_name);
-        setEmail(client.email);
-        setPhone(client.phone || '');
-      }
-    }
-  }, [clientId, clients]);
-  
-  useEffect(() => {
-    if (user && !clientId) {
-      const fetchUserInfo = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('first_name, last_name, email')
-            .eq('id', user.id)
-            .single();
-          
-          if (error) throw error;
-          
-          if (data) {
-            setFirstName(data.first_name || '');
-            setLastName(data.last_name || '');
-            setEmail(data.email || user.email || '');
-            setPhone('');
-          }
-        } catch (error) {
-          console.error('Erreur lors du chargement des informations utilisateur:', error);
-        }
-      };
-      
-      fetchUserInfo();
-    }
-  }, [user, clientId]);
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    if (departureCoordinates && destinationCoordinates) {
-      setTimeout(() => {
-        setShowQuote(true);
-        setIsLoading(false);
-      }, 500);
-    } else {
-      toast({
-        title: 'Adresses incomplètes',
-        description: 'Veuillez sélectionner des adresses valides pour le départ et la destination',
-        variant: 'destructive',
-      });
-      setIsLoading(false);
-    }
-  };
-
-  const handleReturnAddressSelect = (address: Address) => {
-    setCustomReturnAddress(address.fullAddress);
-    setCustomReturnCoordinates(address.coordinates);
-  };
-  
-  const handleSaveQuote = async () => {
-    if (!date) {
-      toast({
-        title: 'Date manquante',
-        description: 'Veuillez sélectionner une date pour le trajet',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    if (!departureCoordinates || !destinationCoordinates) {
-      toast({
-        title: 'Adresses incomplètes',
-        description: 'Veuillez sélectionner des adresses valides pour le calcul du trajet',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    if (hasReturnTrip && !returnToSameAddress && !customReturnAddress) {
-      toast({
-        title: 'Adresse de retour manquante',
-        description: 'Veuillez spécifier une adresse de retour',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      const dateTime = new Date(date);
-      const [hours, minutes] = time.split(':');
-      dateTime.setHours(parseInt(hours), parseInt(minutes));
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      const driverId = session?.user?.id;
-      
-      if (!driverId) {
-        throw new Error("Utilisateur non authentifié");
-      }
-      
-      let finalClientId = selectedClient;
-      
-      if ((!selectedClient || selectedClient === '') && firstName && lastName) {
-        console.log("Creating new client with driver_id:", driverId);
-        
-        const { data, error } = await supabase
-          .from('clients')
-          .insert({
-            driver_id: driverId,
-            first_name: firstName,
-            last_name: lastName,
-            email: email || '',
-            phone: phone || '',
-            client_type: 'personal'
-          })
-          .select()
-          .single();
-        
-        if (error) {
-          console.error("Error creating client:", error);
-          throw error;
-        }
-        
-        console.log("Created new client:", data);
-        finalClientId = data.id;
-        
-        toast({
-          title: 'Client créé',
-          description: `${firstName} ${lastName} a été ajouté à votre liste de clients`,
-        });
-      }
-      
-      if (!finalClientId) {
-        throw new Error("Aucun client spécifié pour ce devis");
-      }
-      
-      const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
-      if (!selectedVehicleInfo) {
-        throw new Error("Véhicule non trouvé");
-      }
-      
-      const quoteDetails = calculateQuoteDetails(
-        selectedVehicle,
-        estimatedDistance,
-        returnDistance,
-        hasReturnTrip,
-        returnToSameAddress,
-        vehicles,
-        hasWaitingTime,
-        waitingTimePrice,
-        time,
-        date,
-        pricingSettings
-      );
-      
-      if (!quoteDetails) {
-        throw new Error("Erreur lors du calcul du devis");
-      }
-      
-      console.log("Creating quote for driver_id:", driverId);
-      
-      const quoteData: Omit<Quote, "id" | "created_at" | "updated_at" | "quote_pdf"> = {
-        driver_id: driverId,
-        client_id: finalClientId,
-        vehicle_id: selectedVehicle,
-        departure_location: departureAddress,
-        arrival_location: destinationAddress,
-        departure_coordinates: departureCoordinates,
-        arrival_coordinates: destinationCoordinates,
-        distance_km: estimatedDistance,
-        duration_minutes: estimatedDuration, 
-        ride_date: dateTime.toISOString(),
-        amount: quoteDetails.totalPrice,
-        status: "pending",
-        has_return_trip: hasReturnTrip,
-        has_waiting_time: hasWaitingTime,
-        waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
-        waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
-        return_to_same_address: returnToSameAddress,
-        custom_return_address: customReturnAddress,
-        return_coordinates: customReturnCoordinates,
-        return_distance_km: returnDistance,
-        return_duration_minutes: returnDuration,
-        day_km: quoteDetails.dayKm,
-        night_km: quoteDetails.nightKm,
-        total_km: quoteDetails.totalKm,
-        day_price: quoteDetails.dayPrice,
-        night_price: quoteDetails.nightPrice,
-        night_surcharge: quoteDetails.nightSurcharge,
-        has_night_rate: quoteDetails.isNightRate,
-        night_hours: quoteDetails.nightHours,
-        night_rate_percentage: quoteDetails.nightRatePercentage,
-        is_sunday_holiday: quoteDetails.isSunday,
-        sunday_holiday_percentage: quoteDetails.sundayRate,
-        sunday_holiday_surcharge: quoteDetails.sundaySurcharge,
-        wait_time_day: quoteDetails.waitTimeDay,
-        wait_time_night: quoteDetails.waitTimeNight,
-        wait_price_day: quoteDetails.waitPriceDay,
-        wait_price_night: quoteDetails.waitPriceNight
-      };
-      
-      await addQuote.mutateAsync(quoteData);
-      
-      toast({
-        title: 'Devis enregistré',
-        description: 'Votre devis a été enregistré avec succès',
-      });
-      
-      setIsQuoteSent(true);
-      
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement du devis:', error);
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de l'enregistrement: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleRouteCalculated = (distance: number, duration: number) => {
-    setEstimatedDistance(Math.round(distance));
-    setEstimatedDuration(Math.round(duration));
-  };
-
-  const handleReset = () => {
-    setShowQuote(false);
-    setIsQuoteSent(false);
-  };
-
-  return {
-    departureAddress,
-    setDepartureAddress,
-    destinationAddress,
-    setDestinationAddress,
-    departureCoordinates,
-    setDepartureCoordinates,
-    destinationCoordinates,
-    setDestinationCoordinates,
-    date,
-    setDate,
-    time,
-    setTime,
+  // Calculate waiting time price
+  const {
+    waitingTimePrice
+  } = useWaitingTimeCalculation({
+    hasWaitingTime: tripOptions.hasWaitingTime,
+    waitingTimeMinutes: tripOptions.waitingTimeMinutes,
     selectedVehicle,
-    setSelectedVehicle,
-    passengers,
-    setPassengers,
-    showQuote,
-    setShowQuote,
-    isLoading,
-    setIsLoading,
+    vehicles,
+    pricingSettings,
+    time: tripOptions.time,
+    date: tripOptions.date
+  });
+  
+  // Calculate quote details
+  const { quoteDetails } = useQuoteDetails({
+    selectedVehicle,
+    estimatedDistance: tripOptions.estimatedDistance,
+    returnDistance: returnDistance,
+    hasReturnTrip: tripOptions.hasReturnTrip,
+    returnToSameAddress: tripOptions.returnToSameAddress,
+    vehicles,
+    hasWaitingTime: tripOptions.hasWaitingTime,
+    waitingTimePrice,
+    time: tripOptions.time,
+    date: tripOptions.date,
+    pricingSettings
+  });
+  
+  // Save quote logic
+  const {
     isSubmitting,
-    setIsSubmitting,
     isQuoteSent,
     setIsQuoteSent,
-    selectedClient,
-    setSelectedClient,
-    firstName,
-    setFirstName,
-    lastName,
-    setLastName,
-    email,
-    setEmail,
-    phone,
-    setPhone,
-    estimatedDistance,
-    setEstimatedDistance,
-    estimatedDuration,
-    setEstimatedDuration,
-    hasReturnTrip,
-    setHasReturnTrip,
-    hasWaitingTime,
-    setHasWaitingTime,
-    waitingTimeMinutes,
-    setWaitingTimeMinutes,
-    waitingTimePrice,
-    setWaitingTimePrice,
-    returnToSameAddress,
-    setReturnToSameAddress,
-    customReturnAddress,
-    setCustomReturnAddress,
-    customReturnCoordinates,
-    setCustomReturnCoordinates,
+    handleSaveQuote: saveQuote
+  } = useSaveQuote({
+    quoteDetails,
+    departureAddress: addressForm.departureAddress,
+    destinationAddress: addressForm.destinationAddress,
+    departureCoordinates: addressForm.departureCoordinates,
+    destinationCoordinates: addressForm.destinationCoordinates,
+    date: tripOptions.date,
+    time: tripOptions.time,
+    hasReturnTrip: tripOptions.hasReturnTrip,
+    returnToSameAddress: tripOptions.returnToSameAddress,
+    customReturnAddress: addressForm.customReturnAddress,
+    customReturnCoordinates: addressForm.customReturnCoordinates,
     returnDistance,
-    setReturnDistance,
     returnDuration,
-    setReturnDuration,
+    hasWaitingTime: tripOptions.hasWaitingTime,
+    waitingTimeMinutes: tripOptions.waitingTimeMinutes,
+    waitingTimePrice,
+    estimatedDistance: tripOptions.estimatedDistance,
+    estimatedDuration: tripOptions.estimatedDuration,
+    selectedVehicle,
     vehicles,
+    pricingSettings
+  });
+  
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    formState.handleSubmit(
+      e, 
+      addressForm.departureCoordinates, 
+      addressForm.destinationCoordinates
+    );
+  };
+  
+  // Handle saving quote
+  const handleSaveQuote = async () => {
+    await saveQuote(
+      clientData.firstName,
+      clientData.lastName,
+      clientData.email,
+      clientData.phone,
+      clientData.selectedClient
+    );
+    
+    if (onSuccess) {
+      onSuccess();
+    }
+  };
+  
+  // Handle route calculation
+  const handleRouteCalculated = (distance: number, duration: number) => {
+    const { estimatedDistance, estimatedDuration } = routeHandler(distance, duration);
+    tripOptions.setEstimatedDistance(estimatedDistance);
+    tripOptions.setEstimatedDuration(estimatedDuration);
+  };
+  
+  // Handle reset
+  const handleReset = () => {
+    formState.handleReset();
+    setIsQuoteSent(false);
+  };
+  
+  // Calculate base price
+  const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
+  
+  // Calculate estimated price
+  const estimatedPrice = Math.round(tripOptions.estimatedDistance * basePrice);
+  
+  return {
+    // Address state
+    ...addressForm,
+    
+    // Client data
+    ...clientData,
+    
+    // Trip options
+    ...tripOptions,
+    
+    // Form state
+    ...formState,
+    
+    // Additional state
+    returnDistance,
+    returnDuration,
+    vehicles,
+    vehicleTypes,
+    isLoadingVehicles,
+    selectedVehicle,
+    setSelectedVehicle,
+    waitingTimePrice,
+    isSubmitting,
+    isQuoteSent,
+    setIsQuoteSent,
+    
+    // Calculated values
     basePrice,
     estimatedPrice,
-    waitingTimeOptions,
+    
+    // Handlers
     handleSubmit,
-    handleReturnAddressSelect,
     handleSaveQuote,
     handleRouteCalculated,
     handleReset
