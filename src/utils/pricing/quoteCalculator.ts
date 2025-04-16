@@ -78,10 +78,14 @@ export const calculateQuoteDetails = (
   const kmSplit = calculateDayNightKmSplit(
     tripDateTime,
     tripEndTime,
-    distance,
+    calculatedDistanceOneWay,
     nightRateStart,
     nightRateEnd
   );
+  
+  // Calculer les prix spécifiques pour les parties jour et nuit
+  const dayPrice = kmSplit.dayKm * basePrice;
+  const nightPrice = kmSplit.nightKm * basePrice * (1 + nightRatePercentage / 100);
   
   const nightSurcharge = calculateNightSurcharge(
     oneWayPriceBase,
@@ -165,8 +169,10 @@ export const calculateQuoteDetails = (
     dayKm: kmSplit.dayKm,
     nightKm: kmSplit.nightKm,
     totalKm: kmSplit.totalKm,
-    dayPrice: oneWayPriceBase * (kmSplit.dayKm / kmSplit.totalKm),
-    nightPrice: oneWayPriceBase * (kmSplit.nightKm / kmSplit.totalKm),
+    dayPercentage: kmSplit.dayPercentage,
+    nightPercentage: kmSplit.nightPercentage,
+    dayPrice: dayPrice,
+    nightPrice: nightPrice,
     isSunday: isSundayOrHoliday,
     sundayRate: sundayRatePercentage,
     oneWayPriceHT,

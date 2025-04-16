@@ -97,7 +97,15 @@ export const calculateNightDuration = (startTime, endTime, nightStartTime, night
         } else {
           // Trip extends past midnight
           const endMinutesAdjusted = endMinutesFromMidnight % 1440;
-          nightMinutes = (1440 - nightStart) + Math.min(endMinutesAdjusted, nightEnd);
+          
+          // Calculate night minutes before midnight
+          const nightBeforeMidnight = 1440 - nightStart;
+          
+          // Calculate night minutes after midnight (up to night end or end time)
+          const nightAfterMidnight = endMinutesAdjusted <= nightEnd ? 
+            endMinutesAdjusted : nightEnd;
+          
+          nightMinutes = nightBeforeMidnight + nightAfterMidnight;
         }
       }
     }
@@ -133,6 +141,17 @@ export const calculateDayNightKmSplit = (
     nightEndTime
   );
   
+  // Protection contre les divisions par zéro
+  if (totalMinutes === 0) {
+    return {
+      dayKm: totalDistance,
+      nightKm: 0,
+      totalKm: totalDistance,
+      dayPercentage: 100,
+      nightPercentage: 0
+    };
+  }
+  
   // Calculate proportion of the trip that happens during night hours
   const nightProportion = nightMinutes / totalMinutes;
   
@@ -140,11 +159,15 @@ export const calculateDayNightKmSplit = (
   const nightKm = totalDistance * nightProportion;
   const dayKm = totalDistance - nightKm;
   
+  // Protection contre les erreurs de calcul dues aux arrondis
+  const dayPercentage = Math.max(0, Math.min(100, ((totalDistance - nightKm) / totalDistance) * 100));
+  const nightPercentage = Math.max(0, Math.min(100, (nightKm / totalDistance) * 100));
+  
   return {
     dayKm,
     nightKm,
     totalKm: totalDistance,
-    dayPercentage: ((totalDistance - nightKm) / totalDistance) * 100,
-    nightPercentage: (nightKm / totalDistance) * 100
+    dayPercentage,
+    nightPercentage
   };
 };

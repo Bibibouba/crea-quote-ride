@@ -17,6 +17,8 @@ export interface NightRateInfo {
   totalKm?: number;
   dayPrice?: number;
   nightPrice?: number;
+  dayPercentage?: number;
+  nightPercentage?: number;
 }
 
 export interface SundayRateInfo {
@@ -40,14 +42,18 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   // Toujours afficher la jauge si nous avons des informations sur le trajet de nuit
   const shouldDisplayGauge = !!nightRateInfo;
   
-  // Calculate day and night percentages
-  const dayPercentage = nightRateInfo && nightRateInfo.totalKm && nightRateInfo.dayKm
-    ? (nightRateInfo.dayKm / nightRateInfo.totalKm) * 100
-    : nightRateInfo?.totalHours 
-      ? ((nightRateInfo.totalHours - nightRateInfo.nightHours) / nightRateInfo.totalHours) * 100
-      : 100;
+  // Calculate day and night percentages - utiliser les pourcentages si fournis, sinon calculer
+  const dayPercentage = nightRateInfo?.dayPercentage 
+    ? nightRateInfo.dayPercentage 
+    : nightRateInfo && nightRateInfo.totalKm && nightRateInfo.dayKm
+      ? (nightRateInfo.dayKm / nightRateInfo.totalKm) * 100
+      : nightRateInfo?.totalHours 
+        ? ((nightRateInfo.totalHours - nightRateInfo.nightHours) / nightRateInfo.totalHours) * 100
+        : 100;
   
-  const nightPercentage = 100 - dayPercentage;
+  const nightPercentage = nightRateInfo?.nightPercentage 
+    ? nightRateInfo.nightPercentage 
+    : 100 - dayPercentage;
 
   // Format the night hours for display
   const formattedNightHours = nightRateInfo?.nightHours 

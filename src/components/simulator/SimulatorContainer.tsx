@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +24,25 @@ const SimulatorContainer = () => {
     
     return () => clearTimeout(timeout);
   }, []);
+
+  // Add a debug effect to log day/night calculations
+  React.useEffect(() => {
+    if (formState.quoteDetails) {
+      console.log("Calcul jour/nuit:", {
+        dayKm: formState.quoteDetails.dayKm,
+        nightKm: formState.quoteDetails.nightKm,
+        totalKm: formState.quoteDetails.totalKm,
+        dayPercentage: formState.quoteDetails.dayPercentage,
+        nightPercentage: formState.quoteDetails.nightPercentage,
+        isNightRate: formState.quoteDetails.isNightRate,
+        nightHours: formState.quoteDetails.nightHours,
+        nightStartDisplay: formState.quoteDetails.nightStartDisplay,
+        nightEndDisplay: formState.quoteDetails.nightEndDisplay,
+        time: formState.time,
+        estimatedDuration: formState.estimatedDuration
+      });
+    }
+  }, [formState.quoteDetails]);
 
   const handleNextStep = () => {
     if (activeTab === 'step1') setActiveTab('step2');

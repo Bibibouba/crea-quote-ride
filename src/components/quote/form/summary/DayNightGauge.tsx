@@ -16,8 +16,14 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
   dayKm,
   nightKm
 }) => {
-  const formattedDayPercentage = Math.round(dayPercentage);
-  const formattedNightPercentage = Math.round(nightPercentage);
+  // Assurons-nous que les pourcentages sont bien des nombres et arrondis
+  const formattedDayPercentage = Math.round(dayPercentage || 0);
+  const formattedNightPercentage = Math.round(nightPercentage || 0);
+
+  // Forçons les pourcentages à totaliser 100%
+  const totalPercentage = formattedDayPercentage + formattedNightPercentage;
+  const adjustedDayPercentage = totalPercentage === 0 ? 100 : (formattedDayPercentage / totalPercentage) * 100;
+  const adjustedNightPercentage = totalPercentage === 0 ? 0 : (formattedNightPercentage / totalPercentage) * 100;
 
   return (
     <div className="space-y-2 w-full">
@@ -41,13 +47,13 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
       <div className="relative h-5 w-full overflow-hidden rounded-full bg-secondary">
         <div
           className="absolute inset-y-0 left-0 bg-amber-400 transition-all duration-300 flex items-center justify-center text-xs font-medium text-amber-900"
-          style={{ width: `${dayPercentage}%` }}
+          style={{ width: `${adjustedDayPercentage}%` }}
         >
           {formattedDayPercentage > 15 && `${formattedDayPercentage}%`}
         </div>
         <div
           className="absolute inset-y-0 right-0 bg-blue-500 transition-all duration-300 flex items-center justify-center text-xs font-medium text-white"
-          style={{ width: `${nightPercentage}%` }}
+          style={{ width: `${adjustedNightPercentage}%` }}
         >
           {formattedNightPercentage > 15 && `${formattedNightPercentage}%`}
         </div>
