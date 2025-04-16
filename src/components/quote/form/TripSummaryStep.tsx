@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -18,6 +17,7 @@ import { formatDuration } from '@/lib/formatDuration';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { TripTimeInfo, NightRateInfo, SundayRateInfo } from './summary/TripTimeInfo';
+import { PriceFormatter } from './summary/PriceFormatter';
 
 interface TripSummaryStepProps {
   departureAddress: string;
@@ -81,20 +81,40 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
   const nightRatePercentage = quoteDetails?.nightRatePercentage || 0;
   const nightStartDisplay = quoteDetails?.nightStartDisplay || '';
   const nightEndDisplay = quoteDetails?.nightEndDisplay || '';
+  const dayKm = quoteDetails?.dayKm;
+  const nightKm = quoteDetails?.nightKm;
+  const totalKm = quoteDetails?.totalKm || estimatedDistance;
 
-  // FIX: Ensure price is a number before calling toFixed
+  const nightRateInfo: NightRateInfo = {
+    isApplied: !!isNightRate,
+    percentage: nightRatePercentage,
+    nightHours: nightHours,
+    totalHours: (estimatedDuration / 60),
+    nightStart: nightStartDisplay,
+    nightEnd: nightEndDisplay,
+    nightSurcharge: quoteDetails?.nightSurcharge,
+    dayKm: dayKm,
+    nightKm: nightKm,
+    totalKm: totalKm,
+    dayPrice: quoteDetails?.dayPrice,
+    nightPrice: quoteDetails?.nightPrice
+  };
+
+  const sundayRateInfo: SundayRateInfo | undefined = isSunday ? {
+    isApplied: true,
+    percentage: selectedVehicleInfo?.holiday_sunday_percentage || 0
+  } : undefined;
+
   const formatPrice = (price?: number | string | null) => {
     if (price === undefined || price === null) return "0.0";
     
-    // Convert to number if it's a string
     const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
     
-    // Check if it's a valid number
     if (isNaN(numericPrice) || typeof numericPrice !== 'number') return "0.0";
     
     return numericPrice.toFixed(1);
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="rounded-lg border bg-card p-4 mb-6">
@@ -167,30 +187,20 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
         </Alert>
       )}
       
-      {isNightRate && quoteDetails?.nightMinutes && quoteDetails?.totalMinutes && quoteDetails.nightMinutes > 0 && (
-        <Alert variant="default" className="bg-indigo-50 border-indigo-200">
-          <Moon className="h-4 w-4 text-indigo-600" />
-          <AlertTitle className="text-indigo-800">Tarif de nuit applicable</AlertTitle>
-          <AlertDescription className="text-indigo-700">
-            Ce trajet inclut {Math.round((quoteDetails.nightMinutes / quoteDetails.totalMinutes) * 100)}% de 
-            parcours en horaires de nuit.
-            {nightStartDisplay && nightEndDisplay && (
-              <span> La majoration de {nightRatePercentage}% s'applique entre {nightStartDisplay} et {nightEndDisplay}.</span>
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      {isSunday && quoteDetails?.sundaySurcharge && quoteDetails.sundaySurcharge > 0 && (
-        <Alert variant="default" className="bg-orange-50 border-orange-200">
-          <Calendar className="h-4 w-4 text-orange-600" />
-          <AlertTitle className="text-orange-800">Majoration dimanche/jour férié</AlertTitle>
-          <AlertDescription className="text-orange-700">
-            Une majoration de {selectedVehicleInfo?.holiday_sunday_percentage || 0}% s'applique à l'ensemble du trajet 
-            (dimanche ou jour férié).
-          </AlertDescription>
-        </Alert>
-      )}
+      <TripTimeInfo
+        startTime={time}
+        endTime={
+          (() => {
+            const [hours, minutes] = time.split(':').map(Number);
+            const arrivalTime = new Date();
+            arrivalTime.setHours(hours);
+            arrivalTime.setMinutes(minutes + estimatedDuration);
+            return format(arrivalTime, 'HH:mm');
+          })()
+        }
+        nightRateInfo={nightRateInfo}
+        sundayRateInfo={sundayRateInfo}
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="h-[400px] rounded-lg border overflow-hidden">
@@ -361,7 +371,6 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = ({
                 </div>
               )}
               
-              {/* Afficher les conditions tarifaires spéciales si présentes */}
               {(isNightRate || isSunday) && (
                 <div className="bg-secondary/20 p-2 rounded-md mt-2 text-sm">
                   {isNightRate && quoteDetails?.nightSurcharge && quoteDetails.nightSurcharge > 0 && (

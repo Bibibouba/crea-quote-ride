@@ -37,7 +37,8 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   nightRateInfo,
   sundayRateInfo
 }) => {
-  if (!nightRateInfo && !sundayRateInfo) return null;
+  // Toujours afficher la jauge si nous avons des informations sur le trajet de nuit
+  const shouldDisplayGauge = !!nightRateInfo;
   
   // Calculate day and night percentages
   const dayPercentage = nightRateInfo && nightRateInfo.totalKm && nightRateInfo.dayKm
@@ -55,25 +56,29 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   
   return (
     <div className="bg-secondary/20 p-3 rounded-md mt-2 text-sm space-y-3">
-      {nightRateInfo && nightRateInfo.isApplied && (
+      {shouldDisplayGauge && (
         <>
           <div className="flex items-center text-xs text-muted-foreground mb-1">
             <Moon className="h-3 w-3 mr-1" />
             <span>
-              Tarif de nuit appliqué ({nightRateInfo.percentage}% de majoration entre {nightRateInfo.nightStart} et {nightRateInfo.nightEnd})
+              {nightRateInfo?.isApplied ? (
+                `Tarif de nuit appliqué (${nightRateInfo.percentage}% de majoration entre ${nightRateInfo.nightStart} et ${nightRateInfo.nightEnd})`
+              ) : (
+                "Répartition jour/nuit du trajet"
+              )}
               {formattedNightHours && <span className="ml-1">- {formattedNightHours} en horaires de nuit</span>}
             </span>
           </div>
           
-          {/* Add the improved gauge here */}
+          {/* Toujours afficher la jauge si nous avons des infos sur le trajet */}
           <DayNightGauge 
             dayPercentage={dayPercentage} 
             nightPercentage={nightPercentage}
-            dayKm={nightRateInfo.dayKm}
-            nightKm={nightRateInfo.nightKm}
+            dayKm={nightRateInfo?.dayKm}
+            nightKm={nightRateInfo?.nightKm}
           />
           
-          {nightRateInfo.dayPrice !== undefined && nightRateInfo.nightPrice !== undefined && (
+          {nightRateInfo?.isApplied && nightRateInfo.dayPrice !== undefined && nightRateInfo.nightPrice !== undefined && (
             <div className="flex justify-between text-xs mt-1">
               <span>{nightRateInfo.dayPrice.toFixed(1)}€ (tarif jour)</span>
               <span>{nightRateInfo.nightPrice.toFixed(1)}€ + {nightRateInfo.nightSurcharge?.toFixed(1) || '0.0'}€ de majoration (tarif nuit)</span>
