@@ -74,6 +74,25 @@ export const PriceDetailsDisplay: React.FC<PriceDetailsDisplayProps> = ({
         </div>
       </div>
       
+      {/* Détail du calcul jour/nuit pour le trajet aller si applicable */}
+      {isNightRate && quoteDetails?.dayKm > 0 && quoteDetails?.nightKm > 0 && (
+        <div className="ml-6 space-y-1 p-2 bg-secondary/20 rounded-md text-xs">
+          <div className="flex justify-between">
+            <p>Tarif de jour ({Math.round(quoteDetails.dayKm * 10) / 10} km):</p>
+            <p className="font-medium">{formatPrice(quoteDetails.dayPrice)}€ HT</p>
+          </div>
+          <div className="flex justify-between">
+            <p>
+              Tarif de nuit ({Math.round(quoteDetails.nightKm * 10) / 10} km) 
+              <span className="text-muted-foreground ml-1">
+                (+{quoteDetails.nightRatePercentage}%)
+              </span>:
+            </p>
+            <p className="font-medium">{formatPrice(quoteDetails.nightPrice)}€ HT</p>
+          </div>
+        </div>
+      )}
+      
       {hasWaitingTime && (
         <div className="flex justify-between">
           <p className="text-sm">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>

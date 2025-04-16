@@ -37,13 +37,13 @@ export const ExactPriceDetails: React.FC<ExactPriceDetailsProps> = ({
         
         {dayKm > 0 && (
           <p>
-            Tarif de jour : {Math.round(dayKm)} km × {basePrice.toFixed(2)}€/km HT = {formatPrice(dayPrice)}€ HT
+            Tarif de jour : {Math.round(dayKm * 10) / 10} km × {basePrice.toFixed(2)}€/km HT = {formatPrice(dayPrice)}€ HT
           </p>
         )}
         
         {nightKm > 0 && (
           <p>
-            Tarif de Nuit : {Math.round(nightKm)} km × {basePrice.toFixed(2)}€/km HT + {nightPercentage}% = {formatPrice(nightPrice)}€ HT
+            Tarif de nuit : {Math.round(nightKm * 10) / 10} km × {basePrice.toFixed(2)}€/km HT + {nightPercentage}% = {formatPrice(nightPrice)}€ HT
           </p>
         )}
         
