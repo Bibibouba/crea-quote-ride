@@ -1,5 +1,5 @@
 
-import { UseQuoteFormStateProps } from '@/types/quoteForm';
+import { QuoteFormStateProps } from '@/types/quoteForm';
 
 interface UseFormResetProps {
   setDepartureAddress: (value: string) => void;

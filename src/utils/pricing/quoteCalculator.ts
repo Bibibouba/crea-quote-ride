@@ -1,11 +1,74 @@
 
 import { Vehicle, PricingSettings, QuoteDetails } from '@/types/quoteForm';
 import { calculateDayNightKmSplit } from './timeUtils';
-import { calculateNightRate } from './nightRateCalculator';
-import { calculateSundayRate } from './sundayRateCalculator';
-import { calculateVAT } from './vatCalculator';
-import { calculateMinFare } from './minFareCalculator';
+import { calculateNightSurcharge } from './nightRateCalculator';
+import { calculateSundaySurcharge } from './sundayRateCalculator';
+import { calculateVatAndTotalPrices } from './vatCalculator';
+import { applyMinimumFare } from './minFareCalculator';
 import { calculateWaitingTimePrice } from './calculateWaitingTimePrice';
+
+// Define missing functions that were imported incorrectly
+const calculateVAT = (price: number, vatRate: number, includeVAT: boolean): number => {
+  if (includeVAT) {
+    return price / (1 + (vatRate / 100));
+  } else {
+    return price / (1 + (vatRate / 100));
+  }
+};
+
+const calculateNightRate = (
+  basePrice: number,
+  dayKm: number,
+  nightKm: number,
+  isNightRateEnabled: boolean,
+  nightRatePercentage: number
+) => {
+  const dayPrice = dayKm * basePrice;
+  const nightPrice = nightKm * basePrice;
+  
+  const nightSurcharge = calculateNightSurcharge(
+    basePrice,
+    isNightRateEnabled,
+    nightKm,
+    dayKm + nightKm,
+    nightRatePercentage
+  );
+  
+  return {
+    isNightRate: isNightRateEnabled && nightKm > 0,
+    nightRatePercentage,
+    dayPrice,
+    nightPrice,
+    nightSurcharge,
+    totalWithNightRate: dayPrice + nightPrice + nightSurcharge
+  };
+};
+
+const calculateSundayRate = (
+  basePrice: number,
+  isSunday: boolean,
+  sundayRatePercentage: number
+) => {
+  const sundaySurcharge = calculateSundaySurcharge(
+    basePrice,
+    isSunday,
+    sundayRatePercentage
+  );
+  
+  return {
+    sundaySurcharge,
+    totalWithSunday: basePrice + sundaySurcharge
+  };
+};
+
+const calculateMinFare = (
+  calculatedPrice: number,
+  minimumFare: number
+) => {
+  return {
+    finalPrice: applyMinimumFare(calculatedPrice, minimumFare)
+  };
+};
 
 // This function calculates all the pricing details for a quote
 export const calculateQuoteDetails = (
@@ -61,21 +124,25 @@ export const calculateQuoteDetails = (
   const [hours, minutes] = time.split(':').map(Number);
   departureTime.setHours(hours, minutes, 0, 0);
   
-  const {
-    dayKm,
-    nightKm,
-    dayPercentage,
-    nightPercentage,
-    nightHours,
-    dayHours,
-    totalKm,
-    totalMinutes
-  } = calculateDayNightKmSplit(
+  const dayNightSplit = calculateDayNightKmSplit(
     departureTime,
     estimatedDistance, 
     selectedVehicle.night_rate_start || pricingSettings.night_rate_start,
     selectedVehicle.night_rate_end || pricingSettings.night_rate_end
   );
+  
+  const {
+    dayKm,
+    nightKm,
+    dayPercentage,
+    nightPercentage,
+    totalKm
+  } = dayNightSplit;
+  
+  // Add missing properties for compatibility
+  const nightHours = dayNightSplit.nightHours || 0;
+  const dayHours = dayNightSplit.dayHours || 0;
+  const totalMinutes = dayNightSplit.totalMinutes || 0;
 
   console.log("Day/Night split for one-way trip:", {
     dayKm, nightKm, dayPercentage, nightPercentage, nightHours, dayHours
@@ -119,6 +186,7 @@ export const calculateQuoteDetails = (
     const arrivalTime = new Date(departureTime.getTime() + estimatedDurationMinutes * 60 * 1000);
     
     // If there's waiting time, add it to the arrival time to get the return start time
+    const waitingTimeMinutes = hasWaitingTime ? 15 : 0; // Default to 15 minutes if not specified
     const returnStartTime = new Date(arrivalTime.getTime() + (hasWaitingTime ? waitingTimeMinutes * 60 * 1000 : 0));
     
     console.log("Return trip timing:", {
@@ -142,8 +210,8 @@ export const calculateQuoteDetails = (
     returnNightKm = returnSplit.nightKm;
     returnDayPercentage = returnSplit.dayPercentage;
     returnNightPercentage = returnSplit.nightPercentage;
-    returnNightHours = returnSplit.nightHours;
-    returnDayHours = returnSplit.dayHours;
+    returnNightHours = returnSplit.nightHours || 0;
+    returnDayHours = returnSplit.dayHours || 0;
     returnTotalKm = returnSplit.totalKm;
     
     console.log("Day/Night split for return trip:", {

@@ -129,11 +129,15 @@ export const calculateNightDuration = (startTime, endTime, nightStartTime, night
 // Calculate the split between day and night kilometers
 export const calculateDayNightKmSplit = (
   startTime,
-  endTime,
   totalDistance,
   nightStartTime,
   nightEndTime
 ) => {
+  // Create a dummy end time based on distance
+  // Assuming an average speed of 60km/h
+  const durationInMinutes = (totalDistance / 60) * 60; // Convert to minutes
+  const endTime = new Date(startTime.getTime() + durationInMinutes * 60 * 1000);
+  
   const { nightMinutes, totalMinutes } = calculateNightDuration(
     startTime,
     endTime,
@@ -148,7 +152,10 @@ export const calculateDayNightKmSplit = (
       nightKm: 0,
       totalKm: totalDistance,
       dayPercentage: 100,
-      nightPercentage: 0
+      nightPercentage: 0,
+      nightHours: 0,
+      dayHours: 0,
+      totalMinutes: 0
     };
   }
   
@@ -158,6 +165,10 @@ export const calculateDayNightKmSplit = (
   // Calculate day and night kilometers
   const nightKm = totalDistance * nightProportion;
   const dayKm = totalDistance - nightKm;
+  
+  // Calculate hours
+  const nightHours = nightMinutes / 60;
+  const dayHours = (totalMinutes - nightMinutes) / 60;
   
   // Protection contre les erreurs de calcul dues aux arrondis
   const dayPercentage = Math.max(0, Math.min(100, ((totalDistance - nightKm) / totalDistance) * 100));
@@ -176,7 +187,9 @@ export const calculateDayNightKmSplit = (
     dayKm,
     nightKm,
     dayPercentage,
-    nightPercentage
+    nightPercentage,
+    nightHours,
+    dayHours
   });
   
   return {
@@ -184,6 +197,9 @@ export const calculateDayNightKmSplit = (
     nightKm,
     totalKm: totalDistance,
     dayPercentage,
-    nightPercentage
+    nightPercentage,
+    nightHours,
+    dayHours,
+    totalMinutes
   };
 };
