@@ -57,7 +57,7 @@ export const calculateQuoteDetails = (
   const estimatedDurationHours = distance / averageSpeedKmPerHour;
   const estimatedDurationMinutes = estimatedDurationHours * 60;
   
-  // Calculate trip end time
+  // Calculate trip end time (destination arrival time)
   const tripEndTime = new Date(tripDateTime);
   tripEndTime.setMinutes(tripEndTime.getMinutes() + estimatedDurationMinutes);
   
@@ -74,7 +74,7 @@ export const calculateQuoteDetails = (
   const nightHoursDecimal = nightMinutes / 60;
   const dayHoursDecimal = (totalMinutes - nightMinutes) / 60;
   
-  // Calculate day and night kilometer split
+  // Calculate day and night kilometer split for one-way trip
   const kmSplit = calculateDayNightKmSplit(
     tripDateTime,
     tripEndTime,
@@ -105,11 +105,27 @@ export const calculateQuoteDetails = (
   // Apply night and Sunday surcharges
   let oneWayPriceHT = oneWayPriceBase + nightSurcharge + sundaySurcharge;
   
-  // Calculate return trip price if applicable
+  // -- RETURN TRIP CALCULATION --
   let returnPriceHT = 0;
   let returnBasePrice = 0;
   let returnNightSurcharge = 0;
   let returnSundaySurcharge = 0;
+  let returnKmSplit = {
+    dayKm: 0,
+    nightKm: 0,
+    totalKm: 0,
+    dayPercentage: 0,
+    nightPercentage: 0
+  };
+  let returnNightDurationDetails = {
+    nightMinutes: 0,
+    totalMinutes: 0
+  };
+  let returnDayPrice = 0;
+  let returnNightPrice = 0;
+  let isReturnNightRate = false;
+  let returnNightHoursDecimal = 0;
+  let returnDayHoursDecimal = 0;
   
   if (hasReturnTrip) {
     const returnCalculatedDistance = returnToSameAddress
@@ -119,15 +135,60 @@ export const calculateQuoteDetails = (
     returnBasePrice = returnCalculatedDistance * basePrice;
     returnBasePrice = applyMinimumFare(returnBasePrice, minimumFare);
     
-    // For simplicity, assume return trip has same night/day distribution
-    // A more accurate calculation would consider the return trip's specific time
+    // Calculate return trip start time (after waiting time if any)
+    const returnStartTime = new Date(tripEndTime);
+    if (hasWaitingTime) {
+      returnStartTime.setMinutes(returnStartTime.getMinutes() + waitingTimeMinutes);
+    }
+    
+    // Calculate return trip duration and end time
+    const returnDurationHours = returnCalculatedDistance / averageSpeedKmPerHour;
+    const returnDurationMinutes = returnDurationHours * 60;
+    const returnEndTime = new Date(returnStartTime);
+    returnEndTime.setMinutes(returnEndTime.getMinutes() + returnDurationMinutes);
+    
+    // Calculate night duration for return trip
+    returnNightDurationDetails = calculateNightDuration(
+      returnStartTime,
+      returnEndTime,
+      nightRateStart,
+      nightRateEnd
+    );
+    
+    returnNightHoursDecimal = returnNightDurationDetails.nightMinutes / 60;
+    returnDayHoursDecimal = (returnNightDurationDetails.totalMinutes - returnNightDurationDetails.nightMinutes) / 60;
+    
+    // Calculate day/night split for return trip
+    returnKmSplit = calculateDayNightKmSplit(
+      returnStartTime,
+      returnEndTime,
+      returnCalculatedDistance,
+      nightRateStart,
+      nightRateEnd
+    );
+    
+    console.log('Return trip calculation:', {
+      returnStartTime: returnStartTime.toISOString(),
+      returnEndTime: returnEndTime.toISOString(),
+      returnDurationMinutes,
+      returnNightDurationDetails,
+      returnKmSplit
+    });
+    
+    returnDayPrice = returnKmSplit.dayKm * basePrice;
+    returnNightPrice = returnKmSplit.nightKm * basePrice * (1 + nightRatePercentage / 100);
+    
+    // Calculate night surcharge for return trip
     returnNightSurcharge = calculateNightSurcharge(
       returnBasePrice,
       nightRateEnabled,
-      kmSplit.nightKm,
-      kmSplit.totalKm,
+      returnKmSplit.nightKm,
+      returnKmSplit.totalKm,
       nightRatePercentage
     );
+    
+    // Is night rate applied to return trip?
+    isReturnNightRate = nightRateEnabled && returnNightDurationDetails.nightMinutes > 0;
     
     returnSundaySurcharge = calculateSundaySurcharge(
       returnBasePrice + returnNightSurcharge,
@@ -193,6 +254,19 @@ export const calculateQuoteDetails = (
     waitTimeDay: 0, // These would need more complex calculation
     waitTimeNight: 0,
     waitPriceDay: 0,
-    waitPriceNight: 0
+    waitPriceNight: 0,
+    
+    // Return trip related fields
+    returnDayKm: returnKmSplit.dayKm,
+    returnNightKm: returnKmSplit.nightKm,
+    returnTotalKm: returnKmSplit.totalKm,
+    returnDayPrice: returnDayPrice,
+    returnNightPrice: returnNightPrice,
+    returnNightSurcharge: returnNightSurcharge,
+    isReturnNightRate: isReturnNightRate,
+    returnNightHours: returnNightHoursDecimal,
+    returnDayHours: returnDayHoursDecimal,
+    returnDayPercentage: returnKmSplit.dayPercentage,
+    returnNightPercentage: returnKmSplit.nightPercentage
   };
 };

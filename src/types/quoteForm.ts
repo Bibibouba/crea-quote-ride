@@ -88,6 +88,18 @@ export interface QuoteDetails {
   return_price?: number;
   dayPercentage?: number;
   nightPercentage?: number;
+  // Return trip specific fields
+  returnDayKm?: number;
+  returnNightKm?: number;
+  returnTotalKm?: number;
+  returnDayPrice?: number;
+  returnNightPrice?: number;
+  returnNightSurcharge?: number;
+  isReturnNightRate?: boolean;
+  returnNightHours?: number;
+  returnDayHours?: number;
+  returnDayPercentage?: number;
+  returnNightPercentage?: number;
 }
 
 export interface WaitingTimeOption {
@@ -145,7 +157,6 @@ export interface QuoteDetailsType {
   // Fields for compatibility with QuoteDetails
   oneWayPrice?: number;
   returnPrice?: number;
-  waitingTimePrice?: number;
   totalPrice?: number;
   amount_ht?: number;
   one_way_price_ht?: number;
@@ -155,6 +166,18 @@ export interface QuoteDetailsType {
   // Ajout des propriétés manquantes
   dayPercentage?: number;
   nightPercentage?: number;
+  // Return trip specific fields
+  returnDayKm?: number;
+  returnNightKm?: number;
+  returnTotalKm?: number;
+  returnDayPrice?: number;
+  returnNightPrice?: number;
+  returnNightSurcharge?: number;
+  isReturnNightRate?: boolean;
+  returnNightHours?: number;
+  returnDayHours?: number;
+  returnDayPercentage?: number;
+  returnNightPercentage?: number;
 }
 
 export type QuoteFormState = ReturnType<typeof useQuoteForm>;

@@ -75,6 +75,17 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
   const dayKm = quoteDetails?.dayKm;
   const nightKm = quoteDetails?.nightKm;
   const totalKm = quoteDetails?.totalKm || estimatedDistance;
+  
+  // Infos retour
+  const returnDayKm = quoteDetails?.returnDayKm;
+  const returnNightKm = quoteDetails?.returnNightKm;
+  const returnTotalKm = quoteDetails?.returnTotalKm || returnDistance;
+  const returnNightHours = quoteDetails?.returnNightHours || 0;
+  const returnDayPercentage = quoteDetails?.returnDayPercentage;
+  const returnNightPercentage = quoteDetails?.returnNightPercentage;
+  const returnDayPrice = quoteDetails?.returnDayPrice;
+  const returnNightPrice = quoteDetails?.returnNightPrice;
+  const returnNightSurcharge = quoteDetails?.returnNightSurcharge;
 
   const nightRateInfo = {
     isApplied: !!isNightRate,
@@ -88,8 +99,28 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     nightKm: nightKm,
     totalKm: totalKm,
     dayPrice: quoteDetails?.dayPrice,
-    nightPrice: quoteDetails?.nightPrice
+    nightPrice: quoteDetails?.nightPrice,
+    dayPercentage: quoteDetails?.dayPercentage,
+    nightPercentage: quoteDetails?.nightPercentage
   };
+  
+  // Informations sur le trajet de retour
+  const returnNightRateInfo = hasReturnTrip ? {
+    isApplied: !!quoteDetails?.isReturnNightRate,
+    percentage: nightRatePercentage,
+    nightHours: returnNightHours,
+    totalHours: (returnDuration / 60),
+    nightStart: nightStartDisplay,
+    nightEnd: nightEndDisplay,
+    nightSurcharge: returnNightSurcharge,
+    dayKm: returnDayKm,
+    nightKm: returnNightKm,
+    totalKm: returnTotalKm,
+    dayPrice: returnDayPrice,
+    nightPrice: returnNightPrice,
+    dayPercentage: returnDayPercentage,
+    nightPercentage: returnNightPercentage
+  } : undefined;
 
   const sundayRateInfo = isSunday ? {
     isApplied: true,
@@ -137,7 +168,9 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
         endTime={tripEndTime.getHours().toString().padStart(2, '0') + ':' + 
                 tripEndTime.getMinutes().toString().padStart(2, '0')}
         nightRateInfo={nightRateInfo}
+        returnNightRateInfo={returnNightRateInfo}
         sundayRateInfo={sundayRateInfo}
+        hasReturnTrip={hasReturnTrip}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
