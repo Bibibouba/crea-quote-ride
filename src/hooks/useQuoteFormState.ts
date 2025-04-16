@@ -1,4 +1,3 @@
-
 import { useAddressForm } from './quote/useAddressForm';
 import { useClientData } from './quote/useClientData';
 import { useFormState } from './quote/useFormState';
@@ -10,6 +9,7 @@ import { useTripOptions } from './quote/useTripOptions';
 import { useVehicleData } from './quote/useVehicleData';
 import { useWaitingTimeCalculation } from './quote/useWaitingTimeCalculation';
 import { waitingTimeOptions } from '@/utils/waitingTimeOptions';
+import { QuoteDetailsType } from '@/types/quoteForm';
 
 export interface UseQuoteFormStateProps {
   clientId?: string;
