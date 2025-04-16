@@ -1,7 +1,7 @@
 
 import { WaitingTimeOption } from '@/types/quoteForm';
 
-export const generateWaitingTimeOptions = (): WaitingTimeOption[] => {
+export const waitingTimeOptions = (): WaitingTimeOption[] => {
   return Array.from({ length: 24 }, (_, i) => {
     const minutes = (i + 1) * 15;
     const hours = Math.floor(minutes / 60);

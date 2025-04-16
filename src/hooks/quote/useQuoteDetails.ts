@@ -1,46 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { calculateQuoteDetails } from '@/utils/pricing';
-import { PricingSettings, Vehicle } from '@/types/quoteForm';
-
-// Define interface for QuoteDetails
-export interface QuoteDetails {
-  basePrice: number;
-  isNightRate: boolean;
-  nightRatePercentage: number;
-  nightHours: number;
-  dayHours: number;
-  nightMinutes: number;
-  totalMinutes: number;
-  nightStartDisplay: string;
-  nightEndDisplay: string;
-  dayKm: number;
-  nightKm: number;
-  totalKm: number;
-  dayPrice: number;
-  nightPrice: number;
-  isSunday: boolean;
-  sundayRate: number;
-  oneWayPriceHT: number;
-  returnPriceHT: number;
-  waitingTimePriceHT: number;
-  totalPriceHT: number;
-  totalVAT: number;
-  oneWayPrice: number;
-  returnPrice: number;
-  waitingTimePrice: number;
-  totalPrice: number;
-  nightSurcharge: number;
-  sundaySurcharge: number;
-  rideVatRate: number;
-  waitingVatRate: number;
-  hasMinDistanceWarning: boolean;
-  minDistance: number;
-  waitTimeDay: number;
-  waitTimeNight: number;
-  waitPriceDay: number;
-  waitPriceNight: number;
-}
+import { PricingSettings, Vehicle, QuoteDetailsType } from '@/types/quoteForm';
 
 interface UseQuoteDetailsProps {
   selectedVehicle: string;
@@ -69,7 +30,7 @@ export const useQuoteDetails = ({
   date,
   pricingSettings
 }: UseQuoteDetailsProps) => {
-  const [quoteDetails, setQuoteDetails] = useState<QuoteDetails | null>(null);
+  const [quoteDetails, setQuoteDetails] = useState<QuoteDetailsType | null>(null);
   
   useEffect(() => {
     if (!selectedVehicle || estimatedDistance === 0 || vehicles.length === 0) {
@@ -91,7 +52,22 @@ export const useQuoteDetails = ({
       pricingSettings
     );
     
-    setQuoteDetails(calculatedQuote as QuoteDetails);
+    // Create QuoteDetailsType from the calculated quote
+    const quoteDetailsType: QuoteDetailsType = {
+      estimatedDistance,
+      estimatedDuration: 0, // This would be set elsewhere
+      amount: calculatedQuote.totalPrice,
+      departureAddress: '', // This would be set elsewhere
+      destinationAddress: '', // This would be set elsewhere
+      departureCoordinates: [0, 0], // This would be set elsewhere
+      destinationCoordinates: [0, 0], // This would be set elsewhere
+      time,
+      date,
+      // Copy all properties from calculatedQuote
+      ...calculatedQuote
+    };
+    
+    setQuoteDetails(quoteDetailsType);
   }, [
     selectedVehicle,
     estimatedDistance,

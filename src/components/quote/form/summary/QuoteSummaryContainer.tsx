@@ -99,8 +99,8 @@ const QuoteSummaryContainer: React.FC<QuoteSummaryProps> = ({
   const tripEndTime = new Date(rideTime);
   tripEndTime.setMinutes(tripEndTime.getMinutes() + estimatedDuration);
   
-  // Calculate night hours using the extracted utility
-  const { isNightRateApplied, nightHours, dayHours } = hasNightRate
+  // Calculate night hours using the updated utility
+  const nightHoursData = hasNightRate
     ? calculateNightHours(
         hours,
         minutes,
@@ -151,9 +151,9 @@ const QuoteSummaryContainer: React.FC<QuoteSummaryProps> = ({
           returnPrice={returnPrice}
           totalPrice={totalPrice}
           tripEndTime={tripEndTime}
-          isNightRateApplied={isNightRateApplied}
-          nightHours={nightHours}
-          dayHours={dayHours}
+          isNightRateApplied={nightHoursData.isNightRateApplied}
+          nightHours={nightHoursData.nightHours}
+          dayHours={nightHoursData.dayHours}
           isSunday={isSunday}
           nightRatePercentage={nightRatePercentage}
           nightRateStart={nightRateStart}

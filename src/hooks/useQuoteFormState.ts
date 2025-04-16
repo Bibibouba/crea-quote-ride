@@ -9,7 +9,7 @@ import { useSaveQuote } from './quote/useSaveQuote';
 import { useTripOptions } from './quote/useTripOptions';
 import { useVehicleData } from './quote/useVehicleData';
 import { useWaitingTimeCalculation } from './quote/useWaitingTimeCalculation';
-import { waitingTimeOptions as generateWaitingTimeOptions } from '@/utils/waitingTimeOptions';
+import { waitingTimeOptions } from '@/utils/waitingTimeOptions';
 
 export interface UseQuoteFormStateProps {
   clientId?: string;
@@ -30,13 +30,13 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
   } = useVehicleData();
   
   // Generate waiting time options
-  const waitingTimeOptions = generateWaitingTimeOptions();
+  const waitingTimeOptionsList = waitingTimeOptions();
   
   // Address form state
   const addressForm = useAddressForm();
   
   // Trip options state
-  const tripOptions = useTripOptions({ waitingTimeOptions });
+  const tripOptions = useTripOptions({ waitingTimeOptions: waitingTimeOptionsList });
   
   // Client data state
   const clientData = useClientData({ clientId });
@@ -91,7 +91,7 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     setIsQuoteSent,
     handleSaveQuote: saveQuote
   } = useSaveQuote({
-    quoteDetails,
+    quoteDetails: quoteDetails as QuoteDetailsType,
     departureAddress: addressForm.departureAddress,
     destinationAddress: addressForm.destinationAddress,
     departureCoordinates: addressForm.departureCoordinates,
@@ -186,6 +186,7 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     // Calculated values
     basePrice,
     estimatedPrice,
+    quoteDetails,
     
     // Handlers
     handleSubmit,
