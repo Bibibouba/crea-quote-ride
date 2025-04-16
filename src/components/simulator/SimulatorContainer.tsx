@@ -115,7 +115,6 @@ const SimulatorContainer = () => {
       total_ttc: formState.quoteDetails.totalPrice || 0
     };
 
-    // Assurons-nous que tous les champs sont inclus dans la requête
     console.log('Submitting with data:', quoteData);
 
     const clientData = {

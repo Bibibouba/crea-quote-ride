@@ -42,8 +42,8 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   // Toujours afficher la jauge si nous avons des informations sur le trajet de nuit
   const shouldDisplayGauge = !!nightRateInfo;
   
-  // Calculate day and night percentages - utiliser les pourcentages si fournis, sinon calculer
-  const dayPercentage = nightRateInfo?.dayPercentage 
+  // Utiliser directement les pourcentages calculés s'ils sont disponibles
+  const dayPercentage = nightRateInfo?.dayPercentage !== undefined 
     ? nightRateInfo.dayPercentage 
     : nightRateInfo && nightRateInfo.totalKm && nightRateInfo.dayKm
       ? (nightRateInfo.dayKm / nightRateInfo.totalKm) * 100
@@ -51,8 +51,8 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
         ? ((nightRateInfo.totalHours - nightRateInfo.nightHours) / nightRateInfo.totalHours) * 100
         : 100;
   
-  const nightPercentage = nightRateInfo?.nightPercentage 
-    ? nightRateInfo.nightPercentage 
+  const nightPercentage = nightRateInfo?.nightPercentage !== undefined
+    ? nightRateInfo.nightPercentage
     : 100 - dayPercentage;
 
   // Format the night hours for display
@@ -76,7 +76,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
             </span>
           </div>
           
-          {/* Toujours afficher la jauge si nous avons des infos sur le trajet */}
+          {/* Affichage des pourcentages avec DEBUG pour vérification */}
           <DayNightGauge 
             dayPercentage={dayPercentage} 
             nightPercentage={nightPercentage}

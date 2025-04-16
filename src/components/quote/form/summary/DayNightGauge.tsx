@@ -24,6 +24,18 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
   const totalPercentage = formattedDayPercentage + formattedNightPercentage;
   const adjustedDayPercentage = totalPercentage === 0 ? 100 : (formattedDayPercentage / totalPercentage) * 100;
   const adjustedNightPercentage = totalPercentage === 0 ? 0 : (formattedNightPercentage / totalPercentage) * 100;
+  
+  // Debug pour vérifier les valeurs
+  console.log('DayNightGauge values:', {
+    dayPercentage,
+    nightPercentage,
+    formattedDayPercentage,
+    formattedNightPercentage,
+    adjustedDayPercentage,
+    adjustedNightPercentage,
+    dayKm,
+    nightKm
+  });
 
   return (
     <div className="space-y-2 w-full">

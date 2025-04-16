@@ -163,6 +163,22 @@ export const calculateDayNightKmSplit = (
   const dayPercentage = Math.max(0, Math.min(100, ((totalDistance - nightKm) / totalDistance) * 100));
   const nightPercentage = Math.max(0, Math.min(100, (nightKm / totalDistance) * 100));
   
+  // Ajouter un log de debug pour voir les valeurs calculées
+  console.log('Day/Night KM Split:', {
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+    nightStartTime,
+    nightEndTime,
+    totalDistance,
+    nightMinutes,
+    totalMinutes,
+    nightProportion,
+    dayKm,
+    nightKm,
+    dayPercentage,
+    nightPercentage
+  });
+  
   return {
     dayKm,
     nightKm,

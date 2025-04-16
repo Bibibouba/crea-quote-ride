@@ -86,6 +86,8 @@ export interface QuoteDetails {
   return_price_ht?: number;
   one_way_price?: number;
   return_price?: number;
+  dayPercentage?: number;
+  nightPercentage?: number;
 }
 
 export interface WaitingTimeOption {
@@ -150,6 +152,9 @@ export interface QuoteDetailsType {
   return_price_ht?: number;
   one_way_price?: number;
   return_price?: number;
+  // Ajout des propriétés manquantes
+  dayPercentage?: number;
+  nightPercentage?: number;
 }
 
 export type QuoteFormState = ReturnType<typeof useQuoteForm>;
