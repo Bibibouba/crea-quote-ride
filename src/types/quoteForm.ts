@@ -154,6 +154,8 @@ export interface QuoteDetailsType {
   waitTimeNight?: number;
   waitPriceDay?: number;
   waitPriceNight?: number;
+  // Add waitingTimePrice property to fix the TypeScript error
+  waitingTimePrice?: number;
   // Fields for compatibility with QuoteDetails
   oneWayPrice?: number;
   returnPrice?: number;

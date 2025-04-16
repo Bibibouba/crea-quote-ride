@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { Address } from '@/hooks/useMapbox';
 import { useAddressForm } from './useAddressForm';
 import { useClientData } from './useClientData';
 import { useFormState } from './useFormState';
@@ -13,6 +12,9 @@ import { useVehicleData } from './useVehicleData';
 import { useWaitingTimeCalculation } from './useWaitingTimeCalculation';
 import { waitingTimeOptions as generateWaitingTimeOptions } from '@/utils/waitingTimeOptions';
 import { QuoteDetailsType } from '@/types/quoteForm';
+import { useFormReset } from './useFormReset';
+import { useRouteHandler } from './useRouteHandler';
+import { useCalculateQuote } from './useCalculateQuote';
 
 /**
  * Legacy hook for backward compatibility
@@ -86,12 +88,12 @@ export const useQuoteForm = () => {
     pricingSettings
   });
   
-  // Handle route calculation
-  const handleRouteCalculated = (distance: number, duration: number) => {
-    const { estimatedDistance: newDistance, estimatedDuration: newDuration } = routeHandler(distance, duration);
-    tripOptions.setEstimatedDistance(newDistance);
-    tripOptions.setEstimatedDuration(newDuration);
-  };
+  // Use our new route handler hook
+  const { handleRouteCalculated } = useRouteHandler({
+    routeHandler,
+    setEstimatedDistance: tripOptions.setEstimatedDistance,
+    setEstimatedDuration: tripOptions.setEstimatedDuration
+  });
   
   // Save quote logic
   const {
@@ -123,53 +125,42 @@ export const useQuoteForm = () => {
     pricingSettings
   });
   
+  // Use the form reset hook
+  const { resetForm } = useFormReset({
+    setDepartureAddress: addressForm.setDepartureAddress,
+    setDestinationAddress: addressForm.setDestinationAddress,
+    setDepartureCoordinates: addressForm.setDepartureCoordinates,
+    setDestinationCoordinates: addressForm.setDestinationCoordinates,
+    setCustomReturnAddress: addressForm.setCustomReturnAddress,
+    setCustomReturnCoordinates: addressForm.setCustomReturnCoordinates,
+    setDate: tripOptions.setDate,
+    setTime: tripOptions.setTime,
+    setPassengers: tripOptions.setPassengers,
+    setEstimatedDistance: tripOptions.setEstimatedDistance,
+    setEstimatedDuration: tripOptions.setEstimatedDuration,
+    setHasReturnTrip: tripOptions.setHasReturnTrip,
+    setHasWaitingTime: tripOptions.setHasWaitingTime,
+    setWaitingTimeMinutes: tripOptions.setWaitingTimeMinutes,
+    setReturnToSameAddress: tripOptions.setReturnToSameAddress,
+    setShowQuote: formState.setShowQuote,
+    setIsQuoteSent,
+    setFirstName: clientData.setFirstName,
+    setLastName: clientData.setLastName,
+    setEmail: clientData.setEmail,
+    setPhone: clientData.setPhone,
+    setSelectedVehicle,
+    vehicles
+  });
+  
+  // Use the calculate quote hook
+  const { handleCalculateQuote } = useCalculateQuote({
+    handleSubmit: formState.handleSubmit,
+    departureCoordinates: addressForm.departureCoordinates,
+    destinationCoordinates: addressForm.destinationCoordinates
+  });
+  
   // Calculate base price
   const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
-  
-  // Helper functions that used to be directly in useQuoteForm
-  const handleCalculateQuote = () => {
-    formState.handleSubmit(
-      new Event('submit') as unknown as React.FormEvent,
-      addressForm.departureCoordinates,
-      addressForm.destinationCoordinates
-    );
-  };
-  
-  const resetForm = () => {
-    // Reset address form
-    addressForm.setDepartureAddress('');
-    addressForm.setDestinationAddress('');
-    addressForm.setDepartureCoordinates(undefined);
-    addressForm.setDestinationCoordinates(undefined);
-    addressForm.setCustomReturnAddress('');
-    addressForm.setCustomReturnCoordinates(undefined);
-    
-    // Reset trip options
-    tripOptions.setDate(new Date());
-    tripOptions.setTime('12:00');
-    tripOptions.setPassengers('1');
-    tripOptions.setEstimatedDistance(0);
-    tripOptions.setEstimatedDuration(0);
-    tripOptions.setHasReturnTrip(false);
-    tripOptions.setHasWaitingTime(false);
-    tripOptions.setWaitingTimeMinutes(15);
-    tripOptions.setReturnToSameAddress(true);
-    
-    // Reset form state
-    formState.setShowQuote(false);
-    setIsQuoteSent(false);
-    
-    // Reset client data
-    clientData.setFirstName('');
-    clientData.setLastName('');
-    clientData.setEmail('');
-    clientData.setPhone('');
-    
-    // Reset vehicle selection
-    if (vehicles.length > 0) {
-      setSelectedVehicle(vehicles[0].id);
-    }
-  };
   
   return {
     // Address state
@@ -257,6 +248,6 @@ export const useQuoteForm = () => {
     handleRouteCalculated,
     handleCalculateQuote,
     resetForm,
-    handleSaveQuote: handleSaveQuote
+    handleSaveQuote
   };
 };
