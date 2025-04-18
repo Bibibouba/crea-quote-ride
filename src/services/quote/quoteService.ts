@@ -16,7 +16,7 @@ export const quoteService = {
     // Make sure we have a valid status value that matches the Quote type
     const validatedQuoteData = {
       ...quoteData,
-      status: quoteData.status as "pending" | "accepted" | "declined"
+      status: quoteData.status as Quote['status']
     };
     
     const { data, error } = await supabase
