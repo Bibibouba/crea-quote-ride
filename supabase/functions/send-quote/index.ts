@@ -23,26 +23,36 @@ interface QuoteEmailRequest {
 }
 
 serve(async (req) => {
+  // Tracer l'heure de début pour calculer la durée d'exécution
+  const startTime = Date.now();
+  console.log(`🚀 Fonction send-quote démarrée le ${new Date().toISOString()}`);
+  
   // Gérer la requête OPTIONS pour CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    console.log('Requête OPTIONS reçue, retour des en-têtes CORS');
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    console.log('Fonction send-quote démarrée')
-    
     // Vérifier la présence de l'API key de Resend
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
-      console.error('Clé API Resend non configurée')
-      throw new Error('Configuration Resend manquante - La variable d\'environnement RESEND_API_KEY n\'est pas définie')
+      console.error('❌ ERREUR CRITIQUE: Clé API Resend non configurée');
+      throw new Error('Configuration Resend manquante - La variable d\'environnement RESEND_API_KEY n\'est pas définie');
     } else {
-      console.log('Clé API Resend trouvée:', resendApiKey.substring(0, 5) + '...')
+      // Vérifier la validité basique de la clé (format attendu)
+      if (!resendApiKey.startsWith('re_') || resendApiKey.length < 20) {
+        console.error('⚠️ AVERTISSEMENT: Format de clé API Resend suspect:', 
+                     `commence par "${resendApiKey.substring(0, 3)}", longueur: ${resendApiKey.length}`);
+      } else {
+        console.log('✅ Clé API Resend trouvée et au format attendu (re_...)');
+      }
     }
     
     // Récupérer les données de la requête
-    const requestData = await req.json()
-    console.log('Données reçues:', JSON.stringify(requestData, null, 2))
+    console.log('📥 Réception de la requête JSON...');
+    const requestData = await req.json();
+    console.log('📋 Données reçues:', JSON.stringify(requestData, null, 2));
     
     // Extraire les champs nécessaires
     const {
@@ -54,38 +64,48 @@ serve(async (req) => {
       rideDate,
       amount,
       pdfUrl,
-    }: QuoteEmailRequest = requestData
+    }: QuoteEmailRequest = requestData;
 
+    // Validation des données
+    console.log('🔍 Validation des données...');
+    
     // Valider l'adresse email
     if (!clientEmail || !clientEmail.includes('@')) {
-      console.error('Adresse email invalide:', clientEmail)
-      throw new Error('Adresse email invalide')
+      console.error('❌ Adresse email invalide:', clientEmail);
+      throw new Error('Adresse email invalide');
     }
     
     // Valider les autres champs requis
     if (!clientName || clientName.trim() === '') {
-      console.error('Nom du client manquant')
-      throw new Error('Nom du client requis')
+      console.error('❌ Nom du client manquant');
+      throw new Error('Nom du client requis');
     }
     
     if (!departureLocation || !arrivalLocation) {
-      console.error('Adresses de départ ou d\'arrivée manquantes')
-      throw new Error('Adresses de départ et d\'arrivée requises')
+      console.error('❌ Adresses de départ ou d\'arrivée manquantes');
+      throw new Error('Adresses de départ et d\'arrivée requises');
     }
     
-    console.log('Envoi d\'email à:', clientEmail)
+    if (!quoteId) {
+      console.error('❌ ID du devis manquant');
+      throw new Error('ID du devis requis');
+    }
+    
+    console.log(`✅ Validation réussie, préparation de l'email pour: ${clientEmail}`);
     
     // Formatter la date
-    let formattedDate
+    let formattedDate;
     try {
-      formattedDate = format(new Date(rideDate), 'dd MMMM yyyy à HH:mm', { locale: fr })
+      formattedDate = format(new Date(rideDate), 'dd MMMM yyyy à HH:mm', { locale: fr });
+      console.log(`📅 Date formatée: ${formattedDate}`);
     } catch (error) {
-      console.error('Erreur de formatage de date:', error)
-      formattedDate = rideDate // Fallback au format original
+      console.error('⚠️ Erreur de formatage de date:', error);
+      formattedDate = rideDate; // Fallback au format original
+      console.log(`⚠️ Utilisation du format de date original: ${formattedDate}`);
     }
 
     // Générer le HTML du mail
-    console.log('Génération du template HTML...')
+    console.log('🔨 Génération du template HTML...');
     const html = await renderAsync(
       QuoteEmail({
         clientName,
@@ -96,7 +116,8 @@ serve(async (req) => {
         amount,
         pdfUrl,
       })
-    )
+    );
+    console.log('✅ HTML généré avec succès');
 
     // Créer le texte brut comme alternative
     const plainText = `Bonjour ${clientName},
@@ -112,12 +133,16 @@ Détails du trajet :
 Ce devis est valable 7 jours à compter de sa date d'émission. Pour toute question, n'hésitez pas à nous contacter.
 
 Cordialement,
-L'équipe VTC`
-
-    console.log('HTML généré, préparation de l\'envoi avec Resend...')
+L'équipe VTC`;
+    
+    console.log('🚀 Initialisation de Resend avec la clé API...');
     
     // Initialiser Resend avec la clé API
-    const resend = new Resend(resendApiKey)
+    const resend = new Resend(resendApiKey);
+    
+    console.log('📧 Envoi de l\'email via Resend...');
+    console.log('Destinataire:', clientEmail);
+    console.log('Sujet:', `Votre devis VTC N° ${quoteId}`);
     
     // Envoyer l'email via Resend
     const { data, error } = await resend.emails.send({
@@ -126,14 +151,16 @@ L'équipe VTC`
       subject: `Votre devis VTC N° ${quoteId}`,
       html,
       text: plainText,
-    })
+    });
 
     if (error) {
-      console.error('Erreur Resend:', error)
-      throw error
+      console.error('❌ Erreur Resend:', error);
+      throw error;
     }
     
-    console.log('Réponse de Resend:', data)
+    console.log('✅ Réponse de Resend (succès):', data);
+    const duration = Date.now() - startTime;
+    console.log(`⏱️ Fonction send-quote terminée en ${duration}ms`);
 
     return new Response(JSON.stringify({ 
       success: true,
@@ -142,9 +169,10 @@ L'équipe VTC`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
-    })
+    });
   } catch (error) {
-    console.error('Erreur dans la fonction send-quote:', error)
+    const duration = Date.now() - startTime;
+    console.error(`❌ Erreur dans la fonction send-quote après ${duration}ms:`, error);
     return new Response(
       JSON.stringify({ 
         success: false,
@@ -154,6 +182,6 @@ L'équipe VTC`
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       }
-    )
+    );
   }
 })

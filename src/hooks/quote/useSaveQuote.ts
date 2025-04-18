@@ -133,14 +133,25 @@ export const useSaveQuote = ({
         quoteData
       });
       
-      console.log("Quote saved:", savedQuote);
+      console.log("📝 Devis enregistré avec succès:", savedQuote);
       
       if (email) {
-        console.log("Tentative d'envoi d'email au client:", email);
+        console.log("📧 Client a fourni une adresse email, tentative d'envoi:", email);
         
         try {
-          const fullName = `${firstName || ''} ${lastName || ''}`.trim();
-          console.log("Préparation de l'envoi d'email à", fullName, "sur", email);
+          // Préparation du nom complet du client
+          let fullName = '';
+          if (firstName && lastName) {
+            fullName = `${firstName} ${lastName}`.trim();
+          } else if (firstName) {
+            fullName = firstName.trim();
+          } else if (lastName) {
+            fullName = lastName.trim();
+          } else {
+            fullName = "Client"; // Valeur par défaut si aucun nom n'est fourni
+          }
+          
+          console.log("📧 Préparation de l'envoi d'email à", fullName, "sur", email);
           
           await sendQuoteEmail({
             clientName: fullName,
@@ -156,7 +167,7 @@ export const useSaveQuote = ({
           });
           setIsQuoteSent(true);
         } catch (emailError) {
-          console.error('Erreur lors de l\'envoi de l\'email:', emailError);
+          console.error('📧 ❌ Erreur lors de l\'envoi de l\'email:', emailError);
           toast({
             title: 'Devis enregistré',
             description: 'Le devis a été enregistré mais l\'envoi par email a échoué.',
@@ -165,7 +176,7 @@ export const useSaveQuote = ({
           setIsQuoteSent(true);
         }
       } else {
-        console.log("Pas d'email fourni, le devis est enregistré sans envoi d'email");
+        console.log("📧 Pas d'email fourni, le devis est enregistré sans envoi d'email");
         toast({
           title: 'Devis enregistré',
           description: 'Votre devis a été enregistré avec succès',
@@ -173,7 +184,7 @@ export const useSaveQuote = ({
         setIsQuoteSent(true);
       }
     } catch (error) {
-      console.error('Erreur lors de l\'enregistrement du devis:', error);
+      console.error('📝 ❌ Erreur lors de l\'enregistrement du devis:', error);
       toast({
         title: 'Erreur',
         description: `Erreur lors de l'enregistrement: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
