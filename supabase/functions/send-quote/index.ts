@@ -4,7 +4,7 @@ import { Resend } from 'npm:resend@1.0.0'
 import { renderAsync } from 'npm:@react-email/render@0.0.7'
 import { QuoteEmail } from './email-template.tsx'
 import { format } from 'npm:date-fns@2.30.0'
-import { fr } from 'npm:date-fns/locale@2.30.0'
+import { fr } from 'npm:date-fns@2.30.0/locale'
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 
