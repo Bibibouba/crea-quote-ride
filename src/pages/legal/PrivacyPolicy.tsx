@@ -1,8 +1,11 @@
 
 import React from 'react';
 import Layout from '@/components/Layout';
+import { useScrollToTop } from '@/hooks/use-scroll-top';
 
 const PrivacyPolicy = () => {
+  useScrollToTop();
+
   return (
     <Layout>
       <div className="container py-12">
