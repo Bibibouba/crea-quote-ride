@@ -371,11 +371,13 @@ export type Database = {
       quotes: {
         Row: {
           amount: number
+          amount_ht: number | null
           arrival_coordinates: number[] | null
           arrival_location: string
           client_id: string
           created_at: string
           custom_return_address: string | null
+          day_hours: number | null
           day_km: number | null
           day_price: number | null
           departure_coordinates: number[] | null
@@ -387,28 +389,46 @@ export type Database = {
           has_return_trip: boolean | null
           has_waiting_time: boolean | null
           id: string
+          is_sunday_holiday: boolean | null
+          night_hours: number | null
           night_km: number | null
           night_price: number | null
+          night_rate_percentage: number | null
+          night_surcharge: number | null
+          one_way_price: number | null
+          one_way_price_ht: number | null
           quote_pdf: string | null
           return_coordinates: number[] | null
           return_distance_km: number | null
           return_duration_minutes: number | null
+          return_price: number | null
+          return_price_ht: number | null
           return_to_same_address: boolean | null
           ride_date: string
           status: string
+          sunday_holiday_percentage: number | null
+          sunday_holiday_surcharge: number | null
+          total_ht: number | null
           total_km: number | null
+          total_vat: number | null
           updated_at: string
           vehicle_id: string | null
+          wait_price_day: number | null
+          wait_price_night: number | null
+          wait_time_day: number | null
+          wait_time_night: number | null
           waiting_time_minutes: number | null
           waiting_time_price: number | null
         }
         Insert: {
           amount: number
+          amount_ht?: number | null
           arrival_coordinates?: number[] | null
           arrival_location: string
           client_id: string
           created_at?: string
           custom_return_address?: string | null
+          day_hours?: number | null
           day_km?: number | null
           day_price?: number | null
           departure_coordinates?: number[] | null
@@ -420,28 +440,46 @@ export type Database = {
           has_return_trip?: boolean | null
           has_waiting_time?: boolean | null
           id?: string
+          is_sunday_holiday?: boolean | null
+          night_hours?: number | null
           night_km?: number | null
           night_price?: number | null
+          night_rate_percentage?: number | null
+          night_surcharge?: number | null
+          one_way_price?: number | null
+          one_way_price_ht?: number | null
           quote_pdf?: string | null
           return_coordinates?: number[] | null
           return_distance_km?: number | null
           return_duration_minutes?: number | null
+          return_price?: number | null
+          return_price_ht?: number | null
           return_to_same_address?: boolean | null
           ride_date: string
           status?: string
+          sunday_holiday_percentage?: number | null
+          sunday_holiday_surcharge?: number | null
+          total_ht?: number | null
           total_km?: number | null
+          total_vat?: number | null
           updated_at?: string
           vehicle_id?: string | null
+          wait_price_day?: number | null
+          wait_price_night?: number | null
+          wait_time_day?: number | null
+          wait_time_night?: number | null
           waiting_time_minutes?: number | null
           waiting_time_price?: number | null
         }
         Update: {
           amount?: number
+          amount_ht?: number | null
           arrival_coordinates?: number[] | null
           arrival_location?: string
           client_id?: string
           created_at?: string
           custom_return_address?: string | null
+          day_hours?: number | null
           day_km?: number | null
           day_price?: number | null
           departure_coordinates?: number[] | null
@@ -453,18 +491,34 @@ export type Database = {
           has_return_trip?: boolean | null
           has_waiting_time?: boolean | null
           id?: string
+          is_sunday_holiday?: boolean | null
+          night_hours?: number | null
           night_km?: number | null
           night_price?: number | null
+          night_rate_percentage?: number | null
+          night_surcharge?: number | null
+          one_way_price?: number | null
+          one_way_price_ht?: number | null
           quote_pdf?: string | null
           return_coordinates?: number[] | null
           return_distance_km?: number | null
           return_duration_minutes?: number | null
+          return_price?: number | null
+          return_price_ht?: number | null
           return_to_same_address?: boolean | null
           ride_date?: string
           status?: string
+          sunday_holiday_percentage?: number | null
+          sunday_holiday_surcharge?: number | null
+          total_ht?: number | null
           total_km?: number | null
+          total_vat?: number | null
           updated_at?: string
           vehicle_id?: string | null
+          wait_price_day?: number | null
+          wait_price_night?: number | null
+          wait_time_day?: number | null
+          wait_time_night?: number | null
           waiting_time_minutes?: number | null
           waiting_time_price?: number | null
         }
