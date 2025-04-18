@@ -410,6 +410,7 @@ export type Database = {
           sunday_holiday_surcharge: number | null
           total_ht: number | null
           total_km: number | null
+          total_ttc: number | null
           total_vat: number | null
           updated_at: string
           vehicle_id: string | null
@@ -461,6 +462,7 @@ export type Database = {
           sunday_holiday_surcharge?: number | null
           total_ht?: number | null
           total_km?: number | null
+          total_ttc?: number | null
           total_vat?: number | null
           updated_at?: string
           vehicle_id?: string | null
@@ -512,6 +514,7 @@ export type Database = {
           sunday_holiday_surcharge?: number | null
           total_ht?: number | null
           total_km?: number | null
+          total_ttc?: number | null
           total_vat?: number | null
           updated_at?: string
           vehicle_id?: string | null

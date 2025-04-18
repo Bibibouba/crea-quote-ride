@@ -76,7 +76,7 @@ export const useClientSimulator = () => {
         wait_price_night: quoteData.wait_price_night,
         total_ht: quoteData.total_ht,
         vat: quoteData.vat,
-        total_ttc: quoteData.total_ttc
+        total_ttc: quoteData.total_ttc || quoteData.amount
       });
       
       // Create the quote
@@ -122,7 +122,7 @@ export const useClientSimulator = () => {
           wait_price_night: quoteData.wait_price_night,
           total_ht: quoteData.total_ht,
           vat: quoteData.vat,
-          total_ttc: quoteData.total_ttc
+          total_ttc: quoteData.total_ttc || quoteData.amount
         });
         
       if (quoteError) throw quoteError;

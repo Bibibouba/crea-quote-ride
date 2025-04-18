@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -73,7 +74,8 @@ const SimulatorContainer = () => {
       isSunday: formState.quoteDetails.isSunday,
       sundaySurcharge: formState.quoteDetails.sundaySurcharge,
       totalPriceHT: formState.quoteDetails.totalPriceHT,
-      totalVAT: formState.quoteDetails.totalVAT
+      totalVAT: formState.quoteDetails.totalVAT,
+      totalPrice: formState.quoteDetails.totalPrice
     });
 
     const quoteData = {
