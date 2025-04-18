@@ -21,12 +21,12 @@ const Footer = () => {
             <h4 className="font-medium mb-4">Produit</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/fonctionnalites" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Fonctionnalités
                 </Link>
               </li>
               <li>
-                <Link to="/tarifs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Tarifs
                 </Link>
               </li>
