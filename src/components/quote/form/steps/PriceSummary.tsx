@@ -14,9 +14,6 @@ interface PriceSummaryProps {
 
 export const PriceSummary: React.FC<PriceSummaryProps> = ({
   quoteDetails,
-  isNightRate,
-  isSunday,
-  nightHours,
   hasWaitingTime,
   hasReturnTrip
 }) => {
@@ -56,27 +53,6 @@ export const PriceSummary: React.FC<PriceSummaryProps> = ({
           )}
         </div>
       </div>
-      
-      {(isNightRate || isSunday) && (
-        <div className="space-y-2">
-          <h4 className="font-medium">Suppléments</h4>
-          <div className="text-sm space-y-1">
-            {isNightRate && (
-              <div className="flex justify-between">
-                <span>Majoration nuit ({nightHours}h)</span>
-                <span>{formatCurrency(quoteDetails.nightSurcharge)} HT</span>
-              </div>
-            )}
-            
-            {isSunday && (
-              <div className="flex justify-between">
-                <span>Majoration dimanche/férié</span>
-                <span>{formatCurrency(quoteDetails.sundaySurcharge)} HT</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
       
       <div className="space-y-2">
         <h4 className="font-medium">Total</h4>
