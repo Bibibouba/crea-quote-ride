@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +18,9 @@ import Subscription from "./pages/dashboard/Subscription";
 import ClientSimulator from "./pages/client/ClientSimulator";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import TermsOfService from "./pages/legal/TermsOfService";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import LegalNotice from "./pages/legal/LegalNotice";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +37,6 @@ const App = () => (
             <Route path="/connexion" element={<Connexion />} />
             <Route path="/inscription" element={<Inscription />} />
             
-            {/* Protected Dashboard Routes */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
             <Route path="/dashboard/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
@@ -45,7 +46,10 @@ const App = () => (
             <Route path="/dashboard/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
             <Route path="/client-simulator" element={<ProtectedRoute><ClientSimulator /></ProtectedRoute>} />
             
-            {/* Catch-all */}
+            <Route path="/cgu" element={<TermsOfService />} />
+            <Route path="/confidentialite" element={<PrivacyPolicy />} />
+            <Route path="/mentions-legales" element={<LegalNotice />} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
