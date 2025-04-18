@@ -323,7 +323,7 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
   doc.setFontSize(9);
   
   let conditionsText = [
-    "• Ce devis est valable 30 jours à compter de sa date d'émission.",
+    "• Validité de l'offre : ce devis est valable 7 jours à compter de sa date d'émission.",
     "• Le paiement s'effectue à la réception de la facture.",
     "• La réservation est confirmée à la réception du devis signé.",
     "• Toute modification du trajet pourra entraîner une révision du tarif.",

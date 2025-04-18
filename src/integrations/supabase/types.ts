@@ -413,6 +413,7 @@ export type Database = {
           total_ttc: number | null
           total_vat: number | null
           updated_at: string
+          vat: number | null
           vehicle_id: string | null
           wait_price_day: number | null
           wait_price_night: number | null
@@ -465,6 +466,7 @@ export type Database = {
           total_ttc?: number | null
           total_vat?: number | null
           updated_at?: string
+          vat?: number | null
           vehicle_id?: string | null
           wait_price_day?: number | null
           wait_price_night?: number | null
@@ -517,6 +519,7 @@ export type Database = {
           total_ttc?: number | null
           total_vat?: number | null
           updated_at?: string
+          vat?: number | null
           vehicle_id?: string | null
           wait_price_day?: number | null
           wait_price_night?: number | null
