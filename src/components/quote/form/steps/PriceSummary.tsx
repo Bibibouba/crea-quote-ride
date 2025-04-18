@@ -2,20 +2,22 @@
 import React, { useEffect } from 'react';
 import { QuoteDetailsType } from '@/types/quoteForm';
 import { formatCurrency } from '@/lib/utils';
+import { PriceDetailsCard } from '../summary/PriceDetailsCard';
 
 interface PriceSummaryProps {
   quoteDetails: QuoteDetailsType | null;
-  isNightRate?: boolean;
-  isSunday?: boolean;
-  nightHours?: number;
   hasWaitingTime?: boolean;
   hasReturnTrip?: boolean;
+  waitingTimeMinutes?: number;
+  showDetailedView?: boolean;
 }
 
 export const PriceSummary: React.FC<PriceSummaryProps> = ({
   quoteDetails,
   hasWaitingTime,
-  hasReturnTrip
+  hasReturnTrip,
+  waitingTimeMinutes,
+  showDetailedView = false
 }) => {
   // Sécurité supplémentaire pour éviter des erreurs avec des données manquantes
   useEffect(() => {
@@ -28,6 +30,19 @@ export const PriceSummary: React.FC<PriceSummaryProps> = ({
     return <p className="text-sm">Aucune donnée de tarification disponible</p>;
   }
 
+  // Si l'affichage détaillé est demandé, utiliser le nouveau composant
+  if (showDetailedView) {
+    return (
+      <PriceDetailsCard
+        quoteDetails={quoteDetails}
+        hasWaitingTime={hasWaitingTime}
+        waitingTimeMinutes={waitingTimeMinutes}
+        hasReturnTrip={hasReturnTrip}
+      />
+    );
+  }
+
+  // Sinon, afficher la vue résumée standard
   return (
     <div className="space-y-4">
       <div className="space-y-2">

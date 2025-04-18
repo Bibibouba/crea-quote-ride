@@ -58,8 +58,8 @@ export const calculateQuoteDetails = (
   const hasMinDistanceWarning = minDistance > 0 && estimatedDistance < minDistance;
   
   // Use global VAT rates or defaults
-  const rideVatRate = pricingSettings.ride_vat_rate || 0;
-  const waitingVatRate = pricingSettings.waiting_vat_rate || 0;
+  const rideVatRate = pricingSettings.ride_vat_rate || 10;
+  const waitingVatRate = pricingSettings.waiting_vat_rate || 20;
   
   // Calculate day/night split for one-way trip
   const departureTime = new Date(date);
@@ -131,7 +131,7 @@ export const calculateQuoteDetails = (
     pricingSettings,
     estimatedDistance / 60 * 60, // Estimated duration in minutes
     hasWaitingTime,
-    hasWaitingTime ? 15 : 0 // Default to 15 minutes if waiting time is enabled
+    hasWaitingTime ? waitingTimePrice : 0 // Default to 15 minutes if waiting time is enabled
   );
 
   // Calculate Sunday/holiday rate
@@ -148,6 +148,51 @@ export const calculateQuoteDetails = (
   if (hasReturnTrip && isSunday) {
     const returnSundayResult = calculateSundayRate(returnPriceWithNightRate, isSunday, sundayRate);
     returnPriceWithSunday = returnSundayResult.totalWithSunday;
+  }
+  
+  // Calculate waiting time day/night split
+  let waitTimeDay = 0;
+  let waitTimeNight = 0;
+  let waitPriceDay = 0;
+  let waitPriceNight = 0;
+  
+  if (hasWaitingTime) {
+    // Calculate when the waiting time starts (after arrival of initial trip)
+    const waitStartTime = new Date(departureTime);
+    waitStartTime.setMinutes(waitStartTime.getMinutes() + (estimatedDuration));
+    
+    // Simple proportion based on the time of day
+    const waitingTimeMinutes = waitingTimePrice / (selectedVehicle.wait_price_per_15min || pricingSettings.wait_price_per_15min || 1) * 15;
+    
+    const nightStartTime = selectedVehicle.night_rate_start || pricingSettings.night_rate_start || "20:00";
+    const nightEndTime = selectedVehicle.night_rate_end || pricingSettings.night_rate_end || "06:00";
+    
+    const [nightStartHour, nightStartMinute] = nightStartTime.split(':').map(Number);
+    const [nightEndHour, nightEndMinute] = nightEndTime.split(':').map(Number);
+    
+    const waitEndTime = new Date(waitStartTime);
+    waitEndTime.setMinutes(waitEndTime.getMinutes() + waitingTimeMinutes);
+    
+    const isNightWaiting = (hour: number, minute: number) => {
+      // Simplify for now - just check if within standard night hours
+      if (nightStartHour < nightEndHour) {
+        return (hour >= nightStartHour && hour < nightEndHour);
+      } else {
+        return (hour >= nightStartHour || hour < nightEndHour);
+      }
+    };
+    
+    const waitStartHour = waitStartTime.getHours();
+    const waitStartMinute = waitStartTime.getMinutes();
+    
+    // Simple estimate - more accurate calculation would check each minute
+    if (isNightWaiting(waitStartHour, waitStartMinute)) {
+      waitTimeNight = waitingTimeMinutes;
+      waitPriceNight = waitingTimePrice;
+    } else {
+      waitTimeDay = waitingTimeMinutes;
+      waitPriceDay = waitingTimePrice;
+    }
   }
   
   // Calculate final prices
@@ -202,12 +247,13 @@ export const calculateQuoteDetails = (
     dayPrice,
     nightPrice,
     sundayRate,
-    waitTimeDay: 0, // These would need to be calculated based on waiting time
-    waitTimeNight: 0,
-    waitPriceDay: 0,
-    waitPriceNight: 0,
+    waitTimeDay,
+    waitTimeNight,
+    waitPriceDay,
+    waitPriceNight,
     dayPercentage,
     nightPercentage,
+    time,
     // Return trip specific fields
     returnDayKm,
     returnNightKm,

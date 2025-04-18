@@ -1,9 +1,11 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QuoteDetailsType } from '@/types/quoteForm';
 import { TripDetailsDisplay } from './TripDetailsDisplay';
 import { PriceSummary } from './PriceSummary';
+import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TripPricingSectionProps {
   estimatedDistance: number;
@@ -42,6 +44,7 @@ export const TripPricingSection: React.FC<TripPricingSectionProps> = ({
 }) => {
   // Utilisation d'un ref pour suivre si le composant est monté
   const isMounted = useRef(true);
+  const [showDetailedView, setShowDetailedView] = useState(false);
   
   // Cleanup lors du démontage du composant
   useEffect(() => {
@@ -49,6 +52,10 @@ export const TripPricingSection: React.FC<TripPricingSectionProps> = ({
       isMounted.current = false;
     };
   }, []);
+
+  const toggleDetailedView = () => {
+    setShowDetailedView(prev => !prev);
+  };
 
   return (
     <div className="space-y-4">
@@ -74,17 +81,28 @@ export const TripPricingSection: React.FC<TripPricingSectionProps> = ({
       </Card>
       
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-xl">Détail de la tarification</CardTitle>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 gap-1" 
+            onClick={toggleDetailedView}
+          >
+            {showDetailedView ? (
+              <>Vue simplifiée <ChevronUp className="h-4 w-4" /></>
+            ) : (
+              <>Vue détaillée <ChevronDown className="h-4 w-4" /></>
+            )}
+          </Button>
         </CardHeader>
         <CardContent>
           <PriceSummary
             quoteDetails={quoteDetails}
-            isNightRate={isNightRate}
-            isSunday={isSunday}
-            nightHours={nightHours}
             hasWaitingTime={hasWaitingTime}
+            waitingTimeMinutes={waitingTimeMinutes}
             hasReturnTrip={hasReturnTrip}
+            showDetailedView={showDetailedView}
           />
         </CardContent>
       </Card>

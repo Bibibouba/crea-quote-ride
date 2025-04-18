@@ -13,6 +13,10 @@ export function cn(...inputs: ClassValue[]) {
  * @returns Formatted currency string
  */
 export function formatCurrency(amount: number, currency: string = 'EUR'): string {
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    return '0,00 €';
+  }
+  
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency: currency,
