@@ -312,15 +312,21 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
     }
   });
   
-  // Add notes and conditions
-  const tableHeight = (pricingData.length * 10) + 10;
+  // Add signature area first
   yPos = doc.lastAutoTable.finalY + 20;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Bon pour accord', 140, yPos);
+  doc.text('Date et signature du client:', 140, yPos + 10);
   
-  doc.setFontSize(11);
+  // Add notes and conditions on a new page
+  doc.addPage();
+  yPos = 20;
+  
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.text('CONDITIONS ET NOTES', 15, yPos);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
   
   let conditionsText = [
     "• Validité de l'offre : ce devis est valable 7 jours à compter de sa date d'émission.",
@@ -346,7 +352,7 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
   if (companySettings?.legal_notices) {
     yPos += 10;
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'italic');
+    doc.setFont('helvetica', 'normal');
     doc.text('Mentions légales:', 15, yPos);
     
     const legalLines = doc.splitTextToSize(companySettings.legal_notices, 180);
@@ -357,13 +363,7 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
     });
   }
   
-  // Add signature area
-  yPos += 20;
-  doc.setFont('helvetica', 'normal');
-  doc.text('Bon pour accord', 140, yPos);
-  doc.text('Date et signature du client:', 140, yPos + 10);
-  
-  // Add footer
+  // Add footer on all pages
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
