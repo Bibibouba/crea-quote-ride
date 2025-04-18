@@ -1,21 +1,27 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
-import { QuoteDetailsType } from '@/types/quoteForm';
+import { prepareQuoteData } from '@/hooks/quote/utils/prepareQuoteData';
 
 interface CreateQuoteParams {
   driverId: string;
   clientId: string;
-  quoteData: ReturnType<typeof prepareQuoteData>;
+  quoteData: Omit<Quote, "id" | "created_at" | "updated_at" | "quote_pdf">;
 }
 
 export const quoteService = {
   async createQuote({ driverId, clientId, quoteData }: CreateQuoteParams): Promise<Quote> {
     console.log("Creating quote for driver_id:", driverId);
     
+    // Make sure we have a valid status value that matches the Quote type
+    const validatedQuoteData = {
+      ...quoteData,
+      status: quoteData.status as "pending" | "accepted" | "declined"
+    };
+    
     const { data, error } = await supabase
       .from('quotes')
-      .insert(quoteData)
+      .insert(validatedQuoteData)
       .select()
       .single();
       
