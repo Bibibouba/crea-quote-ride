@@ -13,6 +13,8 @@ interface TripDetailsDisplayProps {
   returnToSameAddress: boolean;
   returnDistance: number;
   returnDuration: number;
+  hasWaitingTime: boolean;
+  waitingTimeMinutes: number;
 }
 
 export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
@@ -24,14 +26,27 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
   hasReturnTrip,
   returnToSameAddress,
   returnDistance,
-  returnDuration
+  returnDuration,
+  hasWaitingTime,
+  waitingTimeMinutes
 }) => {
+  // Calculer la distance totale (aller + retour si applicable)
+  const totalDistance = hasReturnTrip 
+    ? estimatedDistance + (returnToSameAddress ? estimatedDistance : returnDistance)
+    : estimatedDistance;
+  
+  // Calculer la durée totale (aller + temps d'attente + retour si applicable)
+  const waitingDuration = hasWaitingTime ? waitingTimeMinutes : 0;
+  const totalDuration = hasReturnTrip 
+    ? estimatedDuration + waitingDuration + (returnToSameAddress ? estimatedDuration : returnDuration)
+    : estimatedDuration;
+
   return (
     <div className="space-y-2">
       <div className="flex justify-between">
-        <p className="text-sm">Distance estimée (aller)</p>
+        <p className="text-sm">Distance estimée (totale)</p>
         <p className="text-sm font-medium">
-          {estimatedDistance} km
+          {totalDistance} km
           {hasMinDistanceWarning && (
             <span className="text-xs text-amber-600 ml-1">
               (min. {minDistance} km)
@@ -39,29 +54,59 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
           )}
         </p>
       </div>
-      <div className="flex justify-between">
-        <p className="text-sm">Durée estimée (aller)</p>
-        <p className="text-sm font-medium">{formatDuration(estimatedDuration)}</p>
-      </div>
+      
+      {hasReturnTrip && (
+        <div className="flex justify-between">
+          <p className="text-sm text-muted-foreground">  - Distance aller</p>
+          <p className="text-sm text-muted-foreground">{estimatedDistance} km</p>
+        </div>
+      )}
       
       {hasReturnTrip && !returnToSameAddress && (
-        <>
-          <div className="flex justify-between">
-            <p className="text-sm">Distance estimée (retour)</p>
-            <p className="text-sm font-medium">
-              {returnDistance} km
-              {hasMinDistanceWarning && returnDistance < minDistance && (
-                <span className="text-xs text-amber-600 ml-1">
-                  (min. {minDistance} km)
-                </span>
-              )}
-            </p>
-          </div>
-          <div className="flex justify-between">
-            <p className="text-sm">Durée estimée (retour)</p>
-            <p className="text-sm font-medium">{formatDuration(returnDuration)}</p>
-          </div>
-        </>
+        <div className="flex justify-between">
+          <p className="text-sm text-muted-foreground">  - Distance retour</p>
+          <p className="text-sm text-muted-foreground">{returnDistance} km</p>
+        </div>
+      )}
+      
+      {hasReturnTrip && returnToSameAddress && (
+        <div className="flex justify-between">
+          <p className="text-sm text-muted-foreground">  - Distance retour</p>
+          <p className="text-sm text-muted-foreground">{estimatedDistance} km</p>
+        </div>
+      )}
+      
+      <div className="flex justify-between">
+        <p className="text-sm">Durée estimée (totale)</p>
+        <p className="text-sm font-medium">{formatDuration(totalDuration)}</p>
+      </div>
+      
+      {hasReturnTrip && (
+        <div className="flex justify-between">
+          <p className="text-sm text-muted-foreground">  - Durée aller</p>
+          <p className="text-sm text-muted-foreground">{formatDuration(estimatedDuration)}</p>
+        </div>
+      )}
+      
+      {hasWaitingTime && (
+        <div className="flex justify-between">
+          <p className="text-sm text-muted-foreground">  - Temps d'attente</p>
+          <p className="text-sm text-muted-foreground">{formatDuration(waitingDuration)}</p>
+        </div>
+      )}
+      
+      {hasReturnTrip && !returnToSameAddress && (
+        <div className="flex justify-between">
+          <p className="text-sm text-muted-foreground">  - Durée retour</p>
+          <p className="text-sm text-muted-foreground">{formatDuration(returnDuration)}</p>
+        </div>
+      )}
+      
+      {hasReturnTrip && returnToSameAddress && (
+        <div className="flex justify-between">
+          <p className="text-sm text-muted-foreground">  - Durée retour</p>
+          <p className="text-sm text-muted-foreground">{formatDuration(estimatedDuration)}</p>
+        </div>
       )}
       
       <div className="flex justify-between">
@@ -72,7 +117,7 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
               const [hours, minutes] = time.split(':').map(Number);
               const arrivalTime = new Date();
               arrivalTime.setHours(hours);
-              arrivalTime.setMinutes(minutes + estimatedDuration);
+              arrivalTime.setMinutes(minutes + totalDuration);
               return format(arrivalTime, 'HH:mm');
             })()
           ) : "Non spécifiée"}
@@ -81,3 +126,4 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
     </div>
   );
 };
+

@@ -1,7 +1,9 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { QuoteDetailsType } from '@/types/quoteForm';
 import { TripDetailsDisplay } from './TripDetailsDisplay';
-import { PriceDetailsDisplay } from './PriceDetailsDisplay';
+import { PriceSummary } from './PriceSummary';
 
 interface TripPricingSectionProps {
   estimatedDistance: number;
@@ -15,65 +17,67 @@ interface TripPricingSectionProps {
   returnDuration: number;
   hasWaitingTime: boolean;
   waitingTimeMinutes: number;
-  quoteDetails: any;
-  isNightRate: boolean;
-  isSunday: boolean;
-  nightHours: number;
+  quoteDetails: QuoteDetailsType | null;
+  isNightRate?: boolean;
+  isSunday?: boolean;
+  nightHours?: number;
 }
 
-export const TripPricingSection: React.FC<TripPricingSectionProps> = (props) => {
-  const {
-    estimatedDistance,
-    estimatedDuration,
-    time,
-    hasMinDistanceWarning,
-    minDistance,
-    hasReturnTrip,
-    returnToSameAddress,
-    returnDistance,
-    returnDuration,
-    hasWaitingTime,
-    waitingTimeMinutes,
-    quoteDetails,
-    isNightRate,
-    isSunday,
-    nightHours
-  } = props;
-
+export const TripPricingSection: React.FC<TripPricingSectionProps> = ({
+  estimatedDistance,
+  estimatedDuration,
+  time,
+  hasMinDistanceWarning,
+  minDistance,
+  hasReturnTrip,
+  returnToSameAddress,
+  returnDistance,
+  returnDuration,
+  hasWaitingTime,
+  waitingTimeMinutes,
+  quoteDetails,
+  isNightRate,
+  isSunday,
+  nightHours
+}) => {
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border bg-card p-4">
-        <h3 className="font-medium mb-3">Détails du trajet</h3>
-        
-        <TripDetailsDisplay
-          estimatedDistance={estimatedDistance}
-          estimatedDuration={estimatedDuration}
-          time={time}
-          hasMinDistanceWarning={hasMinDistanceWarning}
-          minDistance={minDistance}
-          hasReturnTrip={hasReturnTrip}
-          returnToSameAddress={returnToSameAddress}
-          returnDistance={returnDistance}
-          returnDuration={returnDuration}
-        />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Aperçu du trajet</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TripDetailsDisplay
+            estimatedDistance={estimatedDistance}
+            estimatedDuration={estimatedDuration}
+            time={time}
+            hasMinDistanceWarning={hasMinDistanceWarning}
+            minDistance={minDistance}
+            hasReturnTrip={hasReturnTrip}
+            returnToSameAddress={returnToSameAddress}
+            returnDistance={returnDistance}
+            returnDuration={returnDuration}
+            hasWaitingTime={hasWaitingTime}
+            waitingTimeMinutes={waitingTimeMinutes}
+          />
+        </CardContent>
+      </Card>
       
-      <div className="rounded-lg border bg-card p-4">
-        <h3 className="font-medium mb-3">Détails du prix</h3>
-        
-        <PriceDetailsDisplay
-          quoteDetails={quoteDetails}
-          hasWaitingTime={hasWaitingTime}
-          waitingTimeMinutes={waitingTimeMinutes}
-          hasReturnTrip={hasReturnTrip}
-          returnToSameAddress={returnToSameAddress}
-          estimatedDistance={estimatedDistance}
-          returnDistance={returnDistance}
-          isNightRate={isNightRate}
-          isSunday={isSunday}
-          nightHours={nightHours}
-        />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Détail de la tarification</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PriceSummary
+            quoteDetails={quoteDetails}
+            isNightRate={isNightRate}
+            isSunday={isSunday}
+            nightHours={nightHours}
+            hasWaitingTime={hasWaitingTime}
+            hasReturnTrip={hasReturnTrip}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -76,7 +75,6 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
   const nightKm = quoteDetails?.nightKm;
   const totalKm = quoteDetails?.totalKm || estimatedDistance;
   
-  // Infos retour
   const returnDayKm = quoteDetails?.returnDayKm;
   const returnNightKm = quoteDetails?.returnNightKm;
   const returnTotalKm = quoteDetails?.returnTotalKm || returnDistance;
@@ -104,7 +102,6 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     nightPercentage: quoteDetails?.nightPercentage
   };
   
-  // Informations sur le trajet de retour
   const returnNightRateInfo = hasReturnTrip ? {
     isApplied: !!quoteDetails?.isReturnNightRate,
     percentage: nightRatePercentage,
@@ -127,7 +124,6 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     percentage: selectedVehicleInfo?.holiday_sunday_percentage || 0
   } : undefined;
 
-  // Calculate trip end time
   const tripEndTime = (() => {
     const [hours, minutes] = time.split(':').map(Number);
     const arrivalTime = new Date();
