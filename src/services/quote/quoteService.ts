@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
 import { prepareQuoteData } from '@/hooks/quote/utils/prepareQuoteData';
+import { validateQuoteStatus } from './utils/validateQuoteStatus';
 
 interface CreateQuoteParams {
   driverId: string;
@@ -16,7 +17,7 @@ export const quoteService = {
     // Make sure we have a valid status value that matches the Quote type
     const validatedQuoteData = {
       ...quoteData,
-      status: quoteData.status as Quote['status']
+      status: validateQuoteStatus(quoteData.status)
     };
     
     const { data, error } = await supabase
@@ -31,6 +32,6 @@ export const quoteService = {
     }
     
     console.log("Quote created successfully:", data);
-    return data;
+    return data as Quote;
   }
 };
