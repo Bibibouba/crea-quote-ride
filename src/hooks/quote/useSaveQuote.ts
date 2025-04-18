@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -187,12 +186,47 @@ export const useSaveQuote = ({
         wait_price_night: quoteDetails.waitPriceNight
       };
       
-      await addQuote.mutateAsync(quoteData);
+      const savedQuote = await addQuote.mutateAsync(quoteData);
       
-      toast({
-        title: 'Devis enregistré',
-        description: 'Votre devis a été enregistré avec succès',
-      });
+      if (email) {
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-quote', {
+            body: {
+              clientName: `${firstName} ${lastName}`,
+              clientEmail: email,
+              quoteId: savedQuote.id.substring(0, 8),
+              departureLocation: departureAddress,
+              arrivalLocation: destinationAddress,
+              rideDate: dateTime.toISOString(),
+              amount: quoteDetails.totalPrice,
+            },
+          });
+
+          if (emailError) {
+            console.error('Erreur lors de l\'envoi de l\'email:', emailError);
+            toast({
+              title: 'Devis enregistré',
+              description: 'Le devis a été enregistré mais l\'envoi par email a échoué.',
+            });
+          } else {
+            toast({
+              title: 'Devis envoyé',
+              description: 'Le devis a été enregistré et envoyé par email.',
+            });
+          }
+        } catch (emailError) {
+          console.error('Erreur lors de l\'envoi de l\'email:', emailError);
+          toast({
+            title: 'Devis enregistré',
+            description: 'Le devis a été enregistré mais l\'envoi par email a échoué.',
+          });
+        }
+      } else {
+        toast({
+          title: 'Devis enregistré',
+          description: 'Votre devis a été enregistré avec succès',
+        });
+      }
       
       setIsQuoteSent(true);
     } catch (error) {
