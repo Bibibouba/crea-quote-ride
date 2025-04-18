@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,52 +84,54 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({
 }) => {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Simulateur de devis VTC</CardTitle>
-        <CardDescription>
+      <CardHeader className="space-y-1 sm:space-y-2">
+        <CardTitle className="text-xl sm:text-2xl">Simulateur de devis VTC</CardTitle>
+        <CardDescription className="text-sm sm:text-base">
           Obtenez un devis instantané pour votre trajet
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <AddressFormSection 
-            departureAddress={departureAddress}
-            setDepartureAddress={setDepartureAddress}
-            destinationAddress={destinationAddress}
-            setDestinationAddress={setDestinationAddress}
-            departureCoordinates={departureCoordinates}
-            setDepartureCoordinates={setDepartureCoordinates}
-            destinationCoordinates={destinationCoordinates}
-            setDestinationCoordinates={setDestinationCoordinates}
-            date={date}
-            setDate={setDate}
-            time={time}
-            setTime={setTime}
-            selectedVehicle={selectedVehicle}
-            setSelectedVehicle={setSelectedVehicle}
-            passengers={passengers}
-            setPassengers={setPassengers}
-            estimatedDistance={estimatedDistance}
-            estimatedDuration={estimatedDuration}
-            onRouteCalculated={onRouteCalculated}
-            vehicles={vehicles}
-          />
-          
-          <QuoteFormOptions
-            hasReturnTrip={hasReturnTrip}
-            setHasReturnTrip={setHasReturnTrip}
-            hasWaitingTime={hasWaitingTime}
-            setHasWaitingTime={setHasWaitingTime}
-            waitingTimeMinutes={waitingTimeMinutes}
-            setWaitingTimeMinutes={setWaitingTimeMinutes}
-            waitingTimePrice={waitingTimePrice}
-            waitingTimeOptions={waitingTimeOptions}
-            returnToSameAddress={returnToSameAddress}
-            setReturnToSameAddress={setReturnToSameAddress}
-            customReturnAddress={customReturnAddress}
-            setCustomReturnAddress={setCustomReturnAddress}
-            handleReturnAddressSelect={handleReturnAddressSelect}
-          />
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6">
+            <AddressFormSection 
+              departureAddress={departureAddress}
+              setDepartureAddress={setDepartureAddress}
+              destinationAddress={destinationAddress}
+              setDestinationAddress={setDestinationAddress}
+              departureCoordinates={departureCoordinates}
+              setDepartureCoordinates={setDepartureCoordinates}
+              destinationCoordinates={destinationCoordinates}
+              setDestinationCoordinates={setDestinationCoordinates}
+              date={date}
+              setDate={setDate}
+              time={time}
+              setTime={setTime}
+              selectedVehicle={selectedVehicle}
+              setSelectedVehicle={setSelectedVehicle}
+              passengers={passengers}
+              setPassengers={setPassengers}
+              estimatedDistance={estimatedDistance}
+              estimatedDuration={estimatedDuration}
+              onRouteCalculated={onRouteCalculated}
+              vehicles={vehicles}
+            />
+            
+            <QuoteFormOptions
+              hasReturnTrip={hasReturnTrip}
+              setHasReturnTrip={setHasReturnTrip}
+              hasWaitingTime={hasWaitingTime}
+              setHasWaitingTime={setHasWaitingTime}
+              waitingTimeMinutes={waitingTimeMinutes}
+              setWaitingTimeMinutes={setWaitingTimeMinutes}
+              waitingTimePrice={waitingTimePrice}
+              waitingTimeOptions={waitingTimeOptions}
+              returnToSameAddress={returnToSameAddress}
+              setReturnToSameAddress={setReturnToSameAddress}
+              customReturnAddress={customReturnAddress}
+              setCustomReturnAddress={setCustomReturnAddress}
+              handleReturnAddressSelect={handleReturnAddressSelect}
+            />
+          </div>
           
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (

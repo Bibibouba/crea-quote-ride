@@ -1,4 +1,3 @@
-
 import React from 'react';
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -60,19 +59,17 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
   vehicles
 }) => {
 
-  // Handler for selecting departure address
   const handleDepartureSelect = (address: Address) => {
     setDepartureCoordinates(address.coordinates);
   };
 
-  // Handler for selecting destination address
   const handleDestinationSelect = (address: Address) => {
     setDestinationCoordinates(address.coordinates);
   };
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         <AddressAutocomplete
           label="Adresse de départ"
           placeholder="Saisissez l'adresse de départ"
@@ -91,7 +88,7 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
         />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div className="space-y-2">
           <Label htmlFor="date">Date</Label>
           <Popover>
@@ -99,7 +96,7 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "w-full justify-start text-left font-normal text-sm sm:text-base",
                   !date && "text-muted-foreground"
                 )}
               >
@@ -107,14 +104,13 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
                 {date ? format(date, "PPP", { locale: fr }) : "Sélectionnez une date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 pointer-events-auto">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={date}
                 onSelect={setDate}
                 initialFocus
                 locale={fr}
-                className="p-3"
               />
             </PopoverContent>
           </Popover>
@@ -126,6 +122,7 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
+            className="text-base"
             required
           />
         </div>
@@ -171,19 +168,24 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
         </div>
       </div>
 
-      {/* Prévisualisation de la carte si les deux adresses ont été sélectionnées */}
       {departureCoordinates && destinationCoordinates && (
-        <div className="mt-4">
+        <div className="mt-4 sm:mt-6">
           <Label className="mb-2 block">Aperçu du trajet</Label>
-          <RouteMap
-            departure={departureCoordinates}
-            destination={destinationCoordinates}
-            onRouteCalculated={onRouteCalculated}
-          />
+          <div className="h-[250px] sm:h-[400px] rounded-lg overflow-hidden">
+            <RouteMap
+              departure={departureCoordinates}
+              destination={destinationCoordinates}
+              onRouteCalculated={onRouteCalculated}
+            />
+          </div>
           {estimatedDistance > 0 && estimatedDuration > 0 && (
-            <div className="flex justify-between mt-2 text-sm">
-              <p className="text-muted-foreground">Distance estimée: <span className="font-medium">{estimatedDistance} km</span></p>
-              <p className="text-muted-foreground">Durée estimée: <span className="font-medium">{estimatedDuration} min</span></p>
+            <div className="flex flex-col sm:flex-row justify-between mt-2 gap-2 sm:gap-0">
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Distance estimée: <span className="font-medium">{estimatedDistance} km</span>
+              </p>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Durée estimée: <span className="font-medium">{estimatedDuration} min</span>
+              </p>
             </div>
           )}
         </div>

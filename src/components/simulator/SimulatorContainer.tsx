@@ -159,13 +159,13 @@ const SimulatorContainer = () => {
   }, [abortController]);
 
   return (
-    <div className="container max-w-5xl mx-auto py-8 px-4">
+    <div className="container max-w-5xl mx-auto py-4 sm:py-8 px-2 sm:px-4">
       <SimulatorHeader />
       
-      <div className="mb-6">
-        <Alert variant="default" className="bg-blue-50 border-blue-200">
-          <AlertCircle className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-800">Simulateur de tarification</AlertTitle>
+      <div className="mb-4 sm:mb-6">
+        <Alert variant="default" className="bg-blue-50 border-blue-200 text-sm sm:text-base">
+          <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+          <AlertTitle className="text-blue-800 text-base sm:text-lg">Simulateur de tarification</AlertTitle>
           <AlertDescription className="text-blue-700">
             Ce simulateur vous permet d'obtenir un devis instantané pour votre trajet. 
             Les tarifs affichés incluent toutes les charges, y compris les majorations pour les trajets de nuit 
@@ -178,14 +178,14 @@ const SimulatorContainer = () => {
         <SimulatorLoading />
       ) : isQuoteSent ? (
         <Card className="border-green-200 bg-green-50">
-          <CardHeader>
-            <CardTitle className="text-green-800">Devis envoyé avec succès</CardTitle>
-            <CardDescription className="text-green-700">
+          <CardHeader className="space-y-1 sm:space-y-2">
+            <CardTitle className="text-green-800 text-lg sm:text-xl">Devis envoyé avec succès</CardTitle>
+            <CardDescription className="text-green-700 text-sm sm:text-base">
               Votre demande de devis a été envoyée. Vous recevrez une confirmation par email.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-green-700">
+            <p className="text-green-700 text-sm sm:text-base">
               Merci d'avoir utilisé notre simulateur de tarification. Notre équipe va traiter votre demande dans les plus brefs délais.
             </p>
           </CardContent>
@@ -199,7 +199,7 @@ const SimulatorContainer = () => {
           </CardFooter>
         </Card>
       ) : (
-        <div>
+        <div className="w-full">
           <SimulatorTabs
             activeTab={activeTab}
             setActiveTab={setActiveTab}
