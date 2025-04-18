@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QuoteDetailsType } from '@/types/quoteForm';
 import { TripDetailsDisplay } from './TripDetailsDisplay';
@@ -40,6 +40,16 @@ export const TripPricingSection: React.FC<TripPricingSectionProps> = ({
   isSunday,
   nightHours
 }) => {
+  // Utilisation d'un ref pour suivre si le composant est monté
+  const isMounted = useRef(true);
+  
+  // Cleanup lors du démontage du composant
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   return (
     <div className="space-y-4">
       <Card>

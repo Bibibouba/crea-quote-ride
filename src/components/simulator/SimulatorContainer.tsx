@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useClientSimulator } from '@/hooks/useClientSimulator';
@@ -15,6 +15,7 @@ const SimulatorContainer = () => {
   const [simulatorReady, setSimulatorReady] = useState(true);
   const [activeTab, setActiveTab] = useState<'step1' | 'step2' | 'step3'>('step1');
   const formState = useQuoteForm();
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   // Simulate loading for a more engaging experience
   React.useEffect(() => {
@@ -26,23 +27,37 @@ const SimulatorContainer = () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  // Add a debug effect to log day/night calculations
+  // Add a debug effect to log day/night calculations with cleanup
   React.useEffect(() => {
+    // Create a new AbortController for this effect
+    const controller = new AbortController();
+    setAbortController(controller);
+
     if (formState.quoteDetails) {
-      console.log("Calcul jour/nuit:", {
-        dayKm: formState.quoteDetails.dayKm,
-        nightKm: formState.quoteDetails.nightKm,
-        totalKm: formState.quoteDetails.totalKm,
-        dayPercentage: formState.quoteDetails.dayPercentage,
-        nightPercentage: formState.quoteDetails.nightPercentage,
-        isNightRate: formState.quoteDetails.isNightRate,
-        nightHours: formState.quoteDetails.nightHours,
-        nightStartDisplay: formState.quoteDetails.nightStartDisplay,
-        nightEndDisplay: formState.quoteDetails.nightEndDisplay,
-        time: formState.time,
-        estimatedDuration: formState.estimatedDuration
-      });
+      try {
+        console.log("Calcul jour/nuit:", {
+          dayKm: formState.quoteDetails.dayKm,
+          nightKm: formState.quoteDetails.nightKm,
+          totalKm: formState.quoteDetails.totalKm,
+          dayPercentage: formState.quoteDetails.dayPercentage,
+          nightPercentage: formState.quoteDetails.nightPercentage,
+          isNightRate: formState.quoteDetails.isNightRate,
+          nightHours: formState.quoteDetails.nightHours,
+          nightStartDisplay: formState.quoteDetails.nightStartDisplay,
+          nightEndDisplay: formState.quoteDetails.nightEndDisplay,
+          time: formState.time,
+          estimatedDuration: formState.estimatedDuration
+        });
+      } catch (error) {
+        // Ne rien faire si une erreur se produit pendant le logging
+        console.warn("Erreur lors du calcul jour/nuit:", error);
+      }
     }
+
+    return () => {
+      // Clean up any pending operations
+      controller.abort();
+    };
   }, [formState.quoteDetails]);
 
   const handleNextStep = () => {
@@ -58,76 +73,90 @@ const SimulatorContainer = () => {
   const handleSubmit = async () => {
     if (!formState.quoteDetails) return Promise.reject(new Error("Quote details not available"));
 
-    // Log quote details for debugging
-    console.log('Submitting quote with details:', {
-      dayKm: formState.quoteDetails.dayKm,
-      nightKm: formState.quoteDetails.nightKm,
-      dayPrice: formState.quoteDetails.dayPrice,
-      nightPrice: formState.quoteDetails.nightPrice,
-      isNightRate: formState.quoteDetails.isNightRate,
-      nightHours: formState.quoteDetails.nightHours,
-      nightRatePercentage: formState.quoteDetails.nightRatePercentage,
-      waitTimeDay: formState.quoteDetails.waitTimeDay,
-      waitTimeNight: formState.quoteDetails.waitTimeNight,
-      waitPriceDay: formState.quoteDetails.waitPriceDay,
-      waitPriceNight: formState.quoteDetails.waitPriceNight,
-      isSunday: formState.quoteDetails.isSunday,
-      sundaySurcharge: formState.quoteDetails.sundaySurcharge,
-      totalPriceHT: formState.quoteDetails.totalPriceHT,
-      totalVAT: formState.quoteDetails.totalVAT,
-      totalPrice: formState.quoteDetails.totalPrice
-    });
+    try {
+      // Log quote details for debugging
+      console.log('Submitting quote with details:', {
+        dayKm: formState.quoteDetails.dayKm,
+        nightKm: formState.quoteDetails.nightKm,
+        dayPrice: formState.quoteDetails.dayPrice,
+        nightPrice: formState.quoteDetails.nightPrice,
+        isNightRate: formState.quoteDetails.isNightRate,
+        nightHours: formState.quoteDetails.nightHours,
+        nightRatePercentage: formState.quoteDetails.nightRatePercentage,
+        waitTimeDay: formState.quoteDetails.waitTimeDay,
+        waitTimeNight: formState.quoteDetails.waitTimeNight,
+        waitPriceDay: formState.quoteDetails.waitPriceDay,
+        waitPriceNight: formState.quoteDetails.waitPriceNight,
+        isSunday: formState.quoteDetails.isSunday,
+        sundaySurcharge: formState.quoteDetails.sundaySurcharge,
+        totalPriceHT: formState.quoteDetails.totalPriceHT,
+        totalVAT: formState.quoteDetails.totalVAT,
+        totalPrice: formState.quoteDetails.totalPrice
+      });
 
-    const quoteData = {
-      vehicle_id: formState.selectedVehicle,
-      departure_location: formState.departureAddress,
-      arrival_location: formState.destinationAddress,
-      departure_coordinates: formState.departureCoordinates,
-      arrival_coordinates: formState.destinationCoordinates,
-      distance_km: formState.estimatedDistance,
-      duration_minutes: formState.estimatedDuration,
-      ride_date: formState.date.toISOString(),
-      amount: formState.quoteDetails.totalPrice,
-      has_return_trip: formState.hasReturnTrip,
-      has_waiting_time: formState.hasWaitingTime,
-      waiting_time_minutes: formState.waitingTimeMinutes,
-      waiting_time_price: formState.quoteDetails.waitingTimePrice,
-      return_to_same_address: formState.returnToSameAddress,
-      custom_return_address: formState.customReturnAddress,
-      return_coordinates: formState.customReturnCoordinates,
-      return_distance_km: formState.returnDistance,
-      return_duration_minutes: formState.returnDuration,
-      has_night_rate: formState.quoteDetails.isNightRate || false,
-      night_hours: formState.quoteDetails.nightHours || 0,
-      night_rate_percentage: formState.quoteDetails.nightRatePercentage || 0,
-      night_surcharge: formState.quoteDetails.nightSurcharge || 0,
-      is_sunday_holiday: formState.quoteDetails.isSunday || false,
-      sunday_holiday_percentage: formState.quoteDetails.sundayRate || 0,
-      sunday_holiday_surcharge: formState.quoteDetails.sundaySurcharge || 0,
-      day_km: formState.quoteDetails.dayKm || 0,
-      night_km: formState.quoteDetails.nightKm || 0,
-      day_price: formState.quoteDetails.dayPrice || 0,
-      night_price: formState.quoteDetails.nightPrice || 0,
-      wait_time_day: formState.quoteDetails.waitTimeDay || 0,
-      wait_time_night: formState.quoteDetails.waitTimeNight || 0,
-      wait_price_day: formState.quoteDetails.waitPriceDay || 0,
-      wait_price_night: formState.quoteDetails.waitPriceNight || 0,
-      total_ht: formState.quoteDetails.totalPriceHT || 0,
-      vat: formState.quoteDetails.totalVAT || 0,
-      total_ttc: formState.quoteDetails.totalPrice || 0
-    };
+      const quoteData = {
+        vehicle_id: formState.selectedVehicle,
+        departure_location: formState.departureAddress,
+        arrival_location: formState.destinationAddress,
+        departure_coordinates: formState.departureCoordinates,
+        arrival_coordinates: formState.destinationCoordinates,
+        distance_km: formState.estimatedDistance,
+        duration_minutes: formState.estimatedDuration,
+        ride_date: formState.date.toISOString(),
+        amount: formState.quoteDetails.totalPrice,
+        has_return_trip: formState.hasReturnTrip,
+        has_waiting_time: formState.hasWaitingTime,
+        waiting_time_minutes: formState.waitingTimeMinutes,
+        waiting_time_price: formState.quoteDetails.waitingTimePrice,
+        return_to_same_address: formState.returnToSameAddress,
+        custom_return_address: formState.customReturnAddress,
+        return_coordinates: formState.customReturnCoordinates,
+        return_distance_km: formState.returnDistance,
+        return_duration_minutes: formState.returnDuration,
+        has_night_rate: formState.quoteDetails.isNightRate || false,
+        night_hours: formState.quoteDetails.nightHours || 0,
+        night_rate_percentage: formState.quoteDetails.nightRatePercentage || 0,
+        night_surcharge: formState.quoteDetails.nightSurcharge || 0,
+        is_sunday_holiday: formState.quoteDetails.isSunday || false,
+        sunday_holiday_percentage: formState.quoteDetails.sundayRate || 0,
+        sunday_holiday_surcharge: formState.quoteDetails.sundaySurcharge || 0,
+        day_km: formState.quoteDetails.dayKm || 0,
+        night_km: formState.quoteDetails.nightKm || 0,
+        day_price: formState.quoteDetails.dayPrice || 0,
+        night_price: formState.quoteDetails.nightPrice || 0,
+        wait_time_day: formState.quoteDetails.waitTimeDay || 0,
+        wait_time_night: formState.quoteDetails.waitTimeNight || 0,
+        wait_price_day: formState.quoteDetails.waitPriceDay || 0,
+        wait_price_night: formState.quoteDetails.waitPriceNight || 0,
+        total_ht: formState.quoteDetails.totalPriceHT || 0,
+        vat: formState.quoteDetails.totalVAT || 0,
+        total_ttc: formState.quoteDetails.totalPrice || 0
+      };
 
-    console.log('Submitting with data:', quoteData);
+      console.log('Submitting with data:', quoteData);
 
-    const clientData = {
-      firstName: formState.firstName,
-      lastName: formState.lastName,
-      email: formState.email,
-      phone: formState.phone
-    };
+      const clientData = {
+        firstName: formState.firstName,
+        lastName: formState.lastName,
+        email: formState.email,
+        phone: formState.phone
+      };
 
-    return submitQuote(quoteData, clientData);
+      return submitQuote(quoteData, clientData);
+    } catch (error) {
+      console.error("Erreur lors de la soumission du devis:", error);
+      return Promise.reject(error);
+    }
   };
+
+  // Nettoyer les contrôleurs d'abort lors du démontage
+  useEffect(() => {
+    return () => {
+      if (abortController) {
+        abortController.abort();
+      }
+    };
+  }, [abortController]);
 
   return (
     <div className="container max-w-5xl mx-auto py-8 px-4">

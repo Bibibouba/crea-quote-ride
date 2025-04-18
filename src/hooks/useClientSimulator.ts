@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,14 @@ export const useClientSimulator = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const resetQuoteForm = useQuoteForm().resetForm;
+  const isMounted = useRef(true);
+
+  // Cleanup function when the component unmounts
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const submitQuote = async (quoteData: any, clientData: any) => {
     setIsSubmitting(true);
@@ -127,21 +135,31 @@ export const useClientSimulator = () => {
         
       if (quoteError) throw quoteError;
       
-      toast({
-        title: 'Devis envoyé',
-        description: "Votre demande de devis a été envoyée avec succès",
-      });
-      
-      setIsQuoteSent(true);
+      // Vérifier si le composant est toujours monté avant de mettre à jour l'état
+      if (isMounted.current) {
+        toast({
+          title: 'Devis envoyé',
+          description: "Votre demande de devis a été envoyée avec succès",
+        });
+        
+        setIsQuoteSent(true);
+      }
     } catch (error: any) {
       console.error('Error submitting quote:', error);
-      toast({
-        title: 'Erreur',
-        description: `Une erreur est survenue: ${error.message}`,
-        variant: 'destructive',
-      });
+      
+      // Vérifier si le composant est toujours monté avant de montrer le toast
+      if (isMounted.current) {
+        toast({
+          title: 'Erreur',
+          description: `Une erreur est survenue: ${error.message}`,
+          variant: 'destructive',
+        });
+      }
     } finally {
-      setIsSubmitting(false);
+      // Vérifier si le composant est toujours monté avant de mettre à jour l'état
+      if (isMounted.current) {
+        setIsSubmitting(false);
+      }
     }
   };
   

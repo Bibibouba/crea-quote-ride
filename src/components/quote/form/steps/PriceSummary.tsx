@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { QuoteDetailsType } from '@/types/quoteForm';
 import { formatCurrency } from '@/lib/utils';
 
@@ -20,6 +20,13 @@ export const PriceSummary: React.FC<PriceSummaryProps> = ({
   hasWaitingTime,
   hasReturnTrip
 }) => {
+  // Sécurité supplémentaire pour éviter des erreurs avec des données manquantes
+  useEffect(() => {
+    if (!quoteDetails) {
+      console.log('Aucune donnée de tarification disponible');
+    }
+  }, [quoteDetails]);
+
   if (!quoteDetails) {
     return <p className="text-sm">Aucune donnée de tarification disponible</p>;
   }
