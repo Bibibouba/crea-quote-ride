@@ -194,11 +194,15 @@ export const useSaveQuote = ({
         try {
           console.log("Sending email to:", email);
           
+          // Utilisons un format court pour le quoteId
+          const shortQuoteId = savedQuote.id.substring(0, 8);
+          console.log("Short quote ID for email:", shortQuoteId);
+          
           const { data: emailData, error: emailError } = await supabase.functions.invoke('send-quote', {
             body: {
               clientName: `${firstName} ${lastName}`,
               clientEmail: email,
-              quoteId: savedQuote.id.substring(0, 8),
+              quoteId: shortQuoteId,
               departureLocation: departureAddress,
               arrivalLocation: destinationAddress,
               rideDate: dateTime.toISOString(),
@@ -219,6 +223,7 @@ export const useSaveQuote = ({
               title: 'Devis envoyé',
               description: 'Le devis a été enregistré et envoyé par email.',
             });
+            setIsQuoteSent(true);
           }
         } catch (emailError) {
           console.error('Erreur lors de l\'envoi de l\'email:', emailError);
@@ -226,15 +231,16 @@ export const useSaveQuote = ({
             title: 'Devis enregistré',
             description: 'Le devis a été enregistré mais l\'envoi par email a échoué.',
           });
+          // On marque quand même le devis comme envoyé pour continuer le flux
+          setIsQuoteSent(true);
         }
       } else {
         toast({
           title: 'Devis enregistré',
           description: 'Votre devis a été enregistré avec succès',
         });
+        setIsQuoteSent(true);
       }
-      
-      setIsQuoteSent(true);
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement du devis:', error);
       toast({
