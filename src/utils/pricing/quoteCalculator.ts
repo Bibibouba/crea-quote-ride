@@ -1,18 +1,10 @@
 
 import { Vehicle, PricingSettings, QuoteDetails } from '@/types/quoteForm';
-import { calculateDayNightKmSplit } from './timeUtils';
-import { calculateNightSurcharge } from './nightRateCalculator';
-import { calculateSundaySurcharge } from './sundayRateCalculator';
-import { calculateVatAndTotalPrices } from './vatCalculator';
-import { applyMinimumFare } from './minFareCalculator';
-import { calculateWaitingTimePrice } from './calculateWaitingTimePrice';
-import { calculateNightRate } from './calculators/nightRateCalculator';
-import { calculateSundayRate } from './calculators/sundayRateCalculator';
-import { calculateMinFare } from './calculators/minFareCalculator';
-import { calculateVAT } from './calculators/vatCalculator';
+import { calculateTripPrice } from './calculators/tripPriceCalculator';
+import { calculateGlobalPrice } from './calculators/globalPriceCalculator';
 import { calculateReturnTripDetails } from './calculators/returnTripCalculator';
+import { calculateDetailedWaitingPrice } from './calculateWaitingTimePrice';
 
-// This function calculates all the pricing details for a quote
 export const calculateQuoteDetails = (
   selectedVehicleId: string,
   estimatedDistance: number,
@@ -38,7 +30,7 @@ export const calculateQuoteDetails = (
     date
   });
 
-  // Find the selected vehicle
+  // Find selected vehicle
   const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
   if (!selectedVehicle) {
     console.error("Selected vehicle not found");
@@ -51,77 +43,39 @@ export const calculateQuoteDetails = (
     };
   }
 
-  // Use vehicle or global pricing settings
-  const basePrice = selectedVehicle.basePrice || pricingSettings.base_fare || 0;
-  const minFare = selectedVehicle.minimum_trip_fare || pricingSettings.minimum_trip_fare || 0;
-  const minDistance = selectedVehicle.min_trip_distance || 0;
-  const hasMinDistanceWarning = minDistance > 0 && estimatedDistance < minDistance;
-  
-  // Use global VAT rates or defaults
-  const rideVatRate = pricingSettings.ride_vat_rate || 10;
-  const waitingVatRate = pricingSettings.waiting_vat_rate || 20;
-  
-  // Calculate day/night split for one-way trip
+  // Set up departure time
   const departureTime = new Date(date);
   const [hours, minutes] = time.split(':').map(Number);
   departureTime.setHours(hours, minutes, 0, 0);
-  
-  const dayNightSplit = calculateDayNightKmSplit(
+
+  // Calculate one-way trip pricing
+  const oneWayTripPrice = calculateTripPrice(
     departureTime,
-    estimatedDistance, 
-    selectedVehicle.night_rate_start || pricingSettings.night_rate_start,
-    selectedVehicle.night_rate_end || pricingSettings.night_rate_end
-  );
-  
-  const {
-    dayKm,
-    nightKm,
-    dayPercentage,
-    nightPercentage,
-    totalKm
-  } = dayNightSplit;
-  
-  // Add missing properties for compatibility
-  const nightHours = dayNightSplit.nightHours || 0;
-  const dayHours = dayNightSplit.dayHours || 0;
-  const totalMinutes = dayNightSplit.totalMinutes || 0;
-
-  console.log("Day/Night split for one-way trip:", {
-    dayKm, nightKm, dayPercentage, nightPercentage, nightHours, dayHours
-  });
-
-  // Calculate night rate for one-way trip
-  const {
-    isNightRate,
-    nightRatePercentage,
-    dayPrice,
-    nightPrice,
-    nightSurcharge,
-    totalWithNightRate: oneWayPriceWithNightRate
-  } = calculateNightRate(
-    basePrice, 
-    dayKm, 
-    nightKm, 
-    selectedVehicle.night_rate_enabled || pricingSettings.night_rate_enabled,
-    selectedVehicle.night_rate_percentage || pricingSettings.night_rate_percentage
+    estimatedDistance,
+    selectedVehicle,
+    pricingSettings
   );
 
-  // Calculate return trip details if needed
-  const {
-    returnDayKm,
-    returnNightKm,
-    returnDayPercentage,
-    returnNightPercentage,
-    returnNightHours,
-    returnDayHours,
-    returnTotalKm,
-    isReturnNightRate,
-    returnNightRatePercentage,
-    returnDayPrice,
-    returnNightPrice,
-    returnNightSurcharge,
-    returnPriceWithNightRate
-  } = calculateReturnTripDetails(
+  // Calculate waiting time details if needed
+  const waitingTimeDetails = hasWaitingTime ? 
+    calculateDetailedWaitingPrice(
+      hasWaitingTime,
+      waitingTimePrice,
+      pricingSettings,
+      time,
+      date,
+      selectedVehicle,
+      selectedVehicle.wait_night_enabled
+    ) : {
+      waitTimeDay: 0,
+      waitTimeNight: 0,
+      waitPriceDay: 0,
+      waitPriceNight: 0,
+      totalWaitPrice: 0
+    };
+
+  // Calculate return trip pricing if needed
+  const returnTripDetails = calculateReturnTripDetails(
     hasReturnTrip,
     returnToSameAddress,
     estimatedDistance,
@@ -129,142 +83,54 @@ export const calculateQuoteDetails = (
     departureTime,
     selectedVehicle,
     pricingSettings,
-    estimatedDistance / 60 * 60, // Estimated duration in minutes
+    (estimatedDistance / 60) * 60,
     hasWaitingTime,
-    hasWaitingTime ? waitingTimePrice : 0 // Default to 15 minutes if waiting time is enabled
+    waitingTimePrice
   );
 
-  // Calculate Sunday/holiday rate
-  const isSunday = date.getDay() === 0; // 0 is Sunday
-  const sundayRate = selectedVehicle.holiday_sunday_percentage || pricingSettings.holiday_sunday_percentage || 0;
-  
-  const {
-    sundaySurcharge,
-    totalWithSunday: oneWayPriceWithSunday
-  } = calculateSundayRate(oneWayPriceWithNightRate, isSunday, sundayRate);
-  
-  // Apply Sunday rate to return trip if needed
-  let returnPriceWithSunday = returnPriceWithNightRate;
-  if (hasReturnTrip && isSunday) {
-    const returnSundayResult = calculateSundayRate(returnPriceWithNightRate, isSunday, sundayRate);
-    returnPriceWithSunday = returnSundayResult.totalWithSunday;
-  }
-  
-  // Calculate waiting time day/night split
-  let waitTimeDay = 0;
-  let waitTimeNight = 0;
-  let waitPriceDay = 0;
-  let waitPriceNight = 0;
-  
-  if (hasWaitingTime) {
-    // Calculate when the waiting time starts (after arrival of initial trip)
-    const waitStartTime = new Date(departureTime);
-    waitStartTime.setMinutes(waitStartTime.getMinutes() + (estimatedDuration));
-    
-    // Simple proportion based on the time of day
-    const waitingTimeMinutes = waitingTimePrice / (selectedVehicle.wait_price_per_15min || pricingSettings.wait_price_per_15min || 1) * 15;
-    
-    const nightStartTime = selectedVehicle.night_rate_start || pricingSettings.night_rate_start || "20:00";
-    const nightEndTime = selectedVehicle.night_rate_end || pricingSettings.night_rate_end || "06:00";
-    
-    const [nightStartHour, nightStartMinute] = nightStartTime.split(':').map(Number);
-    const [nightEndHour, nightEndMinute] = nightEndTime.split(':').map(Number);
-    
-    const waitEndTime = new Date(waitStartTime);
-    waitEndTime.setMinutes(waitEndTime.getMinutes() + waitingTimeMinutes);
-    
-    const isNightWaiting = (hour: number, minute: number) => {
-      // Simplify for now - just check if within standard night hours
-      if (nightStartHour < nightEndHour) {
-        return (hour >= nightStartHour && hour < nightEndHour);
-      } else {
-        return (hour >= nightStartHour || hour < nightEndHour);
-      }
-    };
-    
-    const waitStartHour = waitStartTime.getHours();
-    const waitStartMinute = waitStartTime.getMinutes();
-    
-    // Simple estimate - more accurate calculation would check each minute
-    if (isNightWaiting(waitStartHour, waitStartMinute)) {
-      waitTimeNight = waitingTimeMinutes;
-      waitPriceNight = waitingTimePrice;
-    } else {
-      waitTimeDay = waitingTimeMinutes;
-      waitPriceDay = waitingTimePrice;
-    }
-  }
-  
-  // Calculate final prices
-  const oneWayPrice = Math.max(oneWayPriceWithSunday, hasMinDistanceWarning ? minFare : 0);
-  const returnPrice = hasReturnTrip ? returnPriceWithSunday : 0;
-  
-  // Calculate VAT
-  const oneWayPriceHT = calculateVAT(oneWayPrice, rideVatRate, false);
-  const returnPriceHT = calculateVAT(returnPrice, rideVatRate, false);
-  const waitingTimePriceHT = calculateVAT(waitingTimePrice, waitingVatRate, false);
-  
-  const totalPriceHT = oneWayPriceHT + returnPriceHT + waitingTimePriceHT;
-  const totalVAT = (oneWayPrice - oneWayPriceHT) + (returnPrice - returnPriceHT) + (waitingTimePrice - waitingTimePriceHT);
-  
-  // Calculate total price
-  const totalPrice = oneWayPrice + returnPrice + waitingTimePrice;
-  
-  // Apply minimum fare if needed
-  const { finalPrice } = calculateMinFare(totalPrice, minFare);
-  
-  // Night hours display
-  const nightStartHour = selectedVehicle.night_rate_start || pricingSettings.night_rate_start || "20:00";
-  const nightEndHour = selectedVehicle.night_rate_end || pricingSettings.night_rate_end || "06:00";
-  
+  // Calculate final prices including VAT and Sunday rates
+  const isSunday = date.getDay() === 0;
+  const globalPrices = calculateGlobalPrice(
+    date,
+    oneWayTripPrice.totalPriceWithNightRate,
+    returnTripDetails.returnPriceWithNightRate,
+    waitingTimeDetails.totalWaitPrice,
+    selectedVehicle,
+    pricingSettings,
+    isSunday
+  );
+
+  // Return complete quote details
   return {
-    basePrice,
-    isNightRate,
+    basePrice: selectedVehicle.basePrice || pricingSettings.base_fare || 0,
+    isNightRate: oneWayTripPrice.isNightRate,
     isSunday,
-    oneWayPriceHT,
-    returnPriceHT,
-    waitingTimePriceHT,
-    totalPriceHT,
-    totalVAT,
-    oneWayPrice,
-    returnPrice,
-    waitingTimePrice,
-    totalPrice: finalPrice,
-    nightSurcharge,
-    sundaySurcharge,
-    rideVatRate,
-    waitingVatRate,
-    hasMinDistanceWarning,
-    minDistance,
-    nightRatePercentage,
-    nightHours,
-    dayHours,
-    nightStartDisplay: nightStartHour,
-    nightEndDisplay: nightEndHour,
-    dayKm,
-    nightKm,
-    totalKm,
-    dayPrice,
-    nightPrice,
-    sundayRate,
-    waitTimeDay,
-    waitTimeNight,
-    waitPriceDay,
-    waitPriceNight,
-    dayPercentage,
-    nightPercentage,
-    time,
-    // Return trip specific fields
-    returnDayKm,
-    returnNightKm,
-    returnTotalKm,
-    returnDayPrice,
-    returnNightPrice,
-    returnNightSurcharge,
-    isReturnNightRate,
-    returnNightHours,
-    returnDayHours,
-    returnDayPercentage,
-    returnNightPercentage
+    oneWayPriceHT: oneWayTripPrice.totalPriceWithNightRate,
+    returnPriceHT: returnTripDetails.returnPriceWithNightRate,
+    waitingTimePriceHT: waitingTimeDetails.totalWaitPrice,
+    ...globalPrices,
+    nightSurcharge: oneWayTripPrice.nightSurcharge + returnTripDetails.returnNightSurcharge,
+    hasMinDistanceWarning: selectedVehicle.min_trip_distance ? estimatedDistance < selectedVehicle.min_trip_distance : false,
+    minDistance: selectedVehicle.min_trip_distance || 0,
+    nightRatePercentage: oneWayTripPrice.nightRatePercentage,
+    nightHours: oneWayTripPrice.nightHours,
+    dayHours: oneWayTripPrice.dayHours,
+    nightStartDisplay: selectedVehicle.night_rate_start || pricingSettings.night_rate_start,
+    nightEndDisplay: selectedVehicle.night_rate_end || pricingSettings.night_rate_end,
+    dayKm: oneWayTripPrice.dayKm,
+    nightKm: oneWayTripPrice.nightKm,
+    totalKm: oneWayTripPrice.totalKm,
+    dayPrice: oneWayTripPrice.dayPrice,
+    nightPrice: oneWayTripPrice.nightPrice,
+    waitTimeDay: waitingTimeDetails.waitTimeDay,
+    waitTimeNight: waitingTimeDetails.waitTimeNight,
+    waitPriceDay: waitingTimeDetails.waitPriceDay,
+    waitPriceNight: waitingTimeDetails.waitPriceNight,
+    dayPercentage: oneWayTripPrice.dayPercentage,
+    nightPercentage: oneWayTripPrice.nightPercentage,
+    oneWayPrice: oneWayTripPrice.totalPriceWithNightRate,
+    returnPrice: returnTripDetails.returnPriceWithNightRate,
+    waitingTimePrice: waitingTimeDetails.totalWaitPrice,
+    ...returnTripDetails
   };
 };
