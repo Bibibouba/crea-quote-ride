@@ -1,4 +1,3 @@
-
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { Resend } from 'npm:resend@1.0.0'
 import { renderAsync } from 'npm:@react-email/render@0.0.7'
@@ -23,22 +22,21 @@ interface QuoteEmailRequest {
 }
 
 serve(async (req) => {
-  // Tracer l'heure de début pour calculer la durée d'exécution
   const startTime = Date.now();
   console.log(`🚀 Fonction send-quote démarrée le ${new Date().toISOString()}`);
   
-  // Gérer la requête OPTIONS pour CORS
   if (req.method === 'OPTIONS') {
     console.log('Requête OPTIONS reçue, retour des en-têtes CORS');
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Vérifier la présence de l'API key de Resend
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    // Vérifier la présence de l'API key de Resend (en anglais et en français)
+    const resendApiKey = Deno.env.get('RESEND_API_KEY') || Deno.env.get('RENVOYER_CLÉ_API');
+    
     if (!resendApiKey) {
       console.error('❌ ERREUR CRITIQUE: Clé API Resend non configurée');
-      throw new Error('Configuration Resend manquante - La variable d\'environnement RESEND_API_KEY n\'est pas définie');
+      throw new Error('Configuration Resend manquante - Les variables d\'environnement RESEND_API_KEY et RENVOYER_CLÉ_API ne sont pas définies');
     } else {
       // Vérifier la validité basique de la clé (format attendu)
       if (!resendApiKey.startsWith('re_') || resendApiKey.length < 20) {
@@ -46,6 +44,7 @@ serve(async (req) => {
                      `commence par "${resendApiKey.substring(0, 3)}", longueur: ${resendApiKey.length}`);
       } else {
         console.log('✅ Clé API Resend trouvée et au format attendu (re_...)');
+        console.log(`📑 Clé API utilisée : ${resendApiKey.substring(0, 10)}...`); // Log partiel de la clé pour la sécurité
       }
     }
     
