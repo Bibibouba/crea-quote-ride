@@ -136,9 +136,11 @@ export const useSaveQuote = ({
       console.log("Quote saved:", savedQuote);
       
       if (email) {
+        console.log("Tentative d'envoi d'email au client:", email);
+        
         try {
           await sendQuoteEmail({
-            clientName: `${firstName} ${lastName}`,
+            clientName: `${firstName || ''} ${lastName || ''}`.trim(),
             email,
             quote: savedQuote,
             departureAddress,
@@ -155,10 +157,12 @@ export const useSaveQuote = ({
           toast({
             title: 'Devis enregistré',
             description: 'Le devis a été enregistré mais l\'envoi par email a échoué.',
+            variant: 'destructive',
           });
           setIsQuoteSent(true);
         }
       } else {
+        console.log("Pas d'email fourni, le devis est enregistré sans envoi d'email");
         toast({
           title: 'Devis enregistré',
           description: 'Votre devis a été enregistré avec succès',
