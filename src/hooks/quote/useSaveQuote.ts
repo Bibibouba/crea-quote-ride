@@ -139,8 +139,11 @@ export const useSaveQuote = ({
         console.log("Tentative d'envoi d'email au client:", email);
         
         try {
+          const fullName = `${firstName || ''} ${lastName || ''}`.trim();
+          console.log("Préparation de l'envoi d'email à", fullName, "sur", email);
+          
           await sendQuoteEmail({
-            clientName: `${firstName || ''} ${lastName || ''}`.trim(),
+            clientName: fullName,
             email,
             quote: savedQuote,
             departureAddress,

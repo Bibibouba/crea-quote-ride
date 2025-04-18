@@ -6,8 +6,6 @@ import { QuoteEmail } from './email-template.tsx'
 import { format } from 'npm:date-fns@2.30.0'
 import { fr } from 'npm:date-fns@2.30.0/locale/fr'
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -33,16 +31,18 @@ serve(async (req) => {
   try {
     console.log('Fonction send-quote démarrée')
     
-    // Récupérer les données de la requête
-    const requestData = await req.json()
-    console.log('Données reçues:', JSON.stringify(requestData))
-    
     // Vérifier la présence de l'API key de Resend
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
     if (!resendApiKey) {
       console.error('Clé API Resend non configurée')
-      throw new Error('Configuration Resend manquante')
+      throw new Error('Configuration Resend manquante - La variable d\'environnement RESEND_API_KEY n\'est pas définie')
+    } else {
+      console.log('Clé API Resend trouvée:', resendApiKey.substring(0, 5) + '...')
     }
+    
+    // Récupérer les données de la requête
+    const requestData = await req.json()
+    console.log('Données reçues:', JSON.stringify(requestData, null, 2))
     
     // Extraire les champs nécessaires
     const {
@@ -60,6 +60,17 @@ serve(async (req) => {
     if (!clientEmail || !clientEmail.includes('@')) {
       console.error('Adresse email invalide:', clientEmail)
       throw new Error('Adresse email invalide')
+    }
+    
+    // Valider les autres champs requis
+    if (!clientName || clientName.trim() === '') {
+      console.error('Nom du client manquant')
+      throw new Error('Nom du client requis')
+    }
+    
+    if (!departureLocation || !arrivalLocation) {
+      console.error('Adresses de départ ou d\'arrivée manquantes')
+      throw new Error('Adresses de départ et d\'arrivée requises')
     }
     
     console.log('Envoi d\'email à:', clientEmail)
@@ -87,7 +98,26 @@ serve(async (req) => {
       })
     )
 
-    console.log('HTML généré, préparation de l\'envoi...')
+    // Créer le texte brut comme alternative
+    const plainText = `Bonjour ${clientName},
+    
+Votre devis VTC N° ${quoteId} a été généré avec succès.
+
+Détails du trajet :
+- Départ : ${departureLocation}
+- Arrivée : ${arrivalLocation}
+- Date : ${formattedDate}
+- Montant total : ${amount.toFixed(2)}€
+
+Ce devis est valable 7 jours à compter de sa date d'émission. Pour toute question, n'hésitez pas à nous contacter.
+
+Cordialement,
+L'équipe VTC`
+
+    console.log('HTML généré, préparation de l\'envoi avec Resend...')
+    
+    // Initialiser Resend avec la clé API
+    const resend = new Resend(resendApiKey)
     
     // Envoyer l'email via Resend
     const { data, error } = await resend.emails.send({
@@ -95,15 +125,15 @@ serve(async (req) => {
       to: [clientEmail],
       subject: `Votre devis VTC N° ${quoteId}`,
       html,
-      text: `Bonjour ${clientName}, votre devis VTC N° ${quoteId} a été généré. Trajet de ${departureLocation} à ${arrivalLocation} prévu le ${formattedDate} pour un montant de ${amount.toFixed(2)}€.`,
+      text: plainText,
     })
 
-    console.log('Réponse de Resend:', data)
-    
     if (error) {
       console.error('Erreur Resend:', error)
       throw error
     }
+    
+    console.log('Réponse de Resend:', data)
 
     return new Response(JSON.stringify({ 
       success: true,

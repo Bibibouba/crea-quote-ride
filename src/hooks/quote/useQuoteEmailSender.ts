@@ -21,16 +21,35 @@ export const useQuoteEmailSender = () => {
       const shortQuoteId = quote.id.substring(0, 8);
       console.log("Identifiant court du devis pour l'email:", shortQuoteId);
       
-      // Vérifier que l'adresse email est valide
+      // Validation des données
       if (!email || !email.includes('@')) {
         console.error('Adresse email invalide:', email);
+        toast({
+          title: "Erreur d'envoi",
+          description: "L'adresse email du client est invalide",
+          variant: "destructive",
+        });
         throw new Error("L'adresse email du client est invalide");
       }
       
-      // Vérifier que les données nécessaires sont présentes
-      if (!clientName || !departureAddress || !destinationAddress) {
-        console.error('Données manquantes pour l\'email:', { clientName, departureAddress, destinationAddress });
-        throw new Error("Des informations essentielles sont manquantes pour l'envoi de l'email");
+      if (!clientName || clientName.trim() === '') {
+        console.error('Nom du client manquant');
+        toast({
+          title: "Erreur d'envoi",
+          description: "Le nom du client est requis pour l'envoi de l'email",
+          variant: "destructive",
+        });
+        throw new Error("Le nom du client est requis pour l'envoi de l'email");
+      }
+      
+      if (!departureAddress || !destinationAddress) {
+        console.error('Adresses manquantes pour l\'email:', { departureAddress, destinationAddress });
+        toast({
+          title: "Erreur d'envoi",
+          description: "Les adresses de départ et d'arrivée sont requises",
+          variant: "destructive",
+        });
+        throw new Error("Les adresses de départ et d'arrivée sont requises");
       }
       
       console.log("Appel de la fonction Edge send-quote avec les données:", {
@@ -43,6 +62,7 @@ export const useQuoteEmailSender = () => {
         amount: quote.amount,
       });
       
+      // Appel à la fonction Edge
       const { data: emailData, error: emailError } = await supabase.functions.invoke('send-quote', {
         body: {
           clientName,
@@ -55,12 +75,34 @@ export const useQuoteEmailSender = () => {
         },
       });
 
+      // Gestion de la réponse
       if (emailError) {
         console.error('Erreur lors de l\'appel à la fonction d\'envoi d\'email:', emailError);
+        toast({
+          title: "Erreur d'envoi",
+          description: `L'envoi de l'email a échoué: ${emailError.message || 'Erreur inconnue'}`,
+          variant: "destructive",
+        });
         throw emailError;
       }
       
       console.log("Réponse de la fonction d'envoi d'email:", emailData);
+      
+      if (emailData && emailData.success === false) {
+        const errorMsg = emailData.error || "Erreur côté serveur lors de l'envoi";
+        console.error("Échec de l'envoi d'email:", errorMsg);
+        toast({
+          title: "Erreur d'envoi",
+          description: `L'envoi de l'email a échoué: ${errorMsg}`,
+          variant: "destructive",
+        });
+        throw new Error(errorMsg);
+      }
+      
+      toast({
+        title: "Email envoyé",
+        description: "Le devis a été envoyé par email au client",
+      });
       
       return true;
     } catch (error) {
