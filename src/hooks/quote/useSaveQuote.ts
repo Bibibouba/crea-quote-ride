@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -187,10 +188,13 @@ export const useSaveQuote = ({
       };
       
       const savedQuote = await addQuote.mutateAsync(quoteData);
+      console.log("Quote saved:", savedQuote);
       
       if (email) {
         try {
-          const { error: emailError } = await supabase.functions.invoke('send-quote', {
+          console.log("Sending email to:", email);
+          
+          const { data: emailData, error: emailError } = await supabase.functions.invoke('send-quote', {
             body: {
               clientName: `${firstName} ${lastName}`,
               clientEmail: email,
@@ -202,6 +206,8 @@ export const useSaveQuote = ({
             },
           });
 
+          console.log("Email function response:", emailData);
+          
           if (emailError) {
             console.error('Erreur lors de l\'envoi de l\'email:', emailError);
             toast({

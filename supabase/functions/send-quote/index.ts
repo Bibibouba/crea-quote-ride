@@ -25,11 +25,16 @@ interface QuoteEmailRequest {
 }
 
 serve(async (req) => {
+  // Gérer la requête OPTIONS pour CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    console.log('Received request to send-quote function')
+    const requestData = await req.json()
+    console.log('Request data:', JSON.stringify(requestData))
+    
     const {
       clientName,
       clientEmail,
@@ -39,10 +44,14 @@ serve(async (req) => {
       rideDate,
       amount,
       pdfUrl,
-    }: QuoteEmailRequest = await req.json()
+    }: QuoteEmailRequest = requestData
 
+    console.log('Sending email to:', clientEmail)
+    
+    // Formatter la date
     const formattedDate = format(new Date(rideDate), 'dd MMMM yyyy à HH:mm', { locale: fr })
 
+    // Générer le HTML du mail
     const html = await renderAsync(
       QuoteEmail({
         clientName,
@@ -55,6 +64,9 @@ serve(async (req) => {
       })
     )
 
+    console.log('Email HTML generated successfully')
+    
+    // Envoyer l'email via Resend
     const { data, error } = await resend.emails.send({
       from: 'VTC <onboarding@resend.dev>',
       to: [clientEmail],
@@ -62,7 +74,10 @@ serve(async (req) => {
       html,
     })
 
+    console.log('Resend email response:', data)
+    
     if (error) {
+      console.error('Resend error:', error)
       throw error
     }
 
@@ -71,6 +86,7 @@ serve(async (req) => {
       status: 200,
     })
   } catch (error) {
+    console.error('Error in send-quote function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
