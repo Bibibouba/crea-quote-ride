@@ -1,5 +1,5 @@
+
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuotes } from '@/hooks/useQuotes';
 import { PricingSettings, Vehicle, QuoteDetailsType } from '@/types/quoteForm';
@@ -8,6 +8,7 @@ import { useClientManagement } from './useClientManagement';
 import { useQuoteEmailSender } from './useQuoteEmailSender';
 import { prepareQuoteData } from './utils/prepareQuoteData';
 import { useSessionManager } from './useSessionManager';
+import { quoteService } from '@/services/quote/quoteService';
 
 interface UseSaveQuoteProps {
   quoteDetails: QuoteDetailsType | null | undefined;
@@ -103,8 +104,6 @@ export const useSaveQuote = ({
         throw new Error("Erreur lors du calcul du devis");
       }
       
-      console.log("Creating quote for driver_id:", driverId);
-      
       const quoteData = prepareQuoteData({
         driverId,
         clientId: finalClientId,
@@ -128,7 +127,12 @@ export const useSaveQuote = ({
         returnDuration
       });
       
-      const savedQuote = await addQuote.mutateAsync(quoteData);
+      const savedQuote = await quoteService.createQuote({
+        driverId,
+        clientId: finalClientId,
+        quoteData
+      });
+      
       console.log("Quote saved:", savedQuote);
       
       if (email) {
