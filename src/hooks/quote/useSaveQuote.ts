@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +7,7 @@ import { validateQuoteData } from './utils/validateQuoteData';
 import { useClientManagement } from './useClientManagement';
 import { useQuoteEmailSender } from './useQuoteEmailSender';
 import { prepareQuoteData } from './utils/prepareQuoteData';
+import { useSessionManager } from './useSessionManager';
 
 interface UseSaveQuoteProps {
   quoteDetails: QuoteDetailsType | null | undefined;
@@ -62,6 +62,7 @@ export const useSaveQuote = ({
   const { toast } = useToast();
   const { createNewClient } = useClientManagement();
   const { sendQuoteEmail } = useQuoteEmailSender();
+  const { getAuthenticatedUserId } = useSessionManager();
   
   const handleSaveQuote = async (firstName?: string, lastName?: string, email?: string, phone?: string, selectedClient?: string) => {
     const isValid = validateQuoteData({
@@ -82,13 +83,7 @@ export const useSaveQuote = ({
       const [hours, minutes] = time.split(':');
       dateTime.setHours(parseInt(hours), parseInt(minutes));
       
-      const { data: { session } } = await supabase.auth.getSession();
-      const driverId = session?.user?.id;
-      
-      if (!driverId) {
-        throw new Error("Utilisateur non authentifié");
-      }
-      
+      const driverId = await getAuthenticatedUserId();
       let finalClientId = selectedClient;
       
       if ((!selectedClient || selectedClient === '') && firstName && lastName) {
@@ -110,7 +105,6 @@ export const useSaveQuote = ({
       
       console.log("Creating quote for driver_id:", driverId);
       
-      // Use our new utility to prepare the quote data
       const quoteData = prepareQuoteData({
         driverId,
         clientId: finalClientId,
@@ -158,7 +152,6 @@ export const useSaveQuote = ({
             title: 'Devis enregistré',
             description: 'Le devis a été enregistré mais l\'envoi par email a échoué.',
           });
-          // On marque quand même le devis comme envoyé pour continuer le flux
           setIsQuoteSent(true);
         }
       } else {
