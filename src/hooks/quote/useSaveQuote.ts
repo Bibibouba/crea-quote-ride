@@ -1,10 +1,12 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuotes } from '@/hooks/useQuotes';
 import { Quote } from '@/types/quote';
 import { PricingSettings, Vehicle, QuoteDetailsType } from '@/types/quoteForm';
+import { validateQuoteData } from './utils/validateQuoteData';
+import { useClientManagement } from './useClientManagement';
+import { useQuoteEmailSender } from './useQuoteEmailSender';
 
 interface UseSaveQuoteProps {
   quoteDetails: QuoteDetailsType | null | undefined;
@@ -57,34 +59,20 @@ export const useSaveQuote = ({
   const [isQuoteSent, setIsQuoteSent] = useState(false);
   const { addQuote } = useQuotes();
   const { toast } = useToast();
+  const { createNewClient } = useClientManagement();
+  const { sendQuoteEmail } = useQuoteEmailSender();
   
   const handleSaveQuote = async (firstName?: string, lastName?: string, email?: string, phone?: string, selectedClient?: string) => {
-    if (!date) {
-      toast({
-        title: 'Date manquante',
-        description: 'Veuillez sélectionner une date pour le trajet',
-        variant: 'destructive'
-      });
-      return;
-    }
+    const isValid = validateQuoteData({
+      date,
+      departureCoordinates,
+      destinationCoordinates,
+      hasReturnTrip,
+      returnToSameAddress,
+      customReturnAddress
+    });
     
-    if (!departureCoordinates || !destinationCoordinates) {
-      toast({
-        title: 'Adresses incomplètes',
-        description: 'Veuillez sélectionner des adresses valides pour le calcul du trajet',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    if (hasReturnTrip && !returnToSameAddress && !customReturnAddress) {
-      toast({
-        title: 'Adresse de retour manquante',
-        description: 'Veuillez spécifier une adresse de retour',
-        variant: 'destructive'
-      });
-      return;
-    }
+    if (!isValid) return;
     
     setIsSubmitting(true);
     
@@ -103,33 +91,7 @@ export const useSaveQuote = ({
       let finalClientId = selectedClient;
       
       if ((!selectedClient || selectedClient === '') && firstName && lastName) {
-        console.log("Creating new client with driver_id:", driverId);
-        
-        const { data, error } = await supabase
-          .from('clients')
-          .insert({
-            driver_id: driverId,
-            first_name: firstName,
-            last_name: lastName,
-            email: email || '',
-            phone: phone || '',
-            client_type: 'personal'
-          })
-          .select()
-          .single();
-        
-        if (error) {
-          console.error("Error creating client:", error);
-          throw error;
-        }
-        
-        console.log("Created new client:", data);
-        finalClientId = data.id;
-        
-        toast({
-          title: 'Client créé',
-          description: `${firstName} ${lastName} a été ajouté à votre liste de clients`,
-        });
+        finalClientId = await createNewClient(driverId, firstName, lastName, email, phone);
       }
       
       if (!finalClientId) {
@@ -156,7 +118,7 @@ export const useSaveQuote = ({
         departure_coordinates: departureCoordinates,
         arrival_coordinates: destinationCoordinates,
         distance_km: estimatedDistance,
-        duration_minutes: estimatedDuration, 
+        duration_minutes: estimatedDuration,
         ride_date: dateTime.toISOString(),
         amount: quoteDetails.totalPrice,
         status: "pending",
@@ -192,55 +154,32 @@ export const useSaveQuote = ({
       
       if (email) {
         try {
-          console.log("Sending email to:", email);
-          
-          // Utilisons un format court pour le quoteId
-          const shortQuoteId = savedQuote.id.substring(0, 8);
-          console.log("Short quote ID for email:", shortQuoteId);
-          
-          const { data: emailData, error: emailError } = await supabase.functions.invoke('send-quote', {
-            body: {
-              clientName: `${firstName} ${lastName}`,
-              clientEmail: email,
-              quoteId: shortQuoteId,
-              departureLocation: departureAddress,
-              arrivalLocation: destinationAddress,
-              rideDate: dateTime.toISOString(),
-              amount: quoteDetails.totalPrice,
-            },
+          await sendQuoteEmail({
+            clientName: `${firstName} ${lastName}`,
+            email,
+            quote: savedQuote,
+            departureAddress,
+            destinationAddress
           });
-
-          console.log("Email function response:", emailData);
           
-          if (emailError) {
-            console.error('Erreur lors de l\'envoi de l\'email:', emailError);
-            toast({
-              title: 'Devis enregistré',
-              description: 'Le devis a été enregistré mais l\'envoi par email a échoué.',
-            });
-          } else {
-            toast({
-              title: 'Devis envoyé',
-              description: 'Le devis a été enregistré et envoyé par email.',
-            });
-            setIsQuoteSent(true);
-          }
+          toast({
+            title: 'Devis envoyé',
+            description: 'Le devis a été enregistré et envoyé par email.',
+          });
         } catch (emailError) {
-          console.error('Erreur lors de l\'envoi de l\'email:', emailError);
           toast({
             title: 'Devis enregistré',
             description: 'Le devis a été enregistré mais l\'envoi par email a échoué.',
           });
-          // On marque quand même le devis comme envoyé pour continuer le flux
-          setIsQuoteSent(true);
         }
       } else {
         toast({
           title: 'Devis enregistré',
           description: 'Votre devis a été enregistré avec succès',
         });
-        setIsQuoteSent(true);
       }
+      
+      setIsQuoteSent(true);
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement du devis:', error);
       toast({
