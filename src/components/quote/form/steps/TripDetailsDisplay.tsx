@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { formatDuration } from '@/lib/formatDuration';
+import { OutboundTripDetails } from '../trip/OutboundTripDetails';
+import { ReturnTripDetails } from '../trip/ReturnTripDetails';
 
 interface TripDetailsDisplayProps {
   estimatedDistance: number;
   estimatedDuration: number;
-  time: string;
   hasMinDistanceWarning: boolean;
   minDistance: number;
   hasReturnTrip: boolean;
@@ -29,12 +28,10 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
   hasWaitingTime,
   waitingTimeMinutes
 }) => {
-  // Calcul de la distance totale en considérant les deux itinéraires séparément
   const totalDistance = hasReturnTrip 
     ? (returnToSameAddress ? estimatedDistance * 2 : estimatedDistance + returnDistance)
     : estimatedDistance;
 
-  // Calcul de la durée totale en considérant les deux itinéraires séparément
   const totalDuration = hasReturnTrip
     ? (returnToSameAddress ? estimatedDuration * 2 : estimatedDuration + returnDuration)
     : estimatedDuration;
@@ -48,23 +45,22 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
         </div>
         <div>
           <p className="text-sm font-medium">Durée estimée</p>
-          <p className="text-2xl font-semibold">{formatDuration(totalDuration)}</p>
+          <p className="text-2xl font-semibold">{totalDuration} min</p>
         </div>
       </div>
 
       {hasReturnTrip && (
         <div className="grid grid-cols-2 gap-4 border-t pt-3 mt-2">
-          <div>
-            <p className="text-xs text-muted-foreground">Aller</p>
-            <p className="text-sm">{estimatedDistance} km / {formatDuration(estimatedDuration)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Retour</p>
-            <p className="text-sm">
-              {returnToSameAddress ? estimatedDistance : returnDistance} km / 
-              {formatDuration(returnToSameAddress ? estimatedDuration : returnDuration)}
-            </p>
-          </div>
+          <OutboundTripDetails 
+            distance={estimatedDistance}
+            duration={estimatedDuration}
+          />
+          <ReturnTripDetails
+            enabled={hasReturnTrip}
+            distance={returnToSameAddress ? estimatedDistance : returnDistance}
+            duration={returnToSameAddress ? estimatedDuration : returnDuration}
+            returnToSameAddress={returnToSameAddress}
+          />
         </div>
       )}
 
