@@ -1,124 +1,98 @@
 import React from 'react';
-import { formatDuration } from '@/lib/formatDuration';
-import { format } from 'date-fns';
+import { TripHeaderCard } from './steps/TripHeaderCard';
+import { MinDistanceAlert } from './summary/MinDistanceAlert';
+import { TripTimeInfo } from './summary/TripTimeInfo';
+import { TripDetailsGrid } from './summary/TripDetailsGrid';
+import { FormNavigation } from './summary/FormNavigation';
 
-interface TripDetailsDisplayProps {
+interface TripSummaryStepProps {
+  departureAddress: string;
+  destinationAddress: string;
+  customReturnAddress: string;
+  departureCoordinates?: [number, number];
+  destinationCoordinates?: [number, number];
+  date?: Date;
+  time: string;
+  selectedVehicle: string;
+  passengers: string;
   estimatedDistance: number;
   estimatedDuration: number;
-  time: string;
-  hasMinDistanceWarning: boolean;
-  minDistance: number;
   hasReturnTrip: boolean;
-  returnDistance: number;
-  returnDuration: number;
   hasWaitingTime: boolean;
   waitingTimeMinutes: number;
-  isNightRate: boolean;
-  isSunday: boolean;
-  nightHours: number;
+  returnToSameAddress: boolean;
+  returnDistance: number;
+  returnDuration: number;
+  customReturnCoordinates?: [number, number];
+  quoteDetails: any;
+  vehicles: any[];
+  handleRouteCalculated: (distance: number, duration: number) => void;
+  handleNextStep: () => void;
+  handlePreviousStep: () => void;
+  handleReturnRouteCalculated?: (distance: number, duration: number) => void;
 }
 
-export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
-  estimatedDistance,
-  estimatedDuration,
-  time,
-  hasMinDistanceWarning,
-  minDistance,
-  hasReturnTrip,
-  returnDistance,
-  returnDuration,
-  hasWaitingTime,
-  waitingTimeMinutes,
-  isNightRate,
-  isSunday,
-  nightHours,
-}) => {
-  // Calcul de la distance totale (aller + retour)
-  const totalDistance =
-    estimatedDistance + (hasReturnTrip ? returnDistance : 0);
-
-  // Calcul de la durée totale en minutes (aller + retour + attente)
-  const totalDuration =
-    estimatedDuration +
-    (hasReturnTrip ? returnDuration : 0) +
-    (hasWaitingTime ? waitingTimeMinutes : 0);
+const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
+  const selectedVehicleInfo = props.vehicles.find(v => v.id === props.selectedVehicle);
+  const hasMinDistanceWarning = props.quoteDetails?.hasMinDistanceWarning;
+  const minDistance = props.quoteDetails?.minDistance || 0;
+  
+  const tripEndTime = (() => {
+    const [hours, minutes] = props.time.split(':').map(Number);
+    const arrivalTime = new Date();
+    arrivalTime.setHours(hours);
+    arrivalTime.setMinutes(minutes + props.estimatedDuration);
+    return arrivalTime;
+  })();
 
   return (
-    <div className="space-y-2">
-      {/* Distance totale */}
-      <div className="flex justify-between">
-        <p className="text-sm">Distance estimée (totale)</p>
-        <p className="text-sm font-medium">
-          {totalDistance} km
-          {hasMinDistanceWarning && (
-            <span className="text-xs text-amber-600 ml-1">
-              (min. {minDistance} km)
-            </span>
-          )}
-        </p>
-      </div>
-
-      {/* Détails des segments */}
-      {hasReturnTrip && (
-        <>
-          <div className="flex justify-between">
-            <p className="text-sm text-muted-foreground">  - Distance aller</p>
-            <p className="text-sm text-muted-foreground">{estimatedDistance} km</p>
-          </div>
-          <div className="flex justify-between">
-            <p className="text-sm text-muted-foreground">  - Distance retour</p>
-            <p className="text-sm text-muted-foreground">{returnDistance} km</p>
-          </div>
-        </>
+    <div className="space-y-6">
+      <TripHeaderCard
+        departureAddress={props.departureAddress}
+        destinationAddress={props.destinationAddress}
+        customReturnAddress={props.customReturnAddress}
+        hasReturnTrip={props.hasReturnTrip}
+        returnToSameAddress={props.returnToSameAddress}
+        date={props.date}
+        time={props.time}
+        selectedVehicleInfo={selectedVehicleInfo}
+        passengers={props.passengers}
+        hasWaitingTime={props.hasWaitingTime}
+        waitingTimeMinutes={props.waitingTimeMinutes}
+      />
+      
+      {hasMinDistanceWarning && (
+        <MinDistanceAlert 
+          estimatedDistance={props.estimatedDistance}
+          minDistance={minDistance}
+        />
       )}
-
-      {/* Durée totale */}
-      <div className="flex justify-between">
-        <p className="text-sm">Durée estimée (totale)</p>
-        <p className="text-sm font-medium">{formatDuration(totalDuration)}</p>
-      </div>
-
-      {/* Détails des temps */}
-      <div className="flex flex-col space-y-1 text-sm text-muted-foreground">
-        <div className="flex justify-between">
-          <p>  - Durée aller</p>
-          <p>{formatDuration(estimatedDuration)}</p>
-        </div>
-        {hasReturnTrip && (
-          <div className="flex justify-between">
-            <p>  - Durée retour</p>
-            <p>{formatDuration(returnDuration)}</p>
-          </div>
-        )}
-        {hasWaitingTime && (
-          <div className="flex justify-between">
-            <p>  - Temps d'attente</p>
-            <p>{formatDuration(waitingTimeMinutes)}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Heure d'arrivée */}
-      <div className="flex justify-between">
-        <p className="text-sm">Heure d'arrivée estimée</p>
-        <p className="text-sm font-medium">
-          {(() => {
-            const [h, m] = time.split(':').map(Number);
-            const arrival = new Date();
-            arrival.setHours(h);
-            arrival.setMinutes(m + totalDuration);
-            return format(arrival, 'HH:mm');
-          })()}
-        </p>
-      </div>
-
-      {/* Conditions spéciales */}
-      {(isNightRate || isSunday) && (
-        <p className="text-xs text-muted-foreground">
-          {isNightRate && `Heures de nuit: ${nightHours}h`} 
-          {isSunday && 'Dimanche / Férié'}
-        </p>
-      )}
+      
+      <TripTimeInfo
+        startTime={props.time}
+        endTime={
+          tripEndTime.getHours().toString().padStart(2, '0') + ':' + 
+          tripEndTime.getMinutes().toString().padStart(2, '0')
+        }
+        nightRateInfo={props.quoteDetails?.nightRateInfo}
+        returnNightRateInfo={props.quoteDetails?.returnNightRateInfo}
+        sundayRateInfo={props.quoteDetails?.sundayRateInfo}
+        hasReturnTrip={props.hasReturnTrip}
+      />
+      
+      <TripDetailsGrid
+        {...props}
+        isNightRate={!!props.quoteDetails?.isNightRate}
+        isSunday={!!props.quoteDetails?.isSunday}
+        nightHours={props.quoteDetails?.nightHours || 0}
+      />
+      
+      <FormNavigation
+        handlePreviousStep={props.handlePreviousStep}
+        handleNextStep={props.handleNextStep}
+      />
     </div>
   );
 };
+
+export default TripSummaryStep;
