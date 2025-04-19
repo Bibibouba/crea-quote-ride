@@ -20,7 +20,6 @@ export const useRouteCalculation = ({
   const [returnDuration, setReturnDuration] = useState(0);
   const [oneWayDistance, setOneWayDistance] = useState(0);
   const [oneWayDuration, setOneWayDuration] = useState(0);
-  const [totalDistance, setTotalDistance] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   
   // Calculate return route when needed
@@ -70,17 +69,14 @@ export const useRouteCalculation = ({
     }
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, calculateReturnRoute, oneWayDistance, oneWayDuration]);
   
-  // Update total distance and duration when component values change
+  // Update total duration when component values change
   useEffect(() => {
-    let total_distance = oneWayDistance;
     let total_duration = oneWayDuration;
     
     if (hasReturnTrip) {
-      total_distance += returnDistance;
       total_duration += returnDuration;
     }
     
-    setTotalDistance(total_distance);
     setTotalDuration(total_duration);
   }, [oneWayDistance, oneWayDuration, returnDistance, returnDuration, hasReturnTrip]);
   
@@ -115,7 +111,6 @@ export const useRouteCalculation = ({
     oneWayDuration,
     returnDistance,
     returnDuration,
-    totalDistance,
     totalDuration,
     handleRouteCalculated,
     handleReturnRouteCalculated

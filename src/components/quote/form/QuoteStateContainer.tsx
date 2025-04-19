@@ -74,7 +74,6 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
     handleReset,
     oneWayDistance,
     oneWayDuration,
-    totalDistance,
     totalDuration
   } = formState;
   
@@ -121,7 +120,6 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           returnDistance={returnDistance}
           returnDuration={returnDuration}
           customReturnCoordinates={customReturnCoordinates}
-          totalDistance={totalDistance}
           totalDuration={totalDuration}
         />
       ) : isQuoteSent ? (
@@ -169,7 +167,6 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           returnDistance={returnDistance}
           returnDuration={returnDuration}
           returnCoordinates={customReturnCoordinates}
-          totalDistance={totalDistance}
           totalDuration={totalDuration}
         />
       )}

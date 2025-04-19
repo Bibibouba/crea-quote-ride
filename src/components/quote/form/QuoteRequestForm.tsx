@@ -45,9 +45,11 @@ interface QuoteRequestFormProps {
   handleReturnAddressSelect: (address: Address) => void;
   isLoading: boolean;
   handleSubmit: (e: React.FormEvent) => void;
-  returnDistance?: number;
-  returnDuration?: number;
+  returnDistance: number;
+  returnDuration: number;
   customReturnCoordinates?: [number, number];
+  // Remove totalDistance property
+  totalDuration: number;
 }
 
 const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({
