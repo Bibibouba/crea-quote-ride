@@ -1,4 +1,3 @@
-
 import { useAddressForm } from './quote/useAddressForm';
 import { useClientData } from './quote/useClientData';
 import { useFormState } from './quote/useFormState';
@@ -12,6 +11,7 @@ import { useWaitingTimeCalculation } from './quote/useWaitingTimeCalculation';
 import { useQuoteCalculation } from './quote/useQuoteCalculation';
 import { useFormHandlers } from './quote/useFormHandlers';
 import { QuoteDetailsType } from '@/types/quoteForm';
+import { waitingTimeOptions } from '@/utils/waitingTimeOptions';
 
 export interface UseQuoteFormStateProps {
   clientId?: string;
@@ -34,8 +34,10 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
   // Address form state
   const addressForm = useAddressForm();
   
-  // Trip options state
-  const tripOptions = useTripOptions({ waitingTimeOptions: waitingTimeOptions() });
+  // Trip options state with proper waitingTimeOptions
+  const tripOptions = useTripOptions({
+    waitingTimeOptions: waitingTimeOptions()
+  });
   
   // Client data state
   const clientData = useClientData({ clientId });

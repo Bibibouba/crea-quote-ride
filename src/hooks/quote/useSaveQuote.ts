@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuotes } from '@/hooks/useQuotes';
@@ -104,28 +103,42 @@ export const useSaveQuote = ({
         throw new Error("Erreur lors du calcul du devis");
       }
       
-      const quoteData = prepareQuoteData({
-        driverId,
-        clientId: finalClientId,
-        selectedVehicle,
-        departureAddress,
-        destinationAddress,
-        departureCoordinates,
-        destinationCoordinates,
-        dateTime,
-        estimatedDistance,
-        estimatedDuration,
-        quoteDetails,
-        hasReturnTrip,
-        hasWaitingTime,
-        waitingTimeMinutes,
-        waitingTimePrice,
-        returnToSameAddress,
-        customReturnAddress,
-        customReturnCoordinates,
-        returnDistance,
-        returnDuration
-      });
+      const quoteData = {
+        ...prepareQuoteData({
+          driverId,
+          clientId: finalClientId,
+          selectedVehicle,
+          departureAddress,
+          destinationAddress,
+          departureCoordinates,
+          destinationCoordinates,
+          dateTime,
+          estimatedDistance,
+          estimatedDuration,
+          quoteDetails,
+          hasReturnTrip,
+          hasWaitingTime,
+          waitingTimeMinutes,
+          waitingTimePrice,
+          returnToSameAddress,
+          customReturnAddress,
+          customReturnCoordinates,
+          returnDistance,
+          returnDuration
+        }),
+        return_night_hours: quoteDetails.returnNightHours || 0,
+        return_day_hours: quoteDetails.returnDayHours || 0,
+        return_day_km: quoteDetails.returnDayKm || 0,
+        return_night_km: quoteDetails.returnNightKm || 0,
+        return_day_price: quoteDetails.returnDayPrice || 0,
+        return_night_price: quoteDetails.returnNightPrice || 0,
+        return_night_surcharge: quoteDetails.returnNightSurcharge || 0,
+        is_return_night_rate: quoteDetails.isReturnNightRate || false,
+        day_percentage: quoteDetails.dayPercentage || 0,
+        night_percentage: quoteDetails.nightPercentage || 0,
+        return_day_percentage: quoteDetails.returnDayPercentage || 0,
+        return_night_percentage: quoteDetails.returnNightPercentage || 0
+      };
       
       const savedQuote = await quoteService.createQuote({
         driverId,
