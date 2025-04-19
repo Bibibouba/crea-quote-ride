@@ -16,6 +16,8 @@ export const useRouteCalculation = ({
   customReturnCoordinates,
 }: UseRouteCalculationProps) => {
   const { getRoute } = useMapbox();
+  
+  // États séparés pour l'aller et le retour
   const [returnDistance, setReturnDistance] = useState(0);
   const [returnDuration, setReturnDuration] = useState(0);
   const [oneWayDistance, setOneWayDistance] = useState(0);
@@ -87,6 +89,7 @@ export const useRouteCalculation = ({
     return duration;
   }, [oneWayDuration, returnDuration, hasReturnTrip]);
   
+  // Handler distinct pour l'itinéraire aller
   const handleRouteCalculated = useCallback((distance: number, duration: number) => {
     const roundedDistance = Math.round(distance);
     const roundedDuration = Math.round(duration);
@@ -108,8 +111,9 @@ export const useRouteCalculation = ({
     };
   }, [hasReturnTrip, returnToSameAddress]);
   
-  // Add a handler for return route calculations from the map component
+  // Handler distinct pour l'itinéraire retour
   const handleReturnRouteCalculated = useCallback((distance: number, duration: number) => {
+    // Ne met à jour que les états spécifiques au retour
     if (!hasReturnTrip) return;
     
     const roundedDistance = Math.round(distance);

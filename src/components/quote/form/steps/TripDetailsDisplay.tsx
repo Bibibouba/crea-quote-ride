@@ -29,10 +29,12 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
   hasWaitingTime,
   waitingTimeMinutes
 }) => {
+  // Calcul de la distance totale en considérant les deux itinéraires séparément
   const totalDistance = hasReturnTrip 
     ? (returnToSameAddress ? estimatedDistance * 2 : estimatedDistance + returnDistance)
     : estimatedDistance;
 
+  // Calcul de la durée totale en considérant les deux itinéraires séparément
   const totalDuration = hasReturnTrip
     ? (returnToSameAddress ? estimatedDuration * 2 : estimatedDuration + returnDuration)
     : estimatedDuration;
@@ -49,6 +51,22 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
           <p className="text-2xl font-semibold">{formatDuration(totalDuration)}</p>
         </div>
       </div>
+
+      {hasReturnTrip && (
+        <div className="grid grid-cols-2 gap-4 border-t pt-3 mt-2">
+          <div>
+            <p className="text-xs text-muted-foreground">Aller</p>
+            <p className="text-sm">{estimatedDistance} km / {formatDuration(estimatedDuration)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Retour</p>
+            <p className="text-sm">
+              {returnToSameAddress ? estimatedDistance : returnDistance} km / 
+              {formatDuration(returnToSameAddress ? estimatedDuration : returnDuration)}
+            </p>
+          </div>
+        </div>
+      )}
 
       {hasMinDistanceWarning && (
         <Alert variant="warning" className="mt-4">

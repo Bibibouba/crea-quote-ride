@@ -110,15 +110,13 @@ export const useRouteMarkers = ({
           duration: duration + " min"
         });
 
-        if (onRouteCalculated) {
-          onRouteCalculated(distance, duration);
-        }
-
+        // Suppression de l'ancien tracé d'aller s'il existe
         if (map.current.getSource('route')) {
           map.current.removeLayer('route');
           map.current.removeSource('route');
         }
 
+        // Ajout du nouveau tracé d'aller avec une source distincte "route"
         map.current.addSource('route', {
           type: 'geojson',
           data: {
@@ -140,11 +138,15 @@ export const useRouteMarkers = ({
             'line-cap': 'round'
           },
           paint: {
-            'line-color': '#3b82f6',
+            'line-color': '#3b82f6', // Bleu pour l'aller
             'line-width': 4,
             'line-opacity': 0.75
           }
         });
+
+        if (onRouteCalculated) {
+          onRouteCalculated(distance, duration);
+        }
       } catch (err) {
         console.error('Error calculating one-way route:', err);
       }
@@ -180,15 +182,13 @@ export const useRouteMarkers = ({
           duration: duration + " min"
         });
 
-        if (onReturnRouteCalculated) {
-          onReturnRouteCalculated(distance, duration);
-        }
-
+        // Suppression de l'ancien tracé de retour s'il existe
         if (map.current.getSource('returnRoute')) {
           map.current.removeLayer('returnRoute');
           map.current.removeSource('returnRoute');
         }
 
+        // Ajout du nouveau tracé de retour avec une source distincte "returnRoute"
         map.current.addSource('returnRoute', {
           type: 'geojson',
           data: {
@@ -210,11 +210,15 @@ export const useRouteMarkers = ({
             'line-cap': 'round'
           },
           paint: {
-            'line-color': '#22c55e',
+            'line-color': '#22c55e', // Vert pour le retour
             'line-width': 4,
             'line-opacity': 0.75
           }
         });
+
+        if (onReturnRouteCalculated) {
+          onReturnRouteCalculated(distance, duration);
+        }
       } catch (err) {
         console.error('Error calculating return route:', err);
       }

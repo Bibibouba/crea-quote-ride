@@ -26,6 +26,7 @@ const RouteMapDisplay: React.FC<RouteMapDisplayProps> = ({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useMapInitialization({ mapboxToken, container: mapContainer });
 
+  // Utiliser le hook pour gérer les deux itinéraires séparément
   useRouteMarkers({
     map,
     departure,
