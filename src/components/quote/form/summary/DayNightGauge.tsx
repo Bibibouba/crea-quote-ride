@@ -26,7 +26,8 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
 
   return (
     <div className="space-y-2 w-full">
-      <div className="flex justify-between mb-2">
+      {/* Légende des couleurs en haut avec une bordure pour la rendre plus visible */}
+      <div className="flex justify-between mb-2 p-2 border rounded-md border-gray-200 bg-gray-50">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-100 rounded"></div>
