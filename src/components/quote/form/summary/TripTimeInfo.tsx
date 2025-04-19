@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Moon, Calendar } from 'lucide-react';
 import TripTimeline from './TripTimeline';
@@ -50,57 +49,44 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   hasWaitingTime = false,
   waitingTimeMinutes = 0
 }) => {
-  // Cette fonction détermine les segments du trajet (jour/nuit)
   const getTimeSegments = () => {
     if (!nightRateInfo) return [];
     
     const segments = [];
     
-    // Convertir les heures pour une comparaison plus facile
     const [startHour, startMinute] = startTime.split(':').map(Number);
     const [endHour, endMinute] = endTime.split(':').map(Number);
     const [nightStartHour, nightStartMinute] = nightRateInfo.nightStart.split(':').map(Number);
     const [nightEndHour, nightEndMinute] = nightRateInfo.nightEnd.split(':').map(Number);
 
-    // Déterminer si le voyage commence pendant les heures de nuit
-    const isStartDuringNight = isWithinNightHours(
-      startHour,
-      startMinute,
-      nightStartHour,
-      nightStartMinute,
-      nightEndHour,
-      nightEndMinute
-    );
-
-    // Calculer l'heure d'arrivée du trajet aller
-    let tripEndTime;
-    if (nightRateInfo && nightRateInfo.totalHours) {
-      // Calculer l'heure d'arrivée basée sur la durée totale du trajet
-      const endTimeHour = startHour + Math.floor(nightRateInfo.totalHours);
-      const endTimeMinute = startMinute + Math.floor((nightRateInfo.totalHours % 1) * 60);
+    const calculateTripEndTime = (startHour: number, startMinute: number, totalHours: number) => {
+      const endTimeHour = startHour + Math.floor(totalHours);
+      const endTimeMinute = startMinute + Math.floor((totalHours % 1) * 60);
       
       const adjustedHour = endTimeHour + Math.floor(endTimeMinute / 60);
       const adjustedMinute = endTimeMinute % 60;
       
-      tripEndTime = `${String(adjustedHour % 24).padStart(2, '0')}:${String(adjustedMinute).padStart(2, '0')}`;
-    } else {
-      tripEndTime = endTime;
-    }
+      return `${String(adjustedHour % 24).padStart(2, '0')}:${String(adjustedMinute).padStart(2, '0')}`;
+    };
 
-    // Déterminer si l'arrivée est pendant les heures de nuit
+    const tripEndTime = nightRateInfo.totalHours 
+      ? calculateTripEndTime(startHour, startMinute, nightRateInfo.totalHours) 
+      : endTime;
+
     const [tripEndHour, tripEndMinute] = tripEndTime.split(':').map(Number);
+
+    const isStartDuringNight = isWithinNightHours(
+      startHour, startMinute, 
+      nightStartHour, nightStartMinute, 
+      nightEndHour, nightEndMinute
+    );
     const isEndDuringNight = isWithinNightHours(
-      tripEndHour,
-      tripEndMinute,
-      nightStartHour,
-      nightStartMinute,
-      nightEndHour,
-      nightEndMinute
+      tripEndHour, tripEndMinute, 
+      nightStartHour, nightStartMinute, 
+      nightEndHour, nightEndMinute
     );
 
-    // Si le départ et l'arrivée sont dans la même période (jour ou nuit)
     if (isStartDuringNight === isEndDuringNight) {
-      // Ajouter un seul segment pour tout le trajet
       segments.push({
         start: startTime,
         end: tripEndTime,
@@ -108,87 +94,50 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
         label: "Départ"
       });
     } else {
-      // Le trajet traverse une transition jour/nuit
+      const transitionTime = isStartDuringNight 
+        ? `${String(nightEndHour).padStart(2, '0')}:${String(nightEndMinute).padStart(2, '0')}`
+        : `${String(nightStartHour).padStart(2, '0')}:${String(nightStartMinute).padStart(2, '0')}`;
       
-      // Si on commence le jour et finit la nuit
-      if (!isStartDuringNight && isEndDuringNight) {
-        // Trouver l'heure de transition (début du tarif de nuit)
-        const transitionTime = `${String(nightStartHour).padStart(2, '0')}:${String(nightStartMinute).padStart(2, '0')}`;
-        
-        // Ajouter le segment de jour
-        segments.push({
-          start: startTime,
-          end: transitionTime,
-          type: 'day-trip',
-          label: "Départ"
-        });
-        
-        // Ajouter le segment de nuit
-        segments.push({
-          start: transitionTime,
-          end: tripEndTime,
-          type: 'night-trip'
-        });
-      } 
-      // Si on commence la nuit et finit le jour
-      else if (isStartDuringNight && !isEndDuringNight) {
-        // Trouver l'heure de transition (fin du tarif de nuit)
-        const transitionTime = `${String(nightEndHour).padStart(2, '0')}:${String(nightEndMinute).padStart(2, '0')}`;
-        
-        // Ajouter le segment de nuit
-        segments.push({
-          start: startTime,
-          end: transitionTime,
-          type: 'night-trip',
-          label: "Départ"
-        });
-        
-        // Ajouter le segment de jour
-        segments.push({
-          start: transitionTime,
-          end: tripEndTime,
-          type: 'day-trip'
-        });
-      }
+      segments.push({
+        start: startTime,
+        end: transitionTime,
+        type: isStartDuringNight ? 'night-trip' : 'day-trip',
+        label: "Départ"
+      });
+      
+      segments.push({
+        start: transitionTime,
+        end: tripEndTime,
+        type: isStartDuringNight ? 'day-trip' : 'night-trip'
+      });
     }
 
-    // Ajouter un segment de temps d'attente si applicable
     if (hasWaitingTime && waitingTimeMinutes > 0) {
       const waitingStart = tripEndTime;
-      
-      // Calculer l'heure de fin du temps d'attente
-      const [waitStartHour, waitStartMinute] = waitingStart.split(':').map(Number);
       const waitTimeHours = waitingTimeMinutes / 60;
       
-      const calcWaitEndHour = waitStartHour + Math.floor(waitTimeHours);
-      const calcWaitEndMinute = waitStartMinute + Math.floor((waitTimeHours % 1) * 60);
+      const calcWaitEndHour = parseInt(waitingStart.split(':')[0]) + Math.floor(waitTimeHours);
+      const calcWaitEndMinute = parseInt(waitingStart.split(':')[1]) + Math.floor((waitTimeHours % 1) * 60);
       
       const adjustedHour = calcWaitEndHour + Math.floor(calcWaitEndMinute / 60);
       const adjustedMinute = calcWaitEndMinute % 60;
       
       const waitingEnd = `${String(adjustedHour % 24).padStart(2, '0')}:${String(adjustedMinute).padStart(2, '0')}`;
       
-      // Vérifier si l'attente est en heure de jour ou de nuit
       const isWaitStartNight = isWithinNightHours(
-        waitStartHour,
-        waitStartMinute,
-        nightStartHour,
-        nightStartMinute,
-        nightEndHour,
-        nightEndMinute
+        parseInt(waitingStart.split(':')[0]),
+        parseInt(waitingStart.split(':')[1]),
+        nightStartHour, nightStartMinute, 
+        nightEndHour, nightEndMinute
       );
       
-      const [parsedWaitEndHour, parsedWaitEndMinute] = waitingEnd.split(':').map(Number);
       const isWaitEndNight = isWithinNightHours(
-        parsedWaitEndHour,
-        parsedWaitEndMinute,
-        nightStartHour,
-        nightStartMinute,
-        nightEndHour,
-        nightEndMinute
+        parseInt(waitingEnd.split(':')[0]),
+        parseInt(waitingEnd.split(':')[1]),
+        nightStartHour, nightStartMinute, 
+        nightEndHour, nightEndMinute
       );
       
-      // Si le début et la fin de l'attente sont dans la même période (jour ou nuit)
       if (isWaitStartNight === isWaitEndNight) {
         segments.push({
           start: waitingStart,
@@ -197,178 +146,53 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
           label: "Attente"
         });
       } else {
-        // L'attente traverse une transition jour/nuit
+        const transitionTime = isWaitStartNight 
+          ? `${String(nightEndHour).padStart(2, '0')}:${String(nightEndMinute).padStart(2, '0')}`
+          : `${String(nightStartHour).padStart(2, '0')}:${String(nightStartMinute).padStart(2, '0')}`;
         
-        // Si l'attente commence le jour et finit la nuit
-        if (!isWaitStartNight && isWaitEndNight) {
-          // Trouver l'heure de transition
-          const transitionTime = `${String(nightStartHour).padStart(2, '0')}:${String(nightStartMinute).padStart(2, '0')}`;
-          
-          segments.push({
-            start: waitingStart,
-            end: transitionTime,
-            type: 'day-wait',
-            label: "Attente"
-          });
-          
-          segments.push({
-            start: transitionTime,
-            end: waitingEnd,
-            type: 'night-wait'
-          });
-        } 
-        // Si l'attente commence la nuit et finit le jour
-        else {
-          // Trouver l'heure de transition
-          const transitionTime = `${String(nightEndHour).padStart(2, '0')}:${String(nightEndMinute).padStart(2, '0')}`;
-          
-          segments.push({
-            start: waitingStart,
-            end: transitionTime,
-            type: 'night-wait',
-            label: "Attente"
-          });
-          
-          segments.push({
-            start: transitionTime,
-            end: waitingEnd,
-            type: 'day-wait'
-          });
-        }
+        segments.push({
+          start: waitingStart,
+          end: transitionTime,
+          type: isWaitStartNight ? 'night-wait' : 'day-wait',
+          label: "Attente"
+        });
+        
+        segments.push({
+          start: transitionTime,
+          end: waitingEnd,
+          type: isWaitStartNight ? 'day-wait' : 'night-wait'
+        });
       }
+    }
+
+    if (hasReturnTrip) {
+      const returnStartTime = hasWaitingTime 
+        ? segments[segments.length - 1].end 
+        : tripEndTime;
       
-      // Mettre à jour l'heure de début du trajet retour
-      if (hasReturnTrip) {
-        const returnStartTime = waitingEnd;
-        
-        // Calculer l'heure de fin du retour
-        let returnEndTime;
-        if (returnNightRateInfo && returnNightRateInfo.totalHours) {
-          const [returnStartHour, returnStartMinute] = returnStartTime.split(':').map(Number);
-          const returnEndHour = returnStartHour + Math.floor(returnNightRateInfo.totalHours);
-          const returnEndMinute = returnStartMinute + Math.floor((returnNightRateInfo.totalHours % 1) * 60);
-          
-          const adjustedHour = returnEndHour + Math.floor(returnEndMinute / 60);
-          const adjustedMinute = returnEndMinute % 60;
-          
-          returnEndTime = `${String(adjustedHour % 24).padStart(2, '0')}:${String(adjustedMinute).padStart(2, '0')}`;
-        } else {
-          // Fallback si on n'a pas d'info sur la durée du retour
-          const [returnStartHour, returnStartMinute] = returnStartTime.split(':').map(Number);
-          returnEndTime = `${String((returnStartHour + 1) % 24).padStart(2, '0')}:${String(returnStartMinute).padStart(2, '0')}`;
-        }
-        
-        const [returnStartHour, returnStartMinute] = returnStartTime.split(':').map(Number);
-        const isReturnStartNight = isWithinNightHours(
-          returnStartHour,
-          returnStartMinute,
-          nightStartHour,
-          nightStartMinute,
-          nightEndHour,
-          nightEndMinute
-        );
-        
-        const [returnEndHour, returnEndMinute] = returnEndTime.split(':').map(Number);
-        const isReturnEndNight = isWithinNightHours(
-          returnEndHour,
-          returnEndMinute,
-          nightStartHour,
-          nightStartMinute,
-          nightEndHour,
-          nightEndMinute
-        );
-        
-        // Si le départ et l'arrivée du retour sont dans la même période (jour ou nuit)
-        if (isReturnStartNight === isReturnEndNight) {
-          segments.push({
-            start: returnStartTime,
-            end: returnEndTime,
-            type: isReturnStartNight ? 'night-trip' : 'day-trip',
-            label: "Retour"
-          });
-        } else {
-          // Le retour traverse une transition jour/nuit
-          
-          // Si le retour commence le jour et finit la nuit
-          if (!isReturnStartNight && isReturnEndNight) {
-            // Trouver l'heure de transition
-            const transitionTime = `${String(nightStartHour).padStart(2, '0')}:${String(nightStartMinute).padStart(2, '0')}`;
-            
-            segments.push({
-              start: returnStartTime,
-              end: transitionTime,
-              type: 'day-trip',
-              label: "Retour"
-            });
-            
-            segments.push({
-              start: transitionTime,
-              end: returnEndTime,
-              type: 'night-trip'
-            });
-          } 
-          // Si le retour commence la nuit et finit le jour
-          else {
-            // Trouver l'heure de transition
-            const transitionTime = `${String(nightEndHour).padStart(2, '0')}:${String(nightEndMinute).padStart(2, '0')}`;
-            
-            segments.push({
-              start: returnStartTime,
-              end: transitionTime,
-              type: 'night-trip',
-              label: "Retour"
-            });
-            
-            segments.push({
-              start: transitionTime,
-              end: returnEndTime,
-              type: 'day-trip'
-            });
-          }
-        }
-      }
-    } else if (hasReturnTrip) {
-      // Si pas de temps d'attente, le retour commence juste après l'arrivée du trajet aller
-      const returnStartTime = tripEndTime;
-      
-      // Calculer l'heure de fin du retour
-      let returnEndTime;
-      if (returnNightRateInfo && returnNightRateInfo.totalHours) {
-        const [returnStartHour, returnStartMinute] = returnStartTime.split(':').map(Number);
-        const returnEndHour = returnStartHour + Math.floor(returnNightRateInfo.totalHours);
-        const returnEndMinute = returnStartMinute + Math.floor((returnNightRateInfo.totalHours % 1) * 60);
-        
-        const adjustedHour = returnEndHour + Math.floor(returnEndMinute / 60);
-        const adjustedMinute = returnEndMinute % 60;
-        
-        returnEndTime = `${String(adjustedHour % 24).padStart(2, '0')}:${String(adjustedMinute).padStart(2, '0')}`;
-      } else {
-        // Fallback si on n'a pas d'info sur la durée du retour
-        const [returnStartHour, returnStartMinute] = returnStartTime.split(':').map(Number);
-        returnEndTime = `${String((returnStartHour + 1) % 24).padStart(2, '0')}:${String(returnStartMinute).padStart(2, '0')}`;
-      }
+      const returnEndTime = returnNightRateInfo && returnNightRateInfo.totalHours 
+        ? calculateTripEndTime(
+            parseInt(returnStartTime.split(':')[0]), 
+            parseInt(returnStartTime.split(':')[1]), 
+            returnNightRateInfo.totalHours
+          ) 
+        : endTime;
       
       const [returnStartHour, returnStartMinute] = returnStartTime.split(':').map(Number);
-      const isReturnStartNight = isWithinNightHours(
-        returnStartHour,
-        returnStartMinute,
-        nightStartHour,
-        nightStartMinute,
-        nightEndHour,
-        nightEndMinute
-      );
-      
       const [returnEndHour, returnEndMinute] = returnEndTime.split(':').map(Number);
-      const isReturnEndNight = isWithinNightHours(
-        returnEndHour,
-        returnEndMinute,
-        nightStartHour,
-        nightStartMinute,
-        nightEndHour,
-        nightEndMinute
+      
+      const isReturnStartNight = isWithinNightHours(
+        returnStartHour, returnStartMinute, 
+        nightStartHour, nightStartMinute, 
+        nightEndHour, nightEndMinute
       );
       
-      // Si le départ et l'arrivée du retour sont dans la même période (jour ou nuit)
+      const isReturnEndNight = isWithinNightHours(
+        returnEndHour, returnEndMinute, 
+        nightStartHour, nightStartMinute, 
+        nightEndHour, nightEndMinute
+      );
+      
       if (isReturnStartNight === isReturnEndNight) {
         segments.push({
           start: returnStartTime,
@@ -377,51 +201,28 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
           label: "Retour"
         });
       } else {
-        // Le retour traverse une transition jour/nuit
+        const transitionTime = isReturnStartNight 
+          ? `${String(nightEndHour).padStart(2, '0')}:${String(nightEndMinute).padStart(2, '0')}`
+          : `${String(nightStartHour).padStart(2, '0')}:${String(nightStartMinute).padStart(2, '0')}`; 
         
-        // Si le retour commence le jour et finit la nuit
-        if (!isReturnStartNight && isReturnEndNight) {
-          // Trouver l'heure de transition
-          const transitionTime = `${String(nightStartHour).padStart(2, '0')}:${String(nightStartMinute).padStart(2, '0')}`;
-          
-          segments.push({
-            start: returnStartTime,
-            end: transitionTime,
-            type: 'day-trip',
-            label: "Retour"
-          });
-          
-          segments.push({
-            start: transitionTime,
-            end: returnEndTime,
-            type: 'night-trip'
-          });
-        } 
-        // Si le retour commence la nuit et finit le jour
-        else {
-          // Trouver l'heure de transition
-          const transitionTime = `${String(nightEndHour).padStart(2, '0')}:${String(nightEndMinute).padStart(2, '0')}`;
-          
-          segments.push({
-            start: returnStartTime,
-            end: transitionTime,
-            type: 'night-trip',
-            label: "Retour"
-          });
-          
-          segments.push({
-            start: transitionTime,
-            end: returnEndTime,
-            type: 'day-trip'
-          });
-        }
+        segments.push({
+          start: returnStartTime,
+          end: transitionTime,
+          type: isReturnStartNight ? 'night-trip' : 'day-trip',
+          label: "Retour"
+        });
+        
+        segments.push({
+          start: transitionTime,
+          end: returnEndTime,
+          type: isReturnStartNight ? 'day-trip' : 'night-trip'
+        });
       }
     }
 
     return segments;
   };
 
-  // Calculer l'heure de fin totale (incluant le trajet retour si applicable)
   const calculateFinalEndTime = () => {
     if (!hasReturnTrip) {
       return endTime;
@@ -448,7 +249,6 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
       <div className="bg-secondary/20 p-3 rounded-md mt-2 text-sm space-y-3">
         <h3 className="font-medium mb-2">Chronologie du Trajet</h3>
         
-        {/* Légende des couleurs en haut, en dehors de la jauge */}
         <div className="flex flex-wrap justify-start gap-3 p-2 mb-2 bg-white/60 rounded border border-gray-100">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-100 rounded"></div>
