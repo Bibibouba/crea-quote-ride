@@ -8,10 +8,8 @@ import { useSaveQuote } from './quote/useSaveQuote';
 import { useTripOptions } from './quote/useTripOptions';
 import { useVehicleData } from './quote/useVehicleData';
 import { useWaitingTimeCalculation } from './quote/useWaitingTimeCalculation';
-import { useQuoteCalculation } from './quote/useQuoteCalculation';
-import { useFormHandlers } from './quote/useFormHandlers';
-import { QuoteDetailsType } from '@/types/quoteForm';
 import { waitingTimeOptions } from '@/utils/waitingTimeOptions';
+import { QuoteDetailsType } from '@/types/quoteForm';
 
 export interface UseQuoteFormStateProps {
   clientId?: string;
@@ -31,13 +29,14 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     setSelectedVehicle
   } = useVehicleData();
   
+  // Generate waiting time options
+  const waitingTimeOptionsList = waitingTimeOptions();
+  
   // Address form state
   const addressForm = useAddressForm();
   
-  // Trip options state with proper waitingTimeOptions
-  const tripOptions = useTripOptions({
-    waitingTimeOptions: waitingTimeOptions()
-  });
+  // Trip options state
+  const tripOptions = useTripOptions({ waitingTimeOptions: waitingTimeOptionsList });
   
   // Client data state
   const clientData = useClientData({ clientId });
@@ -47,32 +46,14 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
   
   // Route calculation
   const {
-    oneWayDistance,
-    oneWayDuration,
     returnDistance,
     returnDuration,
-    totalDuration,
-    handleRouteCalculated,
-    handleReturnRouteCalculated
+    handleRouteCalculated: routeHandler
   } = useRouteCalculation({
     hasReturnTrip: tripOptions.hasReturnTrip,
     returnToSameAddress: tripOptions.returnToSameAddress,
     destinationCoordinates: addressForm.destinationCoordinates,
     customReturnCoordinates: addressForm.customReturnCoordinates
-  });
-  
-  // Form handlers
-  const { handleSubmit: baseHandleSubmit, handleReset: baseHandleReset } = useFormHandlers({
-    setShowQuote: formState.setShowQuote,
-    setIsLoading: formState.setIsLoading
-  });
-  
-  // Quote calculations
-  const { totalDistance, basePrice, estimatedPrice } = useQuoteCalculation({
-    oneWayDistance,
-    returnDistance,
-    vehicles,
-    selectedVehicle
   });
   
   // Calculate waiting time price
@@ -91,8 +72,8 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
   // Calculate quote details
   const { quoteDetails } = useQuoteDetails({
     selectedVehicle,
-    estimatedDistance: oneWayDistance,
-    returnDistance,
+    estimatedDistance: tripOptions.estimatedDistance,
+    returnDistance: returnDistance,
     hasReturnTrip: tripOptions.hasReturnTrip,
     returnToSameAddress: tripOptions.returnToSameAddress,
     vehicles,
@@ -108,7 +89,7 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     isSubmitting,
     isQuoteSent,
     setIsQuoteSent,
-    handleSaveQuote
+    handleSaveQuote: saveQuote
   } = useSaveQuote({
     quoteDetails: quoteDetails as QuoteDetailsType,
     departureAddress: addressForm.departureAddress,
@@ -126,8 +107,8 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     hasWaitingTime: tripOptions.hasWaitingTime,
     waitingTimeMinutes: tripOptions.waitingTimeMinutes,
     waitingTimePrice,
-    estimatedDistance: oneWayDistance,
-    estimatedDuration: oneWayDuration,
+    estimatedDistance: tripOptions.estimatedDistance,
+    estimatedDuration: tripOptions.estimatedDuration,
     selectedVehicle,
     vehicles,
     pricingSettings
@@ -135,16 +116,16 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
   
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
-    baseHandleSubmit(
-      e,
-      addressForm.departureCoordinates,
+    formState.handleSubmit(
+      e, 
+      addressForm.departureCoordinates, 
       addressForm.destinationCoordinates
     );
   };
   
   // Handle saving quote
-  const handleQuoteSave = async () => {
-    await handleSaveQuote(
+  const handleSaveQuote = async () => {
+    await saveQuote(
       clientData.firstName,
       clientData.lastName,
       clientData.email,
@@ -157,23 +138,41 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     }
   };
   
+  // Handle route calculation
+  const handleRouteCalculated = (distance: number, duration: number) => {
+    const { estimatedDistance, estimatedDuration } = routeHandler(distance, duration);
+    tripOptions.setEstimatedDistance(estimatedDistance);
+    tripOptions.setEstimatedDuration(estimatedDuration);
+  };
+  
   // Handle reset
   const handleReset = () => {
-    baseHandleReset();
+    formState.handleReset();
     setIsQuoteSent(false);
   };
   
+  // Calculate base price
+  const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
+  
+  // Calculate estimated price
+  const estimatedPrice = Math.round(tripOptions.estimatedDistance * basePrice);
+  
   return {
+    // Address state
     ...addressForm,
+    
+    // Client data
     ...clientData,
+    
+    // Trip options
     ...tripOptions,
+    
+    // Form state
     ...formState,
-    oneWayDistance,
-    oneWayDuration,
+    
+    // Additional state
     returnDistance,
     returnDuration,
-    totalDistance,
-    totalDuration,
     vehicles,
     vehicleTypes,
     isLoadingVehicles,
@@ -183,13 +182,16 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     isSubmitting,
     isQuoteSent,
     setIsQuoteSent,
+    
+    // Calculated values
     basePrice,
     estimatedPrice,
     quoteDetails,
+    
+    // Handlers
     handleSubmit,
-    handleSaveQuote: handleQuoteSave,
+    handleSaveQuote,
     handleRouteCalculated,
-    handleReturnRouteCalculated,
     handleReset
   };
 };

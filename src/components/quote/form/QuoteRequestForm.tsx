@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +27,6 @@ interface QuoteRequestFormProps {
   estimatedDistance: number;
   estimatedDuration: number;
   onRouteCalculated: (distance: number, duration: number) => void;
-  onReturnRouteCalculated?: (distance: number, duration: number) => void;
   vehicles: Vehicle[];
   hasReturnTrip: boolean;
   setHasReturnTrip: (hasReturn: boolean) => void;
@@ -45,10 +43,6 @@ interface QuoteRequestFormProps {
   handleReturnAddressSelect: (address: Address) => void;
   isLoading: boolean;
   handleSubmit: (e: React.FormEvent) => void;
-  returnDistance: number;
-  returnDuration: number;
-  customReturnCoordinates?: [number, number];
-  totalDuration: number;
 }
 
 const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({
@@ -71,7 +65,6 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({
   estimatedDistance,
   estimatedDuration,
   onRouteCalculated,
-  onReturnRouteCalculated,
   vehicles,
   hasReturnTrip,
   setHasReturnTrip,
@@ -87,10 +80,7 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({
   setCustomReturnAddress,
   handleReturnAddressSelect,
   isLoading,
-  handleSubmit,
-  returnDistance,
-  returnDuration,
-  customReturnCoordinates
+  handleSubmit
 }) => {
   return (
     <Card>
@@ -123,12 +113,7 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({
               estimatedDistance={estimatedDistance}
               estimatedDuration={estimatedDuration}
               onRouteCalculated={onRouteCalculated}
-              onReturnRouteCalculated={onReturnRouteCalculated}
               vehicles={vehicles}
-              hasReturnTrip={hasReturnTrip}
-              returnToSameAddress={returnToSameAddress}
-              customReturnAddress={customReturnAddress}
-              customReturnCoordinates={customReturnCoordinates}
             />
             
             <QuoteFormOptions

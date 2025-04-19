@@ -70,11 +70,7 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
     handleReturnAddressSelect,
     handleSaveQuote,
     handleRouteCalculated,
-    handleReturnRouteCalculated,
-    handleReset,
-    oneWayDistance,
-    oneWayDuration,
-    totalDuration
+    handleReset
   } = formState;
   
   return (
@@ -97,10 +93,9 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           setSelectedVehicle={setSelectedVehicle}
           passengers={passengers}
           setPassengers={setPassengers}
-          estimatedDistance={oneWayDistance}
-          estimatedDuration={oneWayDuration}
+          estimatedDistance={estimatedDistance}
+          estimatedDuration={estimatedDuration}
           onRouteCalculated={handleRouteCalculated}
-          onReturnRouteCalculated={handleReturnRouteCalculated}
           vehicles={vehicles}
           hasReturnTrip={hasReturnTrip}
           setHasReturnTrip={setHasReturnTrip}
@@ -117,10 +112,6 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           handleReturnAddressSelect={handleReturnAddressSelect}
           isLoading={isLoading}
           handleSubmit={handleSubmit}
-          returnDistance={returnDistance}
-          returnDuration={returnDuration}
-          customReturnCoordinates={customReturnCoordinates}
-          totalDuration={totalDuration}
         />
       ) : isQuoteSent ? (
         <Card>
@@ -139,8 +130,8 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           destinationCoordinates={destinationCoordinates}
           date={date}
           time={time}
-          estimatedDistance={oneWayDistance}
-          estimatedDuration={oneWayDuration}
+          estimatedDistance={estimatedDistance}
+          estimatedDuration={estimatedDuration}
           selectedVehicle={selectedVehicle}
           passengers={passengers}
           basePrice={basePrice}
@@ -167,7 +158,6 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           returnDistance={returnDistance}
           returnDuration={returnDuration}
           returnCoordinates={customReturnCoordinates}
-          totalDuration={totalDuration}
         />
       )}
     </div>

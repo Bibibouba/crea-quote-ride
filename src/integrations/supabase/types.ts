@@ -379,7 +379,6 @@ export type Database = {
           custom_return_address: string | null
           day_hours: number | null
           day_km: number | null
-          day_percentage: number | null
           day_price: number | null
           departure_coordinates: number[] | null
           departure_location: string
@@ -390,11 +389,9 @@ export type Database = {
           has_return_trip: boolean | null
           has_waiting_time: boolean | null
           id: string
-          is_return_night_rate: boolean | null
           is_sunday_holiday: boolean | null
           night_hours: number | null
           night_km: number | null
-          night_percentage: number | null
           night_price: number | null
           night_rate_percentage: number | null
           night_surcharge: number | null
@@ -402,17 +399,8 @@ export type Database = {
           one_way_price_ht: number | null
           quote_pdf: string | null
           return_coordinates: number[] | null
-          return_day_hours: number | null
-          return_day_km: number | null
-          return_day_percentage: number | null
-          return_day_price: number | null
           return_distance_km: number | null
           return_duration_minutes: number | null
-          return_night_hours: number | null
-          return_night_km: number | null
-          return_night_percentage: number | null
-          return_night_price: number | null
-          return_night_surcharge: number | null
           return_price: number | null
           return_price_ht: number | null
           return_to_same_address: boolean | null
@@ -444,7 +432,6 @@ export type Database = {
           custom_return_address?: string | null
           day_hours?: number | null
           day_km?: number | null
-          day_percentage?: number | null
           day_price?: number | null
           departure_coordinates?: number[] | null
           departure_location: string
@@ -455,11 +442,9 @@ export type Database = {
           has_return_trip?: boolean | null
           has_waiting_time?: boolean | null
           id?: string
-          is_return_night_rate?: boolean | null
           is_sunday_holiday?: boolean | null
           night_hours?: number | null
           night_km?: number | null
-          night_percentage?: number | null
           night_price?: number | null
           night_rate_percentage?: number | null
           night_surcharge?: number | null
@@ -467,17 +452,8 @@ export type Database = {
           one_way_price_ht?: number | null
           quote_pdf?: string | null
           return_coordinates?: number[] | null
-          return_day_hours?: number | null
-          return_day_km?: number | null
-          return_day_percentage?: number | null
-          return_day_price?: number | null
           return_distance_km?: number | null
           return_duration_minutes?: number | null
-          return_night_hours?: number | null
-          return_night_km?: number | null
-          return_night_percentage?: number | null
-          return_night_price?: number | null
-          return_night_surcharge?: number | null
           return_price?: number | null
           return_price_ht?: number | null
           return_to_same_address?: boolean | null
@@ -509,7 +485,6 @@ export type Database = {
           custom_return_address?: string | null
           day_hours?: number | null
           day_km?: number | null
-          day_percentage?: number | null
           day_price?: number | null
           departure_coordinates?: number[] | null
           departure_location?: string
@@ -520,11 +495,9 @@ export type Database = {
           has_return_trip?: boolean | null
           has_waiting_time?: boolean | null
           id?: string
-          is_return_night_rate?: boolean | null
           is_sunday_holiday?: boolean | null
           night_hours?: number | null
           night_km?: number | null
-          night_percentage?: number | null
           night_price?: number | null
           night_rate_percentage?: number | null
           night_surcharge?: number | null
@@ -532,17 +505,8 @@ export type Database = {
           one_way_price_ht?: number | null
           quote_pdf?: string | null
           return_coordinates?: number[] | null
-          return_day_hours?: number | null
-          return_day_km?: number | null
-          return_day_percentage?: number | null
-          return_day_price?: number | null
           return_distance_km?: number | null
           return_duration_minutes?: number | null
-          return_night_hours?: number | null
-          return_night_km?: number | null
-          return_night_percentage?: number | null
-          return_night_price?: number | null
-          return_night_surcharge?: number | null
           return_price?: number | null
           return_price_ht?: number | null
           return_to_same_address?: boolean | null

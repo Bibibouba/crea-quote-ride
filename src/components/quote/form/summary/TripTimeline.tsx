@@ -60,22 +60,14 @@ const TripTimeline: React.FC<TripTimelineProps> = ({
     ? (24 * 60) - startMinutes + endMinutes 
     : endMinutes - startMinutes;
 
-  // Fonction pour obtenir la position en pourcentage pour une heure donnée
-  const getPositionPercentage = (time: string) => {
-    const minutes = timeToMinutes(time);
-    // Ajuster si l'heure est après minuit et avant l'heure de départ
-    const adjustedMinutes = minutes < startMinutes ? minutes + (24 * 60) : minutes;
-    return ((adjustedMinutes - startMinutes) / totalMinutes) * 100;
-  };
-
   return (
     <div className="space-y-4">
       <div className="relative h-16">
         {/* Barre de timeline */}
         <div className="absolute top-6 left-0 right-0 h-2 bg-gray-200 rounded-full">
           {segments.map((segment, index) => {
-            const segmentStart = getPositionPercentage(segment.start);
-            const segmentEnd = getPositionPercentage(segment.end);
+            const segmentStart = ((timeToMinutes(segment.start) - startMinutes + (startMinutes > timeToMinutes(segment.start) ? 24 * 60 : 0)) / totalMinutes) * 100;
+            const segmentEnd = ((timeToMinutes(segment.end) - startMinutes + (startMinutes > timeToMinutes(segment.end) ? 24 * 60 : 0)) / totalMinutes) * 100;
             const width = segmentEnd - segmentStart;
 
             return (
@@ -84,17 +76,16 @@ const TripTimeline: React.FC<TripTimelineProps> = ({
                 className={`absolute h-full ${getSegmentColor(segment.type)} rounded-full`}
                 style={{
                   left: `${segmentStart}%`,
-                  width: `${width}%`,
-                  minWidth: width < 0.5 ? '4px' : undefined // Assure une visibilité minimale
+                  width: `${width}%`
                 }}
               />
             );
           })}
         </div>
 
-        {/* Marqueurs de temps et labels */}
+        {/* Marqueurs de temps */}
         {segments.map((segment, index) => {
-          const position = getPositionPercentage(segment.start);
+          const position = ((timeToMinutes(segment.start) - startMinutes + (startMinutes > timeToMinutes(segment.start) ? 24 * 60 : 0)) / totalMinutes) * 100;
           return (
             <React.Fragment key={`marker-${index}`}>
               <div

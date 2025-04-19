@@ -1,7 +1,7 @@
 
 import { toast } from '@/hooks/use-toast';
 
-interface ValidationFields {
+interface ValidationData {
   date: Date;
   departureCoordinates?: [number, number];
   destinationCoordinates?: [number, number];
@@ -10,14 +10,14 @@ interface ValidationFields {
   customReturnAddress?: string;
 }
 
-export const validateQuoteFields = ({
+export const validateQuoteData = ({
   date,
   departureCoordinates,
   destinationCoordinates,
   hasReturnTrip,
   returnToSameAddress,
   customReturnAddress,
-}: ValidationFields): boolean => {
+}: ValidationData): boolean => {
   if (!date) {
     toast({
       title: 'Date manquante',

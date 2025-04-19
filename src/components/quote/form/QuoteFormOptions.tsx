@@ -1,5 +1,5 @@
+
 import React from 'react';
-import { ReturnTripOptions } from './options/ReturnTripOptions';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -42,15 +42,17 @@ const QuoteFormOptions: React.FC<QuoteFormOptionsProps> = ({
     <div className="space-y-4 border rounded-md p-4 bg-secondary/20">
       <h3 className="font-medium mb-2">Options supplémentaires</h3>
       
-      <ReturnTripOptions
-        hasReturnTrip={hasReturnTrip}
-        setHasReturnTrip={setHasReturnTrip}
-        returnToSameAddress={returnToSameAddress}
-        setReturnToSameAddress={setReturnToSameAddress}
-        customReturnAddress={customReturnAddress}
-        setCustomReturnAddress={setCustomReturnAddress}
-        handleReturnAddressSelect={handleReturnAddressSelect}
-      />
+      <div className="flex items-center justify-between space-x-2">
+        <div className="flex flex-col space-y-1">
+          <Label htmlFor="return-trip" className="font-medium">Aller-retour</Label>
+          <p className="text-sm text-muted-foreground">Souhaitez-vous prévoir un trajet retour ?</p>
+        </div>
+        <Switch 
+          id="return-trip" 
+          checked={hasReturnTrip} 
+          onCheckedChange={setHasReturnTrip} 
+        />
+      </div>
       
       {hasReturnTrip && (
         <>
