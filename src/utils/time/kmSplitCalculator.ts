@@ -1,69 +1,74 @@
 
-import { calculateNightDuration } from './nightDurationCalculator';
-
-interface KmSplitResult {
-  dayKm: number;
-  nightKm: number;
-  totalKm: number;
-  dayPercentage: number;
-  nightPercentage: number;
-  nightHours: number;
-  dayHours: number;
-  totalMinutes: number;
-}
+import { isNightTime } from './nightTimeChecker';
 
 /**
- * Calculate the split between day and night kilometers
+ * Calculates the distribution of kilometers between day and night for a trip
+ * based on the trip start time, total distance, and defined night hours.
  */
 export const calculateDayNightKmSplit = (
   startTime: Date,
   totalDistance: number,
   nightStartTime: string,
   nightEndTime: string
-): KmSplitResult => {
-  // Create end time based on distance (assuming average speed of 60km/h)
-  const durationInMinutes = (totalDistance / 60) * 60;
-  const endTime = new Date(startTime.getTime() + durationInMinutes * 60 * 1000);
-  
-  const { nightMinutes, totalMinutes, nightHours, dayHours } = calculateNightDuration(
-    startTime,
-    endTime,
-    nightStartTime,
-    nightEndTime
-  );
-  
-  // Protection against zero division
-  if (totalMinutes === 0) {
+): {
+  dayKm: number;
+  nightKm: number;
+  dayPercentage: number;
+  nightPercentage: number;
+  dayHours: number;
+  nightHours: number;
+  totalKm: number;
+} => {
+  // For very short trips, avoid complex calculations
+  if (totalDistance < 1) {
     return {
       dayKm: totalDistance,
       nightKm: 0,
-      totalKm: totalDistance,
       dayPercentage: 100,
       nightPercentage: 0,
-      nightHours: 0,
       dayHours: 0,
-      totalMinutes: 0
+      nightHours: 0,
+      totalKm: totalDistance
     };
   }
+
+  // Estimate trip duration (approximate 1 hour per 60km)
+  const estimatedDurationHours = totalDistance / 60;
+  const estimatedDurationMinutes = estimatedDurationHours * 60;
   
-  // Calculate proportions
-  const nightProportion = nightMinutes / totalMinutes;
-  const nightKm = totalDistance * nightProportion;
-  const dayKm = totalDistance - nightKm;
+  // Check every minute of the trip to determine if it's day or night
+  let nightMinutes = 0;
+  let totalMinutes = Math.round(estimatedDurationMinutes);
   
-  // Calculate percentages with protection against rounding errors
-  const dayPercentage = Math.max(0, Math.min(100, ((totalDistance - nightKm) / totalDistance) * 100));
-  const nightPercentage = Math.max(0, Math.min(100, (nightKm / totalDistance) * 100));
+  const currentTime = new Date(startTime);
+  for (let i = 0; i < totalMinutes; i++) {
+    if (isNightTime(currentTime, nightStartTime, nightEndTime)) {
+      nightMinutes++;
+    }
+    // Advance time by 1 minute
+    currentTime.setMinutes(currentTime.getMinutes() + 1);
+  }
+  
+  // Calculate time percentages
+  const dayMinutes = totalMinutes - nightMinutes;
+  const dayPercentage = (dayMinutes / totalMinutes) * 100;
+  const nightPercentage = (nightMinutes / totalMinutes) * 100;
+  
+  // Calculate kilometer distribution based on time percentages
+  const dayKm = Math.round((dayPercentage / 100) * totalDistance * 100) / 100;
+  const nightKm = Math.round(totalDistance - dayKm);
+  
+  // Convert minutes to hours for reporting
+  const dayHours = dayMinutes / 60;
+  const nightHours = nightMinutes / 60;
   
   return {
-    dayKm,
-    nightKm,
-    totalKm: totalDistance,
-    dayPercentage,
-    nightPercentage,
-    nightHours,
-    dayHours,
-    totalMinutes
+    dayKm: dayKm,
+    nightKm: nightKm,
+    dayPercentage: Math.round(dayPercentage),
+    nightPercentage: Math.round(nightPercentage),
+    dayHours: Math.round(dayHours * 100) / 100,
+    nightHours: Math.round(nightHours * 100) / 100,
+    totalKm: totalDistance
   };
 };
-

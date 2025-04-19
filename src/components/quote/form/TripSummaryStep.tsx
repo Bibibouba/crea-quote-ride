@@ -5,6 +5,7 @@ import { MinDistanceAlert } from './summary/MinDistanceAlert';
 import { TripTimeInfo } from './summary/TripTimeInfo';
 import { TripDetailsGrid } from './summary/TripDetailsGrid';
 import { FormNavigation } from './summary/FormNavigation';
+import { TripTotal } from './summary/TripTotal';
 
 interface TripSummaryStepProps {
   departureAddress: string;
@@ -46,6 +47,15 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     return arrivalTime;
   })();
 
+  // Calculate total distance and duration
+  const totalDistance = props.hasReturnTrip 
+    ? props.estimatedDistance + (props.returnToSameAddress ? props.estimatedDistance : props.returnDistance)
+    : props.estimatedDistance;
+    
+  const totalDuration = props.hasReturnTrip 
+    ? props.estimatedDuration + (props.returnToSameAddress ? props.estimatedDuration : props.returnDuration) + (props.hasWaitingTime ? props.waitingTimeMinutes : 0)
+    : props.estimatedDuration;
+
   return (
     <div className="space-y-6">
       <TripHeaderCard
@@ -77,10 +87,33 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
         returnNightRateInfo={props.quoteDetails?.returnNightRateInfo}
         sundayRateInfo={props.quoteDetails?.sundayRateInfo}
         hasReturnTrip={props.hasReturnTrip}
+        selectedVehicleName={selectedVehicleInfo?.name || "A"}
+      />
+      
+      <TripTotal 
+        totalDistance={totalDistance}
+        totalDuration={totalDuration}
+        totalPrice={props.quoteDetails?.totalPrice || 0}
       />
       
       <TripDetailsGrid
-        {...props}
+        departureCoordinates={props.departureCoordinates}
+        destinationCoordinates={props.destinationCoordinates}
+        customReturnCoordinates={props.customReturnCoordinates}
+        handleRouteCalculated={props.handleRouteCalculated}
+        handleReturnRouteCalculated={props.handleReturnRouteCalculated}
+        hasReturnTrip={props.hasReturnTrip}
+        returnToSameAddress={props.returnToSameAddress}
+        estimatedDistance={props.estimatedDistance}
+        estimatedDuration={props.estimatedDuration}
+        time={props.time}
+        hasMinDistanceWarning={hasMinDistanceWarning}
+        minDistance={minDistance}
+        returnDistance={props.returnDistance}
+        returnDuration={props.returnDuration}
+        hasWaitingTime={props.hasWaitingTime}
+        waitingTimeMinutes={props.waitingTimeMinutes}
+        quoteDetails={props.quoteDetails}
         isNightRate={!!props.quoteDetails?.isNightRate}
         isSunday={!!props.quoteDetails?.isSunday}
         nightHours={props.quoteDetails?.nightHours || 0}

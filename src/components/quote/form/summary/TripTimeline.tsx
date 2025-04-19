@@ -24,13 +24,13 @@ interface TripTimelineProps {
 const getSegmentColor = (type: TimeSegment['type']) => {
   switch (type) {
     case 'day-trip':
-      return 'bg-blue-100'; // #dbeafe
+      return 'bg-blue-100'; // Light blue for day trip
     case 'day-wait':
-      return 'bg-green-50'; // #dcfce7
+      return 'bg-green-50'; // Light green for day waiting
     case 'night-wait':
-      return 'bg-green-200'; // #bbf7d0
+      return 'bg-green-200'; // Darker green for night waiting
     case 'night-trip':
-      return 'bg-red-100'; // #fee2e2
+      return 'bg-red-100'; // Light red for night trip
     default:
       return 'bg-gray-100';
   }
@@ -46,13 +46,15 @@ const TripTimeline: React.FC<TripTimelineProps> = ({
   returnArrivalLabel = "Arrivée",
   hasReturnTrip = false,
 }) => {
-  // Calculate total duration in minutes
+  // Calculate total duration in minutes for timeline scaling
   const timeToMinutes = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   };
 
   const startMinutes = timeToMinutes(startTime);
+  
+  // Handle end time that might be on the next day (after midnight)
   const endMinutes = timeToMinutes(endTime);
   const totalMinutes = endMinutes < startMinutes 
     ? (24 * 60) - startMinutes + endMinutes 
