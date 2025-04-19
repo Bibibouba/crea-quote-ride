@@ -89,6 +89,8 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
         sundayRateInfo={props.quoteDetails?.sundayRateInfo}
         hasReturnTrip={props.hasReturnTrip}
         selectedVehicleName={selectedVehicleInfo?.name || "A"}
+        hasWaitingTime={props.hasWaitingTime}
+        waitingTimeMinutes={props.waitingTimeMinutes}
       />
       
       {props.quoteDetails?.dayPercentage !== undefined && props.quoteDetails?.nightPercentage !== undefined && (
