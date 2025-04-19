@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Progress } from '@/components/ui/progress';
 import { Sun, Moon } from 'lucide-react';
 
 interface DayNightGaugeProps {
@@ -24,22 +23,31 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
   const totalPercentage = formattedDayPercentage + formattedNightPercentage;
   const adjustedDayPercentage = totalPercentage === 0 ? 100 : (formattedDayPercentage / totalPercentage) * 100;
   const adjustedNightPercentage = totalPercentage === 0 ? 0 : (formattedNightPercentage / totalPercentage) * 100;
-  
-  // Debug pour vérifier les valeurs
-  console.log('DayNightGauge values:', {
-    dayPercentage,
-    nightPercentage,
-    formattedDayPercentage,
-    formattedNightPercentage,
-    adjustedDayPercentage,
-    adjustedNightPercentage,
-    dayKm,
-    nightKm
-  });
 
   return (
     <div className="space-y-2 w-full">
-      <div className="flex justify-between items-center mb-1">
+      <div className="flex justify-between mb-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-blue-100 rounded"></div>
+            <span className="text-xs">Tarif jour</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-50 rounded"></div>
+            <span className="text-xs">Attente jour</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-200 rounded"></div>
+            <span className="text-xs">Attente nuit</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-100 rounded"></div>
+            <span className="text-xs">Tarif nuit</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center">
         <div className="flex items-center">
           <Sun className="h-4 w-4 text-amber-500 mr-1" />
           <span className="text-sm font-medium">
