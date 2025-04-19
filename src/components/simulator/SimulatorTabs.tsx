@@ -2,7 +2,6 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TripInfoStep from '@/components/quote/form/TripInfoStep';
-import TripSummaryStep from '@/components/quote/form/TripSummaryStep';
 import ClientInfoStep from '@/components/quote/form/ClientInfoStep';
 import { QuoteFormState } from '@/types/quoteForm';
 
@@ -14,7 +13,7 @@ interface SimulatorTabsProps {
   handleSubmit: () => Promise<void>;
   handleNextStep: () => void;
   handlePreviousStep: () => void;
-  children?: React.ReactNode; // Keep the children prop for flexibility
+  children?: React.ReactNode;
 }
 
 const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
@@ -96,31 +95,11 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
       </TabsContent>
       
       <TabsContent value="step2">
-        <TripSummaryStep
-          departureAddress={formState.departureAddress}
-          destinationAddress={formState.destinationAddress}
-          customReturnAddress={formState.customReturnAddress}
-          departureCoordinates={formState.departureCoordinates}
-          destinationCoordinates={formState.destinationCoordinates}
-          date={formState.date}
-          time={formState.time}
-          selectedVehicle={formState.selectedVehicle}
-          passengers={formState.passengers}
-          estimatedDistance={formState.estimatedDistance}
-          estimatedDuration={formState.estimatedDuration}
-          hasReturnTrip={formState.hasReturnTrip}
-          hasWaitingTime={formState.hasWaitingTime}
-          waitingTimeMinutes={formState.waitingTimeMinutes}
-          returnToSameAddress={formState.returnToSameAddress}
-          returnDistance={formState.returnDistance}
-          returnDuration={formState.returnDuration}
-          customReturnCoordinates={formState.customReturnCoordinates}
-          quoteDetails={formState.quoteDetails}
-          vehicles={formState.vehicles}
-          handleRouteCalculated={formState.handleRouteCalculated}
-          handleNextStep={handleNextStep}
-          handlePreviousStep={handlePreviousStep}
-        />
+        <div className="border rounded-md p-6 bg-secondary/10">
+          <p className="text-center text-muted-foreground">
+            Cette section sera bientôt disponible.
+          </p>
+        </div>
       </TabsContent>
       
       <TabsContent value="step3">
