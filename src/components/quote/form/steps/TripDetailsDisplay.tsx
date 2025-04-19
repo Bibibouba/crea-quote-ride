@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { formatDuration } from '@/lib/formatDuration';
-import OutboundTripDetails from '../trip/OutboundTripDetails';
-import ReturnTripDetails from '../trip/ReturnTripDetails';
+import { OutboundTripDetails } from '../trip/OutboundTripDetails';
+import { ReturnTripDetails } from '../trip/ReturnTripDetails';
 
 export interface TripDetailsDisplayProps {
   estimatedDistance: number;
