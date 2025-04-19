@@ -1,9 +1,10 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import AddressFormSection from './AddressFormSection';
 import QuoteFormOptions from './QuoteFormOptions';
+import { RouteDetailsSection } from './steps/RouteDetailsSection';
+import { TripDetailsDisplay } from './steps/TripDetailsDisplay';
 import { Address } from '@/hooks/useMapbox';
 import { Vehicle, WaitingTimeOption } from '@/types/quoteForm';
 
@@ -80,8 +81,8 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
   handleRouteCalculated,
   handleNextStep
 }) => {
-  // Vérifier si les deux adresses sont renseignées et si les coordonnées sont disponibles
-  const canProceed = departureAddress && destinationAddress && departureCoordinates && destinationCoordinates;
+  const canProceed = departureAddress && destinationAddress && departureCoordinates && destinationCoordinates &&
+    (!hasReturnTrip || returnToSameAddress || (customReturnAddress && handleReturnAddressSelect));
 
   return (
     <Card>
@@ -143,6 +144,35 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
             setCustomReturnAddress={setCustomReturnAddress}
             handleReturnAddressSelect={handleReturnAddressSelect}
           />
+
+          {departureCoordinates && destinationCoordinates && (
+            <>
+              <RouteDetailsSection
+                departureCoordinates={departureCoordinates}
+                destinationCoordinates={destinationCoordinates}
+                customReturnCoordinates={hasReturnTrip && !returnToSameAddress ? undefined : departureCoordinates}
+                handleRouteCalculated={handleRouteCalculated}
+                hasReturnTrip={hasReturnTrip}
+                returnToSameAddress={returnToSameAddress}
+              />
+
+              {(estimatedDistance > 0 || estimatedDuration > 0) && (
+                <TripDetailsDisplay
+                  estimatedDistance={estimatedDistance}
+                  estimatedDuration={estimatedDuration}
+                  time={time}
+                  hasMinDistanceWarning={false}
+                  minDistance={0}
+                  hasReturnTrip={hasReturnTrip}
+                  returnToSameAddress={returnToSameAddress}
+                  returnDistance={hasReturnTrip && returnToSameAddress ? estimatedDistance : 0}
+                  returnDuration={hasReturnTrip && returnToSameAddress ? estimatedDuration : 0}
+                  hasWaitingTime={hasWaitingTime}
+                  waitingTimeMinutes={waitingTimeMinutes}
+                />
+              )}
+            </>
+          )}
 
           <div className="flex justify-end">
             <Button
