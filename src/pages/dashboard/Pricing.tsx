@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +18,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Vehicle } from '@/types/vehicle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Import pricing component fragments
 import DistanceTiersList from '@/components/pricing/DistanceTiersList';
 import DistanceTierDialog from '@/components/pricing/DistanceTierDialog';
 import VehicleNightRatesForm from '@/components/pricing/VehicleNightRatesForm';
@@ -49,14 +47,12 @@ const Pricing = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("distance");
 
-  // Load vehicles data
   useEffect(() => {
     if (!user) return;
     
     const fetchVehicles = async () => {
       try {
         console.log("Fetching vehicles for user:", user.id);
-        // Fetch vehicles
         const { data: vehiclesData, error: vehiclesError } = await supabase
           .from('vehicles')
           .select('*')
@@ -83,7 +79,6 @@ const Pricing = () => {
     fetchVehicles();
   }, [user]);
   
-  // Handle tier dialog operations
   const openAddTierDialog = () => {
     setEditingTier(null);
     setTierDialogOpen(true);
@@ -117,7 +112,6 @@ const Pricing = () => {
 
   const handleVehicleChange = (value: string) => {
     setSelectedVehicleId(value);
-    // Reset to the default tab when changing vehicles
     setActiveTab("distance");
   };
 
@@ -210,7 +204,6 @@ const Pricing = () => {
                 <TabsTrigger value="additional">Options supplémentaires</TabsTrigger>
               </TabsList>
               
-              {/* Distance-based rates */}
               <TabsContent value="distance" className="space-y-4 mt-4">
                 <Alert className="bg-blue-50 border-blue-200 mb-4">
                   <AlertCircle className="h-4 w-4 text-blue-600" />
@@ -229,14 +222,7 @@ const Pricing = () => {
                 />
               </TabsContent>
               
-              {/* Night rates - global settings */}
               <TabsContent value="night" className="space-y-4 mt-4">
-                <Alert className="bg-blue-50 border-blue-200 mb-4">
-                  <AlertCircle className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-blue-700">
-                    Les tarifs de nuit s'appliquent à tous les véhicules.
-                  </AlertDescription>
-                </Alert>
                 <VehicleNightRatesForm
                   settings={pricingSettings}
                   onSave={saveSettings}
@@ -244,14 +230,7 @@ const Pricing = () => {
                 />
               </TabsContent>
               
-              {/* Waiting rates - global settings */}
               <TabsContent value="waiting" className="space-y-4 mt-4">
-                <Alert className="bg-blue-50 border-blue-200 mb-4">
-                  <AlertCircle className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-blue-700">
-                    Les tarifs d'attente s'appliquent à tous les véhicules.
-                  </AlertDescription>
-                </Alert>
                 <VehicleWaitingRatesForm
                   settings={pricingSettings}
                   onSave={saveSettings}
@@ -259,14 +238,7 @@ const Pricing = () => {
                 />
               </TabsContent>
               
-              {/* Additional options - global settings */}
               <TabsContent value="additional" className="space-y-4 mt-4">
-                <Alert className="bg-blue-50 border-blue-200 mb-4">
-                  <AlertCircle className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-blue-700">
-                    Ces options s'appliquent à tous les véhicules.
-                  </AlertDescription>
-                </Alert>
                 <VehicleAdditionalOptionsForm
                   settings={pricingSettings}
                   onSave={saveSettings}
@@ -277,7 +249,6 @@ const Pricing = () => {
           </CardContent>
         </Card>
         
-        {/* Dialog for adding/editing tiers */}
         <DistanceTierDialog
           open={tierDialogOpen}
           onOpenChange={setTierDialogOpen}
