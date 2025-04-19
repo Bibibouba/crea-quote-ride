@@ -5,8 +5,8 @@ import { OutboundTripDetails } from '../trip/OutboundTripDetails';
 import { ReturnTripDetails } from '../trip/ReturnTripDetails';
 
 export interface TripDetailsDisplayProps {
-  oneWayDistance: number;
-  oneWayDuration: number;
+  estimatedDistance: number;
+  estimatedDuration: number;
   time: string;
   hasMinDistanceWarning: boolean;
   minDistance: number;
@@ -19,8 +19,8 @@ export interface TripDetailsDisplayProps {
 }
 
 export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
-  oneWayDistance,
-  oneWayDuration,
+  estimatedDistance,
+  estimatedDuration,
   time,
   hasMinDistanceWarning,
   minDistance,
@@ -32,12 +32,12 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
   waitingTimeMinutes,
 }) => {
   const totalDistance = hasReturnTrip 
-    ? (returnToSameAddress ? oneWayDistance * 2 : oneWayDistance + returnDistance)
-    : oneWayDistance;
+    ? (returnToSameAddress ? estimatedDistance * 2 : estimatedDistance + returnDistance)
+    : estimatedDistance;
 
   const totalDuration = hasReturnTrip
-    ? (returnToSameAddress ? oneWayDuration * 2 : oneWayDuration + returnDuration)
-    : oneWayDuration;
+    ? (returnToSameAddress ? estimatedDuration * 2 : estimatedDuration + returnDuration)
+    : estimatedDuration;
 
   return (
     <div className="space-y-4">
@@ -59,13 +59,13 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
       {hasReturnTrip && (
         <div className="grid grid-cols-2 gap-4 border-t pt-3 mt-2">
           <OutboundTripDetails 
-            distance={oneWayDistance}
-            duration={oneWayDuration}
+            distance={estimatedDistance}
+            duration={estimatedDuration}
           />
           <ReturnTripDetails
             enabled={hasReturnTrip}
-            distance={returnToSameAddress ? oneWayDistance : returnDistance}
-            duration={returnToSameAddress ? oneWayDuration : returnDuration}
+            distance={returnToSameAddress ? estimatedDistance : returnDistance}
+            duration={returnToSameAddress ? estimatedDuration : returnDuration}
             returnToSameAddress={returnToSameAddress}
           />
         </div>
