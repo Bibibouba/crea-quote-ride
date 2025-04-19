@@ -18,6 +18,8 @@ export const useRouteCalculation = ({
   const { getRoute } = useMapbox();
   const [returnDistance, setReturnDistance] = useState(0);
   const [returnDuration, setReturnDuration] = useState(0);
+  const [oneWayDistance, setOneWayDistance] = useState(0);
+  const [oneWayDuration, setOneWayDuration] = useState(0);
   const [totalDistance, setTotalDistance] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   
@@ -56,8 +58,8 @@ export const useRouteCalculation = ({
     if (hasReturnTrip && destinationCoordinates) {
       if (returnToSameAddress) {
         // For same address return, simply double the initial route
-        setReturnDistance(totalDistance);
-        setReturnDuration(totalDuration);
+        setReturnDistance(oneWayDistance);
+        setReturnDuration(oneWayDuration);
       } else {
         // For custom return address, calculate a new route
         calculateReturnRoute();
@@ -66,33 +68,35 @@ export const useRouteCalculation = ({
       setReturnDistance(0);
       setReturnDuration(0);
     }
-  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, calculateReturnRoute, totalDistance, totalDuration]);
+  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, calculateReturnRoute, oneWayDistance, oneWayDuration]);
+  
+  // Update total distance and duration when component values change
+  useEffect(() => {
+    let total_distance = oneWayDistance;
+    let total_duration = oneWayDuration;
+    
+    if (hasReturnTrip) {
+      total_distance += returnDistance;
+      total_duration += returnDuration;
+    }
+    
+    setTotalDistance(total_distance);
+    setTotalDuration(total_duration);
+  }, [oneWayDistance, oneWayDuration, returnDistance, returnDuration, hasReturnTrip]);
   
   const handleRouteCalculated = useCallback((distance: number, duration: number) => {
     const roundedDistance = Math.round(distance);
     const roundedDuration = Math.round(duration);
     
-    let totalDist = roundedDistance;
-    let totalDur = roundedDuration;
-    
-    if (hasReturnTrip) {
-      if (returnToSameAddress) {
-        totalDist = roundedDistance * 2;
-        totalDur = roundedDuration * 2;
-      } else if (returnDistance > 0) {
-        totalDist = roundedDistance + returnDistance;
-        totalDur = roundedDuration + returnDuration;
-      }
-    }
-    
-    setTotalDistance(totalDist);
-    setTotalDuration(totalDur);
+    console.log('One way route calculated:', roundedDistance, 'km', roundedDuration, 'min');
+    setOneWayDistance(roundedDistance);
+    setOneWayDuration(roundedDuration);
     
     return {
-      estimatedDistance: totalDist,
-      estimatedDuration: totalDur
+      estimatedDistance: roundedDistance,
+      estimatedDuration: roundedDuration
     };
-  }, [hasReturnTrip, returnToSameAddress, returnDistance, returnDuration]);
+  }, []);
   
   // Add a handler for return route calculations from the map component
   const handleReturnRouteCalculated = useCallback((distance: number, duration: number) => {
@@ -101,21 +105,14 @@ export const useRouteCalculation = ({
     const roundedDistance = Math.round(distance);
     const roundedDuration = Math.round(duration);
     
-    console.log('Setting return distance and duration:', roundedDistance, roundedDuration);
+    console.log('Return route calculated:', roundedDistance, 'km', roundedDuration, 'min');
     setReturnDistance(roundedDistance);
     setReturnDuration(roundedDuration);
-    
-    // Update total distance and duration
-    if (totalDistance > 0) {
-      const oneWayDistance = totalDistance - returnDistance;
-      setTotalDistance(oneWayDistance + roundedDistance);
-      
-      const oneWayDuration = totalDuration - returnDuration;
-      setTotalDuration(oneWayDuration + roundedDuration);
-    }
-  }, [hasReturnTrip, totalDistance, totalDuration, returnDistance, returnDuration]);
+  }, [hasReturnTrip]);
   
   return {
+    oneWayDistance,
+    oneWayDuration,
     returnDistance,
     returnDuration,
     totalDistance,

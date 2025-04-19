@@ -1,3 +1,4 @@
+
 import { useAddressForm } from './quote/useAddressForm';
 import { useClientData } from './quote/useClientData';
 import { useFormState } from './quote/useFormState';
@@ -46,9 +47,13 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
   
   // Route calculation
   const {
+    oneWayDistance,
+    oneWayDuration,
     returnDistance,
     returnDuration,
-    handleRouteCalculated: routeHandler,
+    totalDistance,
+    totalDuration,
+    handleRouteCalculated,
     handleReturnRouteCalculated
   } = useRouteCalculation({
     hasReturnTrip: tripOptions.hasReturnTrip,
@@ -73,7 +78,7 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
   // Calculate quote details
   const { quoteDetails } = useQuoteDetails({
     selectedVehicle,
-    estimatedDistance: tripOptions.estimatedDistance,
+    estimatedDistance: oneWayDistance,
     returnDistance: returnDistance,
     hasReturnTrip: tripOptions.hasReturnTrip,
     returnToSameAddress: tripOptions.returnToSameAddress,
@@ -108,8 +113,8 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     hasWaitingTime: tripOptions.hasWaitingTime,
     waitingTimeMinutes: tripOptions.waitingTimeMinutes,
     waitingTimePrice,
-    estimatedDistance: tripOptions.estimatedDistance,
-    estimatedDuration: tripOptions.estimatedDuration,
+    estimatedDistance: oneWayDistance,
+    estimatedDuration: oneWayDuration,
     selectedVehicle,
     vehicles,
     pricingSettings
@@ -139,13 +144,6 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     }
   };
   
-  // Handle route calculation
-  const handleRouteCalculated = (distance: number, duration: number) => {
-    const { estimatedDistance, estimatedDuration } = routeHandler(distance, duration);
-    tripOptions.setEstimatedDistance(estimatedDistance);
-    tripOptions.setEstimatedDuration(estimatedDuration);
-  };
-  
   // Handle reset
   const handleReset = () => {
     formState.handleReset();
@@ -156,7 +154,7 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
   const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
   
   // Calculate estimated price
-  const estimatedPrice = Math.round(tripOptions.estimatedDistance * basePrice);
+  const estimatedPrice = Math.round(totalDistance * basePrice);
   
   return {
     // Address state
@@ -172,8 +170,12 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     ...formState,
     
     // Additional state
+    oneWayDistance,
+    oneWayDuration,
     returnDistance,
     returnDuration,
+    totalDistance,
+    totalDuration,
     vehicles,
     vehicleTypes,
     isLoadingVehicles,

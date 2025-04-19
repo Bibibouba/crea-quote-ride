@@ -48,6 +48,8 @@ interface TripInfoStepProps {
   returnDistance?: number;
   returnDuration?: number;
   customReturnCoordinates?: [number, number];
+  totalDistance?: number;
+  totalDuration?: number;
 }
 
 const TripInfoStep: React.FC<TripInfoStepProps> = ({
@@ -88,7 +90,9 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
   handleNextStep,
   returnDistance = 0,
   returnDuration = 0,
-  customReturnCoordinates
+  customReturnCoordinates,
+  totalDistance,
+  totalDuration
 }) => {
   const canProceed = departureAddress && destinationAddress && departureCoordinates && destinationCoordinates &&
     (!hasReturnTrip || returnToSameAddress || (customReturnAddress && customReturnCoordinates));

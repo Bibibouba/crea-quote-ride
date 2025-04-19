@@ -71,7 +71,11 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
     handleSaveQuote,
     handleRouteCalculated,
     handleReturnRouteCalculated,
-    handleReset
+    handleReset,
+    oneWayDistance,
+    oneWayDuration,
+    totalDistance,
+    totalDuration
   } = formState;
   
   return (
@@ -94,8 +98,8 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           setSelectedVehicle={setSelectedVehicle}
           passengers={passengers}
           setPassengers={setPassengers}
-          estimatedDistance={estimatedDistance}
-          estimatedDuration={estimatedDuration}
+          estimatedDistance={oneWayDistance}
+          estimatedDuration={oneWayDuration}
           onRouteCalculated={handleRouteCalculated}
           onReturnRouteCalculated={handleReturnRouteCalculated}
           vehicles={vehicles}
@@ -117,6 +121,8 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           returnDistance={returnDistance}
           returnDuration={returnDuration}
           customReturnCoordinates={customReturnCoordinates}
+          totalDistance={totalDistance}
+          totalDuration={totalDuration}
         />
       ) : isQuoteSent ? (
         <Card>
@@ -135,8 +141,8 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           destinationCoordinates={destinationCoordinates}
           date={date}
           time={time}
-          estimatedDistance={estimatedDistance}
-          estimatedDuration={estimatedDuration}
+          estimatedDistance={oneWayDistance}
+          estimatedDuration={oneWayDuration}
           selectedVehicle={selectedVehicle}
           passengers={passengers}
           basePrice={basePrice}
@@ -163,6 +169,8 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           returnDistance={returnDistance}
           returnDuration={returnDuration}
           returnCoordinates={customReturnCoordinates}
+          totalDistance={totalDistance}
+          totalDuration={totalDuration}
         />
       )}
     </div>
