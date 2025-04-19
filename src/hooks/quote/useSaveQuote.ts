@@ -1,12 +1,12 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuotes } from '@/hooks/useQuotes';
 import { PricingSettings, Vehicle, QuoteDetailsType } from '@/types/quoteForm';
-import { validateQuoteData } from './utils/validateQuoteData';
-import { useClientManagement } from './useClientManagement';
-import { useQuoteEmailSender } from './useQuoteEmailSender';
+import { validateQuoteFields } from '@/services/quote/validation/validateQuoteFields';
 import { prepareQuoteData } from './utils/prepareQuoteData';
-import { useSessionManager } from './useSessionManager';
+import { useQuoteClientHandler } from './useQuoteClientHandler';
+import { useQuoteEmailHandler } from './useQuoteEmailHandler';
 import { quoteService } from '@/services/quote/quoteService';
 
 interface UseSaveQuoteProps {
@@ -58,14 +58,19 @@ export const useSaveQuote = ({
 }: UseSaveQuoteProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
-  const { addQuote } = useQuotes();
   const { toast } = useToast();
-  const { createNewClient } = useClientManagement();
-  const { sendQuoteEmail } = useQuoteEmailSender();
-  const { getAuthenticatedUserId } = useSessionManager();
+  const { addQuote } = useQuotes();
+  const { handleClientCreation } = useQuoteClientHandler();
+  const { handleEmailSending } = useQuoteEmailHandler();
   
-  const handleSaveQuote = async (firstName?: string, lastName?: string, email?: string, phone?: string, selectedClient?: string) => {
-    const isValid = validateQuoteData({
+  const handleSaveQuote = async (
+    firstName?: string,
+    lastName?: string,
+    email?: string,
+    phone?: string,
+    selectedClient?: string
+  ) => {
+    const isValid = validateQuoteFields({
       date,
       departureCoordinates,
       destinationCoordinates,
@@ -83,16 +88,14 @@ export const useSaveQuote = ({
       const [hours, minutes] = time.split(':');
       dateTime.setHours(parseInt(hours), parseInt(minutes));
       
-      const driverId = await getAuthenticatedUserId();
-      let finalClientId = selectedClient;
-      
-      if ((!selectedClient || selectedClient === '') && firstName && lastName) {
-        finalClientId = await createNewClient(driverId, firstName, lastName, email, phone);
-      }
-      
-      if (!finalClientId) {
-        throw new Error("Aucun client spécifié pour ce devis");
-      }
+      // Handle client creation and get IDs
+      const { driverId, clientId } = await handleClientCreation(
+        firstName,
+        lastName,
+        email,
+        phone,
+        selectedClient
+      );
       
       const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
       if (!selectedVehicleInfo) {
@@ -106,7 +109,7 @@ export const useSaveQuote = ({
       const quoteData = {
         ...prepareQuoteData({
           driverId,
-          clientId: finalClientId,
+          clientId,
           selectedVehicle,
           departureAddress,
           destinationAddress,
@@ -142,60 +145,23 @@ export const useSaveQuote = ({
       
       const savedQuote = await quoteService.createQuote({
         driverId,
-        clientId: finalClientId,
+        clientId,
         quoteData
       });
       
       console.log("📝 Devis enregistré avec succès:", savedQuote);
       
-      if (email) {
-        console.log("📧 Client a fourni une adresse email, tentative d'envoi:", email);
-        
-        try {
-          // Préparation du nom complet du client
-          let fullName = '';
-          if (firstName && lastName) {
-            fullName = `${firstName} ${lastName}`.trim();
-          } else if (firstName) {
-            fullName = firstName.trim();
-          } else if (lastName) {
-            fullName = lastName.trim();
-          } else {
-            fullName = "Client"; // Valeur par défaut si aucun nom n'est fourni
-          }
-          
-          console.log("📧 Préparation de l'envoi d'email à", fullName, "sur", email);
-          
-          await sendQuoteEmail({
-            clientName: fullName,
-            email,
-            quote: savedQuote,
-            departureAddress,
-            destinationAddress
-          });
-          
-          toast({
-            title: 'Devis envoyé',
-            description: 'Le devis a été enregistré et envoyé par email.',
-          });
-          setIsQuoteSent(true);
-        } catch (emailError) {
-          console.error('📧 ❌ Erreur lors de l\'envoi de l\'email:', emailError);
-          toast({
-            title: 'Devis enregistré',
-            description: 'Le devis a été enregistré mais l\'envoi par email a échoué.',
-            variant: 'destructive',
-          });
-          setIsQuoteSent(true);
-        }
-      } else {
-        console.log("📧 Pas d'email fourni, le devis est enregistré sans envoi d'email");
-        toast({
-          title: 'Devis enregistré',
-          description: 'Votre devis a été enregistré avec succès',
-        });
-        setIsQuoteSent(true);
-      }
+      // Handle email sending
+      await handleEmailSending(
+        email,
+        firstName,
+        lastName,
+        savedQuote,
+        departureAddress,
+        destinationAddress
+      );
+      
+      setIsQuoteSent(true);
     } catch (error) {
       console.error('📝 ❌ Erreur lors de l\'enregistrement du devis:', error);
       toast({
