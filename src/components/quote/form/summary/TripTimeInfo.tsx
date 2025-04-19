@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Moon, Calendar } from 'lucide-react';
 import TripTimeline from './TripTimeline';
+import { isWithinNightHours } from '@/utils/time/nightTimeChecker';
 
 export interface NightRateInfo {
   isApplied: boolean;
@@ -45,32 +47,47 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
     if (!nightRateInfo) return [];
     
     const segments = [];
+    
+    // Convert times to Date objects for easier comparison
+    const today = new Date();
     const [startHour, startMinute] = startTime.split(':').map(Number);
     const [endHour, endMinute] = endTime.split(':').map(Number);
     const [nightStartHour, nightStartMinute] = nightRateInfo.nightStart.split(':').map(Number);
     const [nightEndHour, nightEndMinute] = nightRateInfo.nightEnd.split(':').map(Number);
 
-    const isNightStart = startHour >= nightStartHour || startHour < nightEndHour;
-    
+    // Create first segment for outbound trip
+    const isStartDuringNight = isWithinNightHours(
+      startHour,
+      startMinute,
+      nightStartHour,
+      nightStartMinute,
+      nightEndHour,
+      nightEndMinute
+    );
+
     segments.push({
       start: startTime,
       end: endTime,
-      type: isNightStart ? 'night-trip' : 'day-trip',
+      type: isStartDuringNight ? 'night-trip' : 'day-trip',
       label: "Départ"
     });
 
+    // Add return trip segments if needed
     if (hasReturnTrip) {
+      // Add waiting time segment
       segments.push({
         start: endTime,
         end: endTime,
-        type: isNightStart ? 'night-wait' : 'day-wait',
+        type: isStartDuringNight ? 'night-wait' : 'day-wait',
       });
 
+      // Add return trip segment
+      const isReturnDuringNight = returnNightRateInfo?.isApplied ?? false;
       segments.push({
         start: endTime,
-        end: "21:51",
-        type: 'night-trip',
-        label: "Départ retour"
+        end: "21:51", // This should be calculated based on return duration
+        type: isReturnDuringNight ? 'night-trip' : 'day-trip',
+        label: "Retour"
       });
     }
 
