@@ -47,6 +47,7 @@ interface TripInfoStepProps {
   handleNextStep: () => void;
   returnDistance?: number;
   returnDuration?: number;
+  customReturnCoordinates?: [number, number];
 }
 
 const TripInfoStep: React.FC<TripInfoStepProps> = ({
@@ -86,10 +87,11 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
   handleReturnRouteCalculated,
   handleNextStep,
   returnDistance = 0,
-  returnDuration = 0
+  returnDuration = 0,
+  customReturnCoordinates
 }) => {
   const canProceed = departureAddress && destinationAddress && departureCoordinates && destinationCoordinates &&
-    (!hasReturnTrip || returnToSameAddress || (customReturnAddress && handleReturnAddressSelect));
+    (!hasReturnTrip || returnToSameAddress || (customReturnAddress && customReturnCoordinates));
 
   return (
     <Card>
@@ -157,7 +159,7 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
               <RouteDetailsSection
                 departureCoordinates={departureCoordinates}
                 destinationCoordinates={destinationCoordinates}
-                customReturnCoordinates={hasReturnTrip && !returnToSameAddress ? undefined : departureCoordinates}
+                customReturnCoordinates={customReturnCoordinates}
                 handleRouteCalculated={handleRouteCalculated}
                 handleReturnRouteCalculated={handleReturnRouteCalculated}
                 hasReturnTrip={hasReturnTrip}

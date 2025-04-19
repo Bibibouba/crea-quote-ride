@@ -25,22 +25,29 @@ export const useRouteCalculation = ({
   const calculateReturnRoute = useCallback(async () => {
     if (!hasReturnTrip || !destinationCoordinates) return;
     
-    const returnEndPoint = returnToSameAddress ? 
-      customReturnCoordinates : // If we have custom coordinates, use them
-      customReturnCoordinates; // Otherwise default to custom return coordinates
+    // If returnToSameAddress is true, we don't need customReturnCoordinates
+    // If returnToSameAddress is false, we need customReturnCoordinates
+    const returnEndPoint = !returnToSameAddress ? 
+      customReturnCoordinates : // For custom return address
+      undefined; // Will be handled by doubling the initial route
       
-    if (!returnEndPoint) return;
+    if (!returnToSameAddress && !returnEndPoint) {
+      console.log('No custom return coordinates provided for a custom return address');
+      return;
+    }
     
-    try {
-      console.log('Calculating return route from', destinationCoordinates, 'to', returnEndPoint);
-      const route = await getRoute(destinationCoordinates, returnEndPoint);
-      if (route) {
-        console.log('Return route calculated:', route.distance, 'km', route.duration, 'min');
-        setReturnDistance(Math.round(route.distance));
-        setReturnDuration(Math.round(route.duration));
+    if (!returnToSameAddress && returnEndPoint) {
+      try {
+        console.log('Calculating return route from', destinationCoordinates, 'to', returnEndPoint);
+        const route = await getRoute(destinationCoordinates, returnEndPoint);
+        if (route) {
+          console.log('Return route calculated:', route.distance, 'km', route.duration, 'min');
+          setReturnDistance(Math.round(route.distance));
+          setReturnDuration(Math.round(route.duration));
+        }
+      } catch (error) {
+        console.error("Erreur lors du calcul de l'itinéraire de retour:", error);
       }
-    } catch (error) {
-      console.error("Erreur lors du calcul de l'itinéraire de retour:", error);
     }
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
   
@@ -97,7 +104,16 @@ export const useRouteCalculation = ({
     console.log('Setting return distance and duration:', roundedDistance, roundedDuration);
     setReturnDistance(roundedDistance);
     setReturnDuration(roundedDuration);
-  }, [hasReturnTrip]);
+    
+    // Update total distance and duration
+    if (totalDistance > 0) {
+      const oneWayDistance = totalDistance - returnDistance;
+      setTotalDistance(oneWayDistance + roundedDistance);
+      
+      const oneWayDuration = totalDuration - returnDuration;
+      setTotalDuration(oneWayDuration + roundedDuration);
+    }
+  }, [hasReturnTrip, totalDistance, totalDuration, returnDistance, returnDuration]);
   
   return {
     returnDistance,

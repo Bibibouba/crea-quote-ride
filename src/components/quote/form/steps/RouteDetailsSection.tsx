@@ -17,14 +17,16 @@ export const RouteDetailsSection: React.FC<RouteDetailsSectionProps> = ({
   destinationCoordinates,
   customReturnCoordinates,
   handleRouteCalculated,
+  handleReturnRouteCalculated,
   hasReturnTrip,
   returnToSameAddress
 }) => {
-  // Handler for return route calculation
-  const handleReturnRouteCalculated = (distance: number, duration: number) => {
-    // When we get the return route data, we should update the return distance and duration
-    console.log('Return route calculated:', distance, 'km', duration, 'min');
-  };
+  // Determine the correct return destination
+  const returnDestination = hasReturnTrip 
+    ? (returnToSameAddress 
+        ? departureCoordinates 
+        : customReturnCoordinates)
+    : undefined;
 
   return (
     <div className="h-[400px] rounded-lg border overflow-hidden">
@@ -33,7 +35,7 @@ export const RouteDetailsSection: React.FC<RouteDetailsSectionProps> = ({
           departure={departureCoordinates}
           destination={destinationCoordinates}
           onRouteCalculated={handleRouteCalculated}
-          returnDestination={hasReturnTrip && !returnToSameAddress ? customReturnCoordinates : departureCoordinates}
+          returnDestination={returnDestination}
           onReturnRouteCalculated={handleReturnRouteCalculated}
           showReturn={hasReturnTrip}
         />
