@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,9 +22,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // Import pricing component fragments
 import DistanceTiersList from '@/components/pricing/DistanceTiersList';
 import DistanceTierDialog from '@/components/pricing/DistanceTierDialog';
-import NightRatesForm from '@/components/pricing/NightRatesForm';
-import WaitingRatesForm from '@/components/pricing/WaitingRatesForm';
-import AdditionalOptionsForm from '@/components/pricing/AdditionalOptionsForm';
+import VehicleNightRatesForm from '@/components/pricing/VehicleNightRatesForm';
+import VehicleWaitingRatesForm from '@/components/pricing/VehicleWaitingRatesForm';
+import VehicleAdditionalOptionsForm from '@/components/pricing/VehicleAdditionalOptionsForm';
 import { AlertCircle } from 'lucide-react';
 
 const Pricing = () => {
@@ -220,9 +221,11 @@ const Pricing = () => {
                 <DistanceTiersList
                   vehicles={vehicles}
                   distanceTiers={distanceTiers}
+                  selectedVehicleId={selectedVehicleId}
                   onAddTier={openAddTierDialog}
                   onEditTier={openEditTierDialog}
                   onDeleteTier={handleDeleteTier}
+                  onVehicleSelect={handleVehicleChange}
                 />
               </TabsContent>
               
@@ -234,7 +237,7 @@ const Pricing = () => {
                     Les tarifs de nuit s'appliquent à tous les véhicules.
                   </AlertDescription>
                 </Alert>
-                <NightRatesForm
+                <VehicleNightRatesForm
                   settings={pricingSettings}
                   onSave={saveSettings}
                   saving={savingSettings}
@@ -249,7 +252,7 @@ const Pricing = () => {
                     Les tarifs d'attente s'appliquent à tous les véhicules.
                   </AlertDescription>
                 </Alert>
-                <WaitingRatesForm
+                <VehicleWaitingRatesForm
                   settings={pricingSettings}
                   onSave={saveSettings}
                   saving={savingSettings}
@@ -264,7 +267,7 @@ const Pricing = () => {
                     Ces options s'appliquent à tous les véhicules.
                   </AlertDescription>
                 </Alert>
-                <AdditionalOptionsForm
+                <VehicleAdditionalOptionsForm
                   settings={pricingSettings}
                   onSave={saveSettings}
                   saving={savingSettings}
