@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,9 +21,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // Import pricing component fragments
 import DistanceTiersList from '@/components/pricing/DistanceTiersList';
 import DistanceTierDialog from '@/components/pricing/DistanceTierDialog';
-import VehicleNightRatesForm from '@/components/pricing/VehicleNightRatesForm';
-import VehicleWaitingRatesForm from '@/components/pricing/VehicleWaitingRatesForm';
-import VehicleAdditionalOptionsForm from '@/components/pricing/VehicleAdditionalOptionsForm';
+import NightRatesForm from '@/components/pricing/NightRatesForm';
+import WaitingRatesForm from '@/components/pricing/WaitingRatesForm';
+import AdditionalOptionsForm from '@/components/pricing/AdditionalOptionsForm';
+import { AlertCircle } from 'lucide-react';
 
 const Pricing = () => {
   const { user } = useAuth();
@@ -40,6 +40,7 @@ const Pricing = () => {
     refreshData,
     setSavingSettings
   } = usePricing();
+  
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [editingTier, setEditingTier] = useState<DistanceTier | null>(null);
   const [tierDialogOpen, setTierDialogOpen] = useState(false);
@@ -138,7 +139,7 @@ const Pricing = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Gestion des tarifs</h1>
             <p className="text-muted-foreground">
-              Définissez vos tarifs pour chaque véhicule et type de service
+              Définissez vos tarifs pour vos services
             </p>
           </div>
           <Button 
@@ -192,86 +193,86 @@ const Pricing = () => {
           </Alert>
         )}
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-2">Sélectionnez un véhicule</label>
-          <Select value={selectedVehicleId || ''} onValueChange={handleVehicleChange}>
-            <SelectTrigger className="w-full sm:w-[300px]">
-              <SelectValue placeholder="Sélectionnez un véhicule" />
-            </SelectTrigger>
-            <SelectContent>
-              {vehicles.map((vehicle) => (
-                <SelectItem key={vehicle.id} value={vehicle.id}>
-                  {vehicle.name} - {vehicle.model}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {selectedVehicleId && selectedVehicle && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Tarification pour {selectedVehicle.name} - {selectedVehicle.model}</CardTitle>
-              <CardDescription>
-                Définissez les tarifs spécifiques à ce véhicule
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full md:w-auto grid-cols-4 md:flex">
-                  <TabsTrigger value="distance">Tarifs au km</TabsTrigger>
-                  <TabsTrigger value="night">Tarifs de nuit</TabsTrigger>
-                  <TabsTrigger value="waiting">Tarifs d'attente</TabsTrigger>
-                  <TabsTrigger value="additional">Options supplémentaires</TabsTrigger>
-                </TabsList>
-                
-                {/* Distance-based rates */}
-                <TabsContent value="distance" className="space-y-4 mt-4">
-                  <DistanceTiersList
-                    vehicles={vehicles}
-                    distanceTiers={distanceTiers}
-                    selectedVehicleId={selectedVehicleId}
-                    onAddTier={openAddTierDialog}
-                    onEditTier={openEditTierDialog}
-                    onDeleteTier={handleDeleteTier}
-                    onVehicleSelect={setSelectedVehicleId}
-                    hideVehicleSelector={true}
-                  />
-                </TabsContent>
-                
-                {/* Night rates */}
-                <TabsContent value="night" className="space-y-4 mt-4">
-                  {selectedVehicleId && (
-                    <VehicleNightRatesForm
-                      vehicleId={selectedVehicleId}
-                      defaultSettings={pricingSettings}
-                    />
-                  )}
-                </TabsContent>
-                
-                {/* Waiting rates */}
-                <TabsContent value="waiting" className="space-y-4 mt-4">
-                  {selectedVehicleId && (
-                    <VehicleWaitingRatesForm
-                      vehicleId={selectedVehicleId}
-                      defaultSettings={pricingSettings}
-                    />
-                  )}
-                </TabsContent>
-                
-                {/* Additional options */}
-                <TabsContent value="additional" className="space-y-4 mt-4">
-                  {selectedVehicleId && (
-                    <VehicleAdditionalOptionsForm
-                      vehicleId={selectedVehicleId}
-                      defaultSettings={pricingSettings}
-                    />
-                  )}
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardHeader>
+            <CardTitle>Configuration des tarifs</CardTitle>
+            <CardDescription>
+              Définissez vos différents tarifs et options
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="distance">Tarifs au km</TabsTrigger>
+                <TabsTrigger value="night">Tarifs de nuit</TabsTrigger>
+                <TabsTrigger value="waiting">Tarifs d'attente</TabsTrigger>
+                <TabsTrigger value="additional">Options supplémentaires</TabsTrigger>
+              </TabsList>
+              
+              {/* Distance-based rates */}
+              <TabsContent value="distance" className="space-y-4 mt-4">
+                <Alert className="bg-blue-50 border-blue-200 mb-4">
+                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-700">
+                    Les tarifs au kilomètre peuvent être définis individuellement pour chaque véhicule.
+                  </AlertDescription>
+                </Alert>
+                <DistanceTiersList
+                  vehicles={vehicles}
+                  distanceTiers={distanceTiers}
+                  onAddTier={openAddTierDialog}
+                  onEditTier={openEditTierDialog}
+                  onDeleteTier={handleDeleteTier}
+                />
+              </TabsContent>
+              
+              {/* Night rates - global settings */}
+              <TabsContent value="night" className="space-y-4 mt-4">
+                <Alert className="bg-blue-50 border-blue-200 mb-4">
+                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-700">
+                    Les tarifs de nuit s'appliquent à tous les véhicules.
+                  </AlertDescription>
+                </Alert>
+                <NightRatesForm
+                  settings={pricingSettings}
+                  onSave={saveSettings}
+                  saving={savingSettings}
+                />
+              </TabsContent>
+              
+              {/* Waiting rates - global settings */}
+              <TabsContent value="waiting" className="space-y-4 mt-4">
+                <Alert className="bg-blue-50 border-blue-200 mb-4">
+                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-700">
+                    Les tarifs d'attente s'appliquent à tous les véhicules.
+                  </AlertDescription>
+                </Alert>
+                <WaitingRatesForm
+                  settings={pricingSettings}
+                  onSave={saveSettings}
+                  saving={savingSettings}
+                />
+              </TabsContent>
+              
+              {/* Additional options - global settings */}
+              <TabsContent value="additional" className="space-y-4 mt-4">
+                <Alert className="bg-blue-50 border-blue-200 mb-4">
+                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-700">
+                    Ces options s'appliquent à tous les véhicules.
+                  </AlertDescription>
+                </Alert>
+                <AdditionalOptionsForm
+                  settings={pricingSettings}
+                  onSave={saveSettings}
+                  saving={savingSettings}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
         
         {/* Dialog for adding/editing tiers */}
         <DistanceTierDialog

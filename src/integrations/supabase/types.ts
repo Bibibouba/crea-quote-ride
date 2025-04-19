@@ -592,62 +592,29 @@ export type Database = {
         Row: {
           created_at: string
           driver_id: string
-          holiday_sunday_percentage: number | null
           id: string
           min_trip_distance: number | null
-          minimum_trip_fare: number | null
-          night_rate_enabled: boolean | null
-          night_rate_end: string | null
-          night_rate_percentage: number | null
-          night_rate_start: string | null
           price_per_km: number | null
           updated_at: string
           vehicle_id: string
-          wait_night_enabled: boolean | null
-          wait_night_end: string | null
-          wait_night_percentage: number | null
-          wait_night_start: string | null
-          wait_price_per_15min: number | null
         }
         Insert: {
           created_at?: string
           driver_id: string
-          holiday_sunday_percentage?: number | null
           id?: string
           min_trip_distance?: number | null
-          minimum_trip_fare?: number | null
-          night_rate_enabled?: boolean | null
-          night_rate_end?: string | null
-          night_rate_percentage?: number | null
-          night_rate_start?: string | null
           price_per_km?: number | null
           updated_at?: string
           vehicle_id: string
-          wait_night_enabled?: boolean | null
-          wait_night_end?: string | null
-          wait_night_percentage?: number | null
-          wait_night_start?: string | null
-          wait_price_per_15min?: number | null
         }
         Update: {
           created_at?: string
           driver_id?: string
-          holiday_sunday_percentage?: number | null
           id?: string
           min_trip_distance?: number | null
-          minimum_trip_fare?: number | null
-          night_rate_enabled?: boolean | null
-          night_rate_end?: string | null
-          night_rate_percentage?: number | null
-          night_rate_start?: string | null
           price_per_km?: number | null
           updated_at?: string
           vehicle_id?: string
-          wait_night_enabled?: boolean | null
-          wait_night_end?: string | null
-          wait_night_percentage?: number | null
-          wait_night_start?: string | null
-          wait_price_per_15min?: number | null
         }
         Relationships: [
           {
