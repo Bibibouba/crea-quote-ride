@@ -70,18 +70,22 @@ export const useRouteMarkers = ({
         maxZoom: 15
       });
 
-      calculateRoute();
+      // Always calculate the one-way route first
+      calculateOneWayRoute();
       
+      // Only calculate return route if needed and when return destination is available
       if (showReturn && returnDestination) {
         console.log('Calculating return route on map from', destination, 'to', returnDestination);
         calculateReturnRoute(destination, returnDestination);
       }
     }
 
-    async function calculateRoute() {
+    async function calculateOneWayRoute() {
       if (!map.current || !departure || !destination || !mapboxToken) return;
 
       try {
+        console.log(`Fetching one-way route from [${departure[0]},${departure[1]}] to [${destination[0]},${destination[1]}]`);
+        
         const response = await fetch(
           `https://api.mapbox.com/directions/v5/mapbox/driving/${departure[0]},${departure[1]};${destination[0]},${destination[1]}?steps=true&geometries=geojson&access_token=${mapboxToken}`
         );
@@ -100,6 +104,11 @@ export const useRouteMarkers = ({
         const route = data.routes[0];
         const distance = route.distance / 1000;
         const duration = Math.round(route.duration / 60);
+
+        console.log("One-way route calculated:", {
+          distance: distance.toFixed(2) + " km",
+          duration: duration + " min"
+        });
 
         if (onRouteCalculated) {
           onRouteCalculated(distance, duration);
@@ -137,7 +146,7 @@ export const useRouteMarkers = ({
           }
         });
       } catch (err) {
-        console.error('Error calculating route:', err);
+        console.error('Error calculating one-way route:', err);
       }
     }
 
@@ -165,6 +174,11 @@ export const useRouteMarkers = ({
         const route = data.routes[0];
         const distance = route.distance / 1000;
         const duration = Math.round(route.duration / 60);
+
+        console.log("Return route calculated:", {
+          distance: distance.toFixed(2) + " km",
+          duration: duration + " min"
+        });
 
         if (onReturnRouteCalculated) {
           onReturnRouteCalculated(distance, duration);

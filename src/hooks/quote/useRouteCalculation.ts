@@ -51,7 +51,7 @@ export const useRouteCalculation = ({
         console.log('Calculating return route from', destinationCoordinates, 'to', returnEndPoint);
         const route = await getRoute(destinationCoordinates, returnEndPoint);
         if (route) {
-          console.log('Return route calculated:', route.distance, 'km', route.duration, 'min');
+          console.log('Return route calculated via API:', route.distance, 'km', route.duration, 'min');
           setReturnDistance(Math.round(route.distance));
           setReturnDuration(Math.round(route.duration));
         }
@@ -115,7 +115,7 @@ export const useRouteCalculation = ({
     const roundedDistance = Math.round(distance);
     const roundedDuration = Math.round(duration);
     
-    console.log('Return route explicitly calculated:', roundedDistance, 'km', roundedDuration, 'min');
+    console.log('Return route explicitly calculated from map:', roundedDistance, 'km', roundedDuration, 'min');
     setReturnDistance(roundedDistance);
     setReturnDuration(roundedDuration);
   }, [hasReturnTrip]);

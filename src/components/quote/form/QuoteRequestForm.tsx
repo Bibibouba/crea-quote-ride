@@ -48,7 +48,6 @@ interface QuoteRequestFormProps {
   returnDistance: number;
   returnDuration: number;
   customReturnCoordinates?: [number, number];
-  // Remove totalDistance property
   totalDuration: number;
 }
 
@@ -124,7 +123,12 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({
               estimatedDistance={estimatedDistance}
               estimatedDuration={estimatedDuration}
               onRouteCalculated={onRouteCalculated}
+              onReturnRouteCalculated={onReturnRouteCalculated}
               vehicles={vehicles}
+              hasReturnTrip={hasReturnTrip}
+              returnToSameAddress={returnToSameAddress}
+              customReturnAddress={customReturnAddress}
+              customReturnCoordinates={customReturnCoordinates}
             />
             
             <QuoteFormOptions

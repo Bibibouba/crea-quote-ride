@@ -10,9 +10,9 @@ interface RouteMapProps {
   destination?: [number, number];
   className?: string;
   onRouteCalculated?: (distance: number, duration: number) => void;
-  returnDestination?: [number, number]; // Nouvelle prop pour l'adresse de retour
-  onReturnRouteCalculated?: (distance: number, duration: number) => void; // Callback pour le trajet retour
-  showReturn?: boolean; // Indique si on doit afficher le trajet retour
+  returnDestination?: [number, number]; 
+  onReturnRouteCalculated?: (distance: number, duration: number) => void;
+  showReturn?: boolean;
 }
 
 const RouteMap: React.FC<RouteMapProps> = ({
