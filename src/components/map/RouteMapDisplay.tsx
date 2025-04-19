@@ -8,9 +8,9 @@ interface RouteMapDisplayProps {
   departure?: [number, number];
   destination?: [number, number];
   onRouteCalculated?: (distance: number, duration: number) => void;
-  returnDestination?: [number, number]; // Nouvelle prop pour l'adresse de retour
-  onReturnRouteCalculated?: (distance: number, duration: number) => void; // Callback pour le trajet retour
-  showReturn?: boolean; // Indique si on doit afficher le trajet retour
+  returnDestination?: [number, number];
+  onReturnRouteCalculated?: (distance: number, duration: number) => void;
+  showReturn?: boolean;
 }
 
 const RouteMapDisplay: React.FC<RouteMapDisplayProps> = ({
@@ -104,10 +104,11 @@ const RouteMapDisplay: React.FC<RouteMapDisplayProps> = ({
       calculateRoute();
       
       // Calculate return route if needed
-      if (showReturn) {
-        const returnStart = destination;
-        const returnEnd = returnDestination || departure;
-        calculateReturnRoute(returnStart, returnEnd);
+      if (showReturn && returnDestination) {
+        console.log('Calculating return route on map from', destination, 'to', returnDestination);
+        calculateReturnRoute(destination, returnDestination);
+      } else if (showReturn) {
+        console.log('Return enabled but no returnDestination provided');
       }
     }
 
@@ -182,6 +183,8 @@ const RouteMapDisplay: React.FC<RouteMapDisplayProps> = ({
       if (!map.current || !start || !end || !mapboxToken) return;
 
       try {
+        console.log(`Fetching return route from [${start[0]},${start[1]}] to [${end[0]},${end[1]}]`);
+        
         // Get directions from Mapbox API for return route
         const response = await fetch(
           `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxToken}`
@@ -201,6 +204,12 @@ const RouteMapDisplay: React.FC<RouteMapDisplayProps> = ({
         const route = data.routes[0];
         const distance = route.distance / 1000; // km
         const duration = Math.round(route.duration / 60); // minutes
+
+        console.log('MapBox return route calculated:', {
+          distance: distance,
+          duration: duration,
+          coordinates: route.geometry.coordinates.length
+        });
 
         // Call callback with return route data
         if (onReturnRouteCalculated) {

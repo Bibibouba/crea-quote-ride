@@ -30,19 +30,24 @@ export const useRouteCalculation = ({
   const calculateReturnRoute = useCallback(async () => {
     if (!hasReturnTrip || !destinationCoordinates) return;
     
-    // If returnToSameAddress is true, we don't need customReturnCoordinates
-    // If returnToSameAddress is false, we need customReturnCoordinates
-    const returnEndPoint = !returnToSameAddress ? 
-      customReturnCoordinates : // For custom return address
-      undefined; // Will be handled by doubling the initial route
+    try {
+      let returnEndPoint: [number, number] | undefined;
       
-    if (!returnToSameAddress && !returnEndPoint) {
-      console.log('No custom return coordinates provided for a custom return address');
-      return;
-    }
-    
-    if (!returnToSameAddress && returnEndPoint) {
-      try {
+      // Determine the return endpoint
+      if (!returnToSameAddress && customReturnCoordinates) {
+        // For custom return address
+        returnEndPoint = customReturnCoordinates;
+      } else {
+        // For return to same address as departure
+        returnEndPoint = undefined; // This will be handled by doubling the initial route
+      }
+      
+      if (!returnToSameAddress && !returnEndPoint) {
+        console.log('No custom return coordinates provided for a custom return address');
+        return;
+      }
+      
+      if (!returnToSameAddress && returnEndPoint) {
         console.log('Calculating return route from', destinationCoordinates, 'to', returnEndPoint);
         const route = await getRoute(destinationCoordinates, returnEndPoint);
         if (route) {
@@ -50,28 +55,26 @@ export const useRouteCalculation = ({
           setReturnDistance(Math.round(route.distance));
           setReturnDuration(Math.round(route.duration));
         }
-      } catch (error) {
-        console.error("Erreur lors du calcul de l'itinéraire de retour:", error);
+      } else if (returnToSameAddress) {
+        // For same address return, simply double the initial route
+        console.log('Using same distance for return (same address):', oneWayDistance, 'km');
+        setReturnDistance(oneWayDistance);
+        setReturnDuration(oneWayDuration);
       }
+    } catch (error) {
+      console.error("Erreur lors du calcul de l'itinéraire de retour:", error);
     }
-  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute]);
+  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, getRoute, oneWayDistance, oneWayDuration]);
   
   // Update calculations when return trip settings change
   useEffect(() => {
     if (hasReturnTrip && destinationCoordinates) {
-      if (returnToSameAddress) {
-        // For same address return, simply double the initial route
-        setReturnDistance(oneWayDistance);
-        setReturnDuration(oneWayDuration);
-      } else {
-        // For custom return address, calculate a new route
-        calculateReturnRoute();
-      }
+      calculateReturnRoute();
     } else {
       setReturnDistance(0);
       setReturnDuration(0);
     }
-  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, calculateReturnRoute, oneWayDistance, oneWayDuration]);
+  }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, calculateReturnRoute]);
   
   // Update total duration when component values change
   const totalDuration = useMemo(() => {
@@ -92,11 +95,18 @@ export const useRouteCalculation = ({
     setOneWayDistance(roundedDistance);
     setOneWayDuration(roundedDuration);
     
+    // If returning to same address, update return distance/duration immediately
+    if (hasReturnTrip && returnToSameAddress) {
+      console.log('Auto-updating return trip (same address):', roundedDistance, 'km');
+      setReturnDistance(roundedDistance);
+      setReturnDuration(roundedDuration);
+    }
+    
     return {
       estimatedDistance: roundedDistance,
       estimatedDuration: roundedDuration
     };
-  }, []);
+  }, [hasReturnTrip, returnToSameAddress]);
   
   // Add a handler for return route calculations from the map component
   const handleReturnRouteCalculated = useCallback((distance: number, duration: number) => {
@@ -105,7 +115,7 @@ export const useRouteCalculation = ({
     const roundedDistance = Math.round(distance);
     const roundedDuration = Math.round(duration);
     
-    console.log('Return route calculated:', roundedDistance, 'km', roundedDuration, 'min');
+    console.log('Return route explicitly calculated:', roundedDistance, 'km', roundedDuration, 'min');
     setReturnDistance(roundedDistance);
     setReturnDuration(roundedDuration);
   }, [hasReturnTrip]);
