@@ -1,11 +1,12 @@
 
 import React from 'react';
 import { formatDuration } from '@/lib/formatDuration';
-import { format } from 'date-fns';
+import { OutboundTripDetails } from '../trip/OutboundTripDetails';
+import { ReturnTripDetails } from '../trip/ReturnTripDetails';
 
-interface TripDetailsDisplayProps {
-  estimatedDistance: number;
-  estimatedDuration: number;
+export interface TripDetailsDisplayProps {
+  oneWayDistance: number;
+  oneWayDuration: number;
   time: string;
   hasMinDistanceWarning: boolean;
   minDistance: number;
@@ -18,8 +19,8 @@ interface TripDetailsDisplayProps {
 }
 
 export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
-  estimatedDistance,
-  estimatedDuration,
+  oneWayDistance,
+  oneWayDuration,
   time,
   hasMinDistanceWarning,
   minDistance,
@@ -28,102 +29,64 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
   returnDistance,
   returnDuration,
   hasWaitingTime,
-  waitingTimeMinutes
+  waitingTimeMinutes,
 }) => {
-  // Calculer la distance totale (aller + retour si applicable)
   const totalDistance = hasReturnTrip 
-    ? estimatedDistance + (returnToSameAddress ? estimatedDistance : returnDistance)
-    : estimatedDistance;
-  
-  // Calculer la durée totale (aller + temps d'attente + retour si applicable)
-  const waitingDuration = hasWaitingTime ? waitingTimeMinutes : 0;
-  const totalDuration = hasReturnTrip 
-    ? estimatedDuration + waitingDuration + (returnToSameAddress ? estimatedDuration : returnDuration)
-    : estimatedDuration;
+    ? oneWayDistance + returnDistance
+    : oneWayDistance;
+
+  const totalDuration = hasReturnTrip
+    ? oneWayDuration + returnDuration
+    : oneWayDuration;
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between">
-        <p className="text-sm">Distance estimée (totale)</p>
-        <p className="text-sm font-medium">
-          {totalDistance} km
-          {hasMinDistanceWarning && (
-            <span className="text-xs text-amber-600 ml-1">
-              (min. {minDistance} km)
-            </span>
-          )}
-        </p>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <p className="text-sm font-medium">Heure de prise en charge</p>
+          <p className="text-2xl font-semibold">{time}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium">Distance totale</p>
+          <p className="text-2xl font-semibold">{totalDistance} km</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium">Durée estimée</p>
+          <p className="text-2xl font-semibold">{formatDuration(totalDuration)}</p>
+        </div>
       </div>
-      
+
       {hasReturnTrip && (
-        <div className="flex justify-between">
-          <p className="text-sm text-muted-foreground">  - Distance aller</p>
-          <p className="text-sm text-muted-foreground">{estimatedDistance} km</p>
+        <div className="grid grid-cols-2 gap-4 border-t pt-3 mt-2">
+          <OutboundTripDetails 
+            distance={oneWayDistance}
+            duration={oneWayDuration}
+          />
+          <ReturnTripDetails
+            enabled={hasReturnTrip}
+            distance={returnDistance}
+            duration={returnDuration}
+            returnToSameAddress={returnToSameAddress}
+          />
         </div>
       )}
-      
-      {hasReturnTrip && !returnToSameAddress && (
-        <div className="flex justify-between">
-          <p className="text-sm text-muted-foreground">  - Distance retour</p>
-          <p className="text-sm text-muted-foreground">{returnDistance} km</p>
-        </div>
-      )}
-      
-      {hasReturnTrip && returnToSameAddress && (
-        <div className="flex justify-between">
-          <p className="text-sm text-muted-foreground">  - Distance retour</p>
-          <p className="text-sm text-muted-foreground">{estimatedDistance} km</p>
-        </div>
-      )}
-      
-      <div className="flex justify-between">
-        <p className="text-sm">Durée estimée (totale)</p>
-        <p className="text-sm font-medium">{formatDuration(totalDuration)}</p>
-      </div>
-      
-      {hasReturnTrip && (
-        <div className="flex justify-between">
-          <p className="text-sm text-muted-foreground">  - Durée aller</p>
-          <p className="text-sm text-muted-foreground">{formatDuration(estimatedDuration)}</p>
-        </div>
-      )}
-      
+
       {hasWaitingTime && (
-        <div className="flex justify-between">
-          <p className="text-sm text-muted-foreground">  - Temps d'attente</p>
-          <p className="text-sm text-muted-foreground">{formatDuration(waitingDuration)}</p>
+        <div className="mt-2">
+          <p className="text-sm text-muted-foreground">
+            Temps d'attente : {waitingTimeMinutes} minutes
+          </p>
         </div>
       )}
-      
-      {hasReturnTrip && !returnToSameAddress && (
-        <div className="flex justify-between">
-          <p className="text-sm text-muted-foreground">  - Durée retour</p>
-          <p className="text-sm text-muted-foreground">{formatDuration(returnDuration)}</p>
+
+      {hasMinDistanceWarning && (
+        <div className="mt-4">
+          <p className="text-sm text-muted-foreground">
+            La distance minimale pour ce type de véhicule est de {minDistance} km.
+            Le prix sera calculé sur cette base.
+          </p>
         </div>
       )}
-      
-      {hasReturnTrip && returnToSameAddress && (
-        <div className="flex justify-between">
-          <p className="text-sm text-muted-foreground">  - Durée retour</p>
-          <p className="text-sm text-muted-foreground">{formatDuration(estimatedDuration)}</p>
-        </div>
-      )}
-      
-      <div className="flex justify-between">
-        <p className="text-sm">Heure d'arrivée estimée</p>
-        <p className="text-sm font-medium">
-          {time ? (
-            (() => {
-              const [hours, minutes] = time.split(':').map(Number);
-              const arrivalTime = new Date();
-              arrivalTime.setHours(hours);
-              arrivalTime.setMinutes(minutes + totalDuration);
-              return format(arrivalTime, 'HH:mm');
-            })()
-          ) : "Non spécifiée"}
-        </p>
-      </div>
     </div>
   );
 };
-

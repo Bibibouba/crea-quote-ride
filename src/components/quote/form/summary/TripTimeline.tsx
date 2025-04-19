@@ -24,13 +24,13 @@ interface TripTimelineProps {
 const getSegmentColor = (type: TimeSegment['type']) => {
   switch (type) {
     case 'day-trip':
-      return 'bg-blue-100'; // #dbeafe
+      return 'bg-blue-100'; // Bleu clair pour tarif jour
     case 'day-wait':
-      return 'bg-green-50'; // #dcfce7
+      return 'bg-green-50'; // Vert clair pour attente jour
     case 'night-wait':
-      return 'bg-green-200'; // #bbf7d0
+      return 'bg-green-200'; // Vert foncé pour attente nuit
     case 'night-trip':
-      return 'bg-red-100'; // #fee2e2
+      return 'bg-red-100'; // Rouge clair pour tarif nuit
     default:
       return 'bg-gray-100';
   }
@@ -46,48 +46,36 @@ const TripTimeline: React.FC<TripTimelineProps> = ({
   returnArrivalLabel = "Arrivée",
   hasReturnTrip = false,
 }) => {
-  // Calculate total duration in minutes
+  // Calculer la durée totale en minutes pour l'échelle de la timeline
   const timeToMinutes = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   };
 
   const startMinutes = timeToMinutes(startTime);
+  
+  // Gérer l'heure de fin qui pourrait être le jour suivant (après minuit)
   const endMinutes = timeToMinutes(endTime);
   const totalMinutes = endMinutes < startMinutes 
     ? (24 * 60) - startMinutes + endMinutes 
     : endMinutes - startMinutes;
 
-  return (
-    <div className="space-y-6">
-      <div className="text-sm flex justify-between mb-1">
-        <div className="font-medium">Chronologie du Trajet</div>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-100 rounded"></div>
-            <span>Tarif jour</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-50 rounded"></div>
-            <span>Attente jour</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-200 rounded"></div>
-            <span>Attente nuit</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-100 rounded"></div>
-            <span>Tarif nuit</span>
-          </div>
-        </div>
-      </div>
+  // Fonction pour obtenir la position en pourcentage pour une heure donnée
+  const getPositionPercentage = (time: string) => {
+    const minutes = timeToMinutes(time);
+    // Ajuster si l'heure est après minuit et avant l'heure de départ
+    const adjustedMinutes = minutes < startMinutes ? minutes + (24 * 60) : minutes;
+    return ((adjustedMinutes - startMinutes) / totalMinutes) * 100;
+  };
 
+  return (
+    <div className="space-y-4">
       <div className="relative h-16">
-        {/* Timeline bar */}
+        {/* Barre de timeline */}
         <div className="absolute top-6 left-0 right-0 h-2 bg-gray-200 rounded-full">
           {segments.map((segment, index) => {
-            const segmentStart = ((timeToMinutes(segment.start) - startMinutes + (startMinutes > timeToMinutes(segment.start) ? 24 * 60 : 0)) / totalMinutes) * 100;
-            const segmentEnd = ((timeToMinutes(segment.end) - startMinutes + (startMinutes > timeToMinutes(segment.end) ? 24 * 60 : 0)) / totalMinutes) * 100;
+            const segmentStart = getPositionPercentage(segment.start);
+            const segmentEnd = getPositionPercentage(segment.end);
             const width = segmentEnd - segmentStart;
 
             return (
@@ -96,16 +84,17 @@ const TripTimeline: React.FC<TripTimelineProps> = ({
                 className={`absolute h-full ${getSegmentColor(segment.type)} rounded-full`}
                 style={{
                   left: `${segmentStart}%`,
-                  width: `${width}%`
+                  width: `${width}%`,
+                  minWidth: width < 0.5 ? '4px' : undefined // Assure une visibilité minimale
                 }}
               />
             );
           })}
         </div>
 
-        {/* Time markers */}
+        {/* Marqueurs de temps et labels */}
         {segments.map((segment, index) => {
-          const position = ((timeToMinutes(segment.start) - startMinutes + (startMinutes > timeToMinutes(segment.start) ? 24 * 60 : 0)) / totalMinutes) * 100;
+          const position = getPositionPercentage(segment.start);
           return (
             <React.Fragment key={`marker-${index}`}>
               <div
@@ -139,7 +128,7 @@ const TripTimeline: React.FC<TripTimelineProps> = ({
           );
         })}
         
-        {/* End time marker */}
+        {/* Marqueur du temps de fin */}
         <div
           className="absolute w-1 h-1 bg-gray-600 rounded-full transform -translate-x-1/2"
           style={{

@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Progress } from '@/components/ui/progress';
 import { Sun, Moon } from 'lucide-react';
 
 interface DayNightGaugeProps {
@@ -24,22 +23,24 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
   const totalPercentage = formattedDayPercentage + formattedNightPercentage;
   const adjustedDayPercentage = totalPercentage === 0 ? 100 : (formattedDayPercentage / totalPercentage) * 100;
   const adjustedNightPercentage = totalPercentage === 0 ? 0 : (formattedNightPercentage / totalPercentage) * 100;
-  
-  // Debug pour vérifier les valeurs
-  console.log('DayNightGauge values:', {
-    dayPercentage,
-    nightPercentage,
-    formattedDayPercentage,
-    formattedNightPercentage,
-    adjustedDayPercentage,
-    adjustedNightPercentage,
-    dayKm,
-    nightKm
-  });
 
   return (
     <div className="space-y-2 w-full">
-      <div className="flex justify-between items-center mb-1">
+      {/* Légende des couleurs en haut avec une bordure pour la rendre plus visible */}
+      <div className="flex justify-between mb-2 p-2 border rounded-md border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-blue-100 rounded"></div>
+            <span className="text-xs">Tarif jour</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-100 rounded"></div>
+            <span className="text-xs">Tarif nuit</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center">
         <div className="flex items-center">
           <Sun className="h-4 w-4 text-amber-500 mr-1" />
           <span className="text-sm font-medium">
@@ -58,13 +59,13 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
       
       <div className="relative h-5 w-full overflow-hidden rounded-full bg-secondary">
         <div
-          className="absolute inset-y-0 left-0 bg-amber-400 transition-all duration-300 flex items-center justify-center text-xs font-medium text-amber-900"
+          className="absolute inset-y-0 left-0 bg-blue-100 transition-all duration-300 flex items-center justify-center text-xs font-medium text-blue-900"
           style={{ width: `${adjustedDayPercentage}%` }}
         >
           {formattedDayPercentage > 15 && `${formattedDayPercentage}%`}
         </div>
         <div
-          className="absolute inset-y-0 right-0 bg-blue-500 transition-all duration-300 flex items-center justify-center text-xs font-medium text-white"
+          className="absolute inset-y-0 right-0 bg-red-100 transition-all duration-300 flex items-center justify-center text-xs font-medium text-red-900"
           style={{ width: `${adjustedNightPercentage}%` }}
         >
           {formattedNightPercentage > 15 && `${formattedNightPercentage}%`}

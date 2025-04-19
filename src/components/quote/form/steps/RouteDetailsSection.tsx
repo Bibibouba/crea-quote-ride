@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import RouteMap from '@/components/map/RouteMap';
 
 interface RouteDetailsSectionProps {
@@ -21,6 +21,24 @@ export const RouteDetailsSection: React.FC<RouteDetailsSectionProps> = ({
   hasReturnTrip,
   returnToSameAddress
 }) => {
+  // Determine the correct return destination
+  const returnDestination = hasReturnTrip && !returnToSameAddress
+    ? customReturnCoordinates 
+    : (hasReturnTrip && returnToSameAddress ? departureCoordinates : undefined);
+
+  // Log what's happening for debugging
+  useEffect(() => {
+    if (hasReturnTrip) {
+      console.log('Return trip config:', {
+        returnToSameAddress,
+        departureCoordinates,
+        destinationCoordinates,
+        customReturnCoordinates,
+        calculatedReturnDestination: returnDestination
+      });
+    }
+  }, [hasReturnTrip, returnToSameAddress, departureCoordinates, destinationCoordinates, customReturnCoordinates, returnDestination]);
+
   return (
     <div className="h-[400px] rounded-lg border overflow-hidden">
       {departureCoordinates && destinationCoordinates ? (
@@ -28,7 +46,7 @@ export const RouteDetailsSection: React.FC<RouteDetailsSectionProps> = ({
           departure={departureCoordinates}
           destination={destinationCoordinates}
           onRouteCalculated={handleRouteCalculated}
-          returnDestination={!returnToSameAddress ? customReturnCoordinates : undefined}
+          returnDestination={returnDestination}
           onReturnRouteCalculated={handleReturnRouteCalculated}
           showReturn={hasReturnTrip}
         />
