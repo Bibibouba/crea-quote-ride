@@ -6,6 +6,7 @@ import { TripTimeInfo } from './summary/TripTimeInfo';
 import { TripDetailsGrid } from './summary/TripDetailsGrid';
 import { FormNavigation } from './summary/FormNavigation';
 import { TripTotal } from './summary/TripTotal';
+import { DayNightGauge } from './summary/DayNightGauge';
 
 interface TripSummaryStepProps {
   departureAddress: string;
@@ -47,7 +48,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     return arrivalTime;
   })();
 
-  // Calculate total distance and duration
+  // Calculer la distance et la durée totales
   const totalDistance = props.hasReturnTrip 
     ? props.estimatedDistance + (props.returnToSameAddress ? props.estimatedDistance : props.returnDistance)
     : props.estimatedDistance;
@@ -89,6 +90,17 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
         hasReturnTrip={props.hasReturnTrip}
         selectedVehicleName={selectedVehicleInfo?.name || "A"}
       />
+      
+      {props.quoteDetails?.dayPercentage !== undefined && props.quoteDetails?.nightPercentage !== undefined && (
+        <div className="bg-secondary/20 p-3 rounded-md">
+          <DayNightGauge 
+            dayPercentage={props.quoteDetails.dayPercentage}
+            nightPercentage={props.quoteDetails.nightPercentage}
+            dayKm={props.quoteDetails.dayKm}
+            nightKm={props.quoteDetails.nightKm}
+          />
+        </div>
+      )}
       
       <TripTotal 
         totalDistance={totalDistance}

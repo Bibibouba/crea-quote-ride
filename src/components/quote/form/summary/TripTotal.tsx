@@ -13,7 +13,7 @@ export const TripTotal: React.FC<TripTotalProps> = ({
   totalDuration,
   totalPrice
 }) => {
-  // Format duration as hours and minutes
+  // Formater la durée en heures et minutes
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
