@@ -65,8 +65,8 @@ export const TripPricingSection: React.FC<TripPricingSectionProps> = ({
         </CardHeader>
         <CardContent>
           <TripDetailsDisplay
-            estimatedDistance={estimatedDistance}
-            estimatedDuration={estimatedDuration}
+            oneWayDistance={estimatedDistance}
+            oneWayDuration={estimatedDuration}
             time={time}
             hasMinDistanceWarning={hasMinDistanceWarning}
             minDistance={minDistance}

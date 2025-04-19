@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -172,8 +171,8 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
 
               {(estimatedDistance > 0 || estimatedDuration > 0) && (
                 <TripDetailsDisplay
-                  estimatedDistance={estimatedDistance}
-                  estimatedDuration={estimatedDuration}
+                  oneWayDistance={estimatedDistance}
+                  oneWayDuration={estimatedDuration}
                   time={time}
                   hasMinDistanceWarning={false}
                   minDistance={0}
