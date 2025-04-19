@@ -94,7 +94,7 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
           placeholder="Saisissez l'adresse de départ"
           value={departureAddress}
           onChange={setDepartureAddress}
-          onAddressSelect={handleDepartureSelect}
+          onSelect={handleDepartureSelect}
         />
 
         <AddressAutocomplete
@@ -102,7 +102,7 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
           placeholder="Saisissez l'adresse de destination"
           value={destinationAddress}
           onChange={setDestinationAddress}
-          onAddressSelect={handleDestinationSelect}
+          onSelect={handleDestinationSelect}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
