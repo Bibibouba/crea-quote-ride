@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import QuoteRequestForm from './QuoteRequestForm';
@@ -70,6 +69,7 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
     handleReturnAddressSelect,
     handleSaveQuote,
     handleRouteCalculated,
+    handleReturnRouteCalculated,
     handleReset
   } = formState;
   
@@ -96,6 +96,7 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           estimatedDistance={estimatedDistance}
           estimatedDuration={estimatedDuration}
           onRouteCalculated={handleRouteCalculated}
+          onReturnRouteCalculated={handleReturnRouteCalculated}
           vehicles={vehicles}
           hasReturnTrip={hasReturnTrip}
           setHasReturnTrip={setHasReturnTrip}
@@ -112,6 +113,8 @@ const QuoteStateContainer: React.FC<QuoteStateContainerProps> = ({
           handleReturnAddressSelect={handleReturnAddressSelect}
           isLoading={isLoading}
           handleSubmit={handleSubmit}
+          returnDistance={returnDistance}
+          returnDuration={returnDuration}
         />
       ) : isQuoteSent ? (
         <Card>

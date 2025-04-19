@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -42,7 +43,10 @@ interface TripInfoStepProps {
   handleDestinationSelect: (address: Address) => void;
   handleReturnAddressSelect: (address: Address) => void;
   handleRouteCalculated: (distance: number, duration: number) => void;
+  handleReturnRouteCalculated?: (distance: number, duration: number) => void;
   handleNextStep: () => void;
+  returnDistance?: number;
+  returnDuration?: number;
 }
 
 const TripInfoStep: React.FC<TripInfoStepProps> = ({
@@ -79,7 +83,10 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
   handleDestinationSelect,
   handleReturnAddressSelect,
   handleRouteCalculated,
-  handleNextStep
+  handleReturnRouteCalculated,
+  handleNextStep,
+  returnDistance = 0,
+  returnDuration = 0
 }) => {
   const canProceed = departureAddress && destinationAddress && departureCoordinates && destinationCoordinates &&
     (!hasReturnTrip || returnToSameAddress || (customReturnAddress && handleReturnAddressSelect));
@@ -152,6 +159,7 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
                 destinationCoordinates={destinationCoordinates}
                 customReturnCoordinates={hasReturnTrip && !returnToSameAddress ? undefined : departureCoordinates}
                 handleRouteCalculated={handleRouteCalculated}
+                handleReturnRouteCalculated={handleReturnRouteCalculated}
                 hasReturnTrip={hasReturnTrip}
                 returnToSameAddress={returnToSameAddress}
               />
@@ -165,8 +173,8 @@ const TripInfoStep: React.FC<TripInfoStepProps> = ({
                   minDistance={0}
                   hasReturnTrip={hasReturnTrip}
                   returnToSameAddress={returnToSameAddress}
-                  returnDistance={hasReturnTrip && returnToSameAddress ? estimatedDistance : 0}
-                  returnDuration={hasReturnTrip && returnToSameAddress ? estimatedDuration : 0}
+                  returnDistance={returnDistance}
+                  returnDuration={returnDuration}
                   hasWaitingTime={hasWaitingTime}
                   waitingTimeMinutes={waitingTimeMinutes}
                 />

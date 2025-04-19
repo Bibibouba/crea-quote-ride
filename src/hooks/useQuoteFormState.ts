@@ -48,7 +48,8 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
   const {
     returnDistance,
     returnDuration,
-    handleRouteCalculated: routeHandler
+    handleRouteCalculated: routeHandler,
+    handleReturnRouteCalculated
   } = useRouteCalculation({
     hasReturnTrip: tripOptions.hasReturnTrip,
     returnToSameAddress: tripOptions.returnToSameAddress,
@@ -192,6 +193,7 @@ export const useQuoteFormState = ({ clientId, onSuccess }: UseQuoteFormStateProp
     handleSubmit,
     handleSaveQuote,
     handleRouteCalculated,
+    handleReturnRouteCalculated,
     handleReset
   };
 };
