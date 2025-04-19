@@ -71,19 +71,19 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
         </div>
       )}
 
+      {hasWaitingTime && (
+        <div className="mt-2">
+          <p className="text-sm text-muted-foreground">
+            Temps d'attente : {waitingTimeMinutes} minutes
+          </p>
+        </div>
+      )}
+
       {hasMinDistanceWarning && (
         <div className="mt-4">
           <p className="text-sm text-muted-foreground">
             La distance minimale pour ce type de véhicule est de {minDistance} km.
             Le prix sera calculé sur cette base.
-          </p>
-        </div>
-      )}
-
-      {hasWaitingTime && (
-        <div className="mt-2">
-          <p className="text-sm text-muted-foreground">
-            Temps d'attente : {waitingTimeMinutes} minutes
           </p>
         </div>
       )}
