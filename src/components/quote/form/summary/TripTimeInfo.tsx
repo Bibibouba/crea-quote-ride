@@ -109,7 +109,6 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
       });
     } else {
       // Le trajet traverse une transition jour/nuit
-      // Trouver le point de transition
       
       // Si on commence le jour et finit la nuit
       if (!isStartDuringNight && isEndDuringNight) {
@@ -161,11 +160,11 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
       const [waitStartHour, waitStartMinute] = waitingStart.split(':').map(Number);
       const waitTimeHours = waitingTimeMinutes / 60;
       
-      const waitEndHour = waitStartHour + Math.floor(waitTimeHours);
-      const waitEndMinute = waitStartMinute + Math.floor((waitTimeHours % 1) * 60);
+      const calcWaitEndHour = waitStartHour + Math.floor(waitTimeHours);
+      const calcWaitEndMinute = waitStartMinute + Math.floor((waitTimeHours % 1) * 60);
       
-      const adjustedHour = waitEndHour + Math.floor(waitEndMinute / 60);
-      const adjustedMinute = waitEndMinute % 60;
+      const adjustedHour = calcWaitEndHour + Math.floor(calcWaitEndMinute / 60);
+      const adjustedMinute = calcWaitEndMinute % 60;
       
       const waitingEnd = `${String(adjustedHour % 24).padStart(2, '0')}:${String(adjustedMinute).padStart(2, '0')}`;
       
@@ -179,10 +178,10 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
         nightEndMinute
       );
       
-      const [waitEndHour, waitEndMinute] = waitingEnd.split(':').map(Number);
+      const [parsedWaitEndHour, parsedWaitEndMinute] = waitingEnd.split(':').map(Number);
       const isWaitEndNight = isWithinNightHours(
-        waitEndHour,
-        waitEndMinute,
+        parsedWaitEndHour,
+        parsedWaitEndMinute,
         nightStartHour,
         nightStartMinute,
         nightEndHour,
