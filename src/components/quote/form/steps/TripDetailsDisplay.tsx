@@ -1,11 +1,13 @@
-import React from 'react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { OutboundTripDetails } from '../trip/OutboundTripDetails';
-import { ReturnTripDetails } from '../trip/ReturnTripDetails';
 
-interface TripDetailsDisplayProps {
+import React from 'react';
+import { formatDuration } from '@/lib/formatDuration';
+import OutboundTripDetails from '../trip/OutboundTripDetails';
+import ReturnTripDetails from '../trip/ReturnTripDetails';
+
+export interface TripDetailsDisplayProps {
   estimatedDistance: number;
   estimatedDuration: number;
+  time: string;
   hasMinDistanceWarning: boolean;
   minDistance: number;
   hasReturnTrip: boolean;
@@ -19,6 +21,7 @@ interface TripDetailsDisplayProps {
 export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
   estimatedDistance,
   estimatedDuration,
+  time,
   hasMinDistanceWarning,
   minDistance,
   hasReturnTrip,
@@ -40,12 +43,16 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
+          <p className="text-sm font-medium">Heure de prise en charge</p>
+          <p className="text-2xl font-semibold">{time}</p>
+        </div>
+        <div>
           <p className="text-sm font-medium">Distance totale</p>
           <p className="text-2xl font-semibold">{totalDistance} km</p>
         </div>
         <div>
           <p className="text-sm font-medium">Durée estimée</p>
-          <p className="text-2xl font-semibold">{totalDuration} min</p>
+          <p className="text-2xl font-semibold">{formatDuration(totalDuration)}</p>
         </div>
       </div>
 
@@ -65,18 +72,18 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
       )}
 
       {hasMinDistanceWarning && (
-        <Alert variant="warning" className="mt-4">
-          <AlertDescription>
+        <div className="mt-4">
+          <p className="text-sm text-muted-foreground">
             La distance minimale pour ce type de véhicule est de {minDistance} km.
             Le prix sera calculé sur cette base.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
       )}
 
       {hasWaitingTime && (
         <div className="mt-2">
           <p className="text-sm text-muted-foreground">
-            Temps d'attente: {waitingTimeMinutes} minutes
+            Temps d'attente : {waitingTimeMinutes} minutes
           </p>
         </div>
       )}
