@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
@@ -44,7 +45,6 @@ interface QuoteDisplayProps {
   returnDuration: number;
   returnCoordinates?: [number, number];
   quoteDetails?: any;
-  totalDuration: number;
 }
 
 const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
@@ -82,8 +82,7 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
   returnDistance,
   returnDuration,
   returnCoordinates,
-  quoteDetails,
-  totalDuration
+  quoteDetails
 }) => {
   const { pricingSettings } = usePricing();
   

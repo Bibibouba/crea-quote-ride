@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +16,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { PercentIcon, Loader2, Save } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Separator } from "@/components/ui/separator";
+
+interface PricingSettings {
+  wait_price_per_15min?: number | null;
+  wait_night_enabled?: boolean | null;
+  wait_night_start?: string | null;
+  wait_night_end?: string | null;
+  wait_night_percentage?: number | null;
+}
 
 const waitingRatesSchema = z.object({
   wait_price_per_15min: z.coerce.number().min(0, "Le tarif d'attente doit être positif"),
@@ -26,26 +37,126 @@ const waitingRatesSchema = z.object({
 });
 
 interface VehicleWaitingRatesFormProps {
-  settings: any;
-  onSave: (values: any) => Promise<void>;
-  saving: boolean;
+  vehicleId: string;
+  defaultSettings?: PricingSettings;
 }
 
-const VehicleWaitingRatesForm = ({ settings, onSave, saving }: VehicleWaitingRatesFormProps) => {
+const VehicleWaitingRatesForm = ({ vehicleId, defaultSettings }: VehicleWaitingRatesFormProps) => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [vehicleSettings, setVehicleSettings] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchVehicleSettings = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('vehicle_pricing_settings')
+          .select('wait_price_per_15min, wait_night_enabled, wait_night_start, wait_night_end, wait_night_percentage')
+          .eq('vehicle_id', vehicleId)
+          .single();
+          
+        if (error) throw error;
+        setVehicleSettings(data);
+      } catch (error) {
+        console.error('Error fetching vehicle settings:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les paramètres du véhicule",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchVehicleSettings();
+  }, [vehicleId, toast]);
+
   const form = useForm<z.infer<typeof waitingRatesSchema>>({
     resolver: zodResolver(waitingRatesSchema),
     defaultValues: {
-      wait_price_per_15min: settings?.wait_price_per_15min || 7.5,
-      wait_night_enabled: settings?.wait_night_enabled || false,
-      wait_night_start: settings?.wait_night_start || "20:00",
-      wait_night_end: settings?.wait_night_end || "06:00",
-      wait_night_percentage: settings?.wait_night_percentage || 15,
+      wait_price_per_15min: 7.5,
+      wait_night_enabled: false,
+      wait_night_start: "20:00",
+      wait_night_end: "06:00",
+      wait_night_percentage: 15,
     },
+    values: {
+      wait_price_per_15min: vehicleSettings?.wait_price_per_15min ?? defaultSettings?.wait_price_per_15min ?? 7.5,
+      wait_night_enabled: vehicleSettings?.wait_night_enabled ?? defaultSettings?.wait_night_enabled ?? false,
+      wait_night_start: vehicleSettings?.wait_night_start ?? defaultSettings?.wait_night_start ?? "20:00",
+      wait_night_end: vehicleSettings?.wait_night_end ?? defaultSettings?.wait_night_end ?? "06:00",
+      wait_night_percentage: vehicleSettings?.wait_night_percentage ?? defaultSettings?.wait_night_percentage ?? 15,
+    }
   });
+
+  useEffect(() => {
+    if (vehicleSettings) {
+      form.reset({
+        wait_price_per_15min: vehicleSettings.wait_price_per_15min ?? defaultSettings?.wait_price_per_15min ?? 7.5,
+        wait_night_enabled: vehicleSettings.wait_night_enabled ?? defaultSettings?.wait_night_enabled ?? false,
+        wait_night_start: vehicleSettings.wait_night_start ?? defaultSettings?.wait_night_start ?? "20:00",
+        wait_night_end: vehicleSettings.wait_night_end ?? defaultSettings?.wait_night_end ?? "06:00",
+        wait_night_percentage: vehicleSettings.wait_night_percentage ?? defaultSettings?.wait_night_percentage ?? 15,
+      });
+    }
+  }, [vehicleSettings, defaultSettings, form]);
+
+  const onSubmit = async (values: z.infer<typeof waitingRatesSchema>) => {
+    setSaving(true);
+    try {
+      // Mise à jour des paramètres dans la nouvelle table
+      const { error } = await supabase
+        .from('vehicle_pricing_settings')
+        .update({
+          wait_price_per_15min: values.wait_price_per_15min,
+          wait_night_enabled: values.wait_night_enabled,
+          wait_night_start: values.wait_night_start,
+          wait_night_end: values.wait_night_end,
+          wait_night_percentage: values.wait_night_percentage,
+        })
+        .eq('vehicle_id', vehicleId);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Succès",
+        description: "Les paramètres de tarif d'attente ont été mis à jour",
+      });
+      
+      setVehicleSettings({
+        ...vehicleSettings,
+        wait_price_per_15min: values.wait_price_per_15min,
+        wait_night_enabled: values.wait_night_enabled,
+        wait_night_start: values.wait_night_start,
+        wait_night_end: values.wait_night_end,
+        wait_night_percentage: values.wait_night_percentage
+      });
+    } catch (error) {
+      console.error('Error saving waiting rate settings:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer les paramètres",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="wait_price_per_15min"
@@ -58,15 +169,18 @@ const VehicleWaitingRatesForm = ({ settings, onSave, saving }: VehicleWaitingRat
                   min="0"
                   step="0.01"
                   {...field}
+                  value={field.value?.toString() || '0'}
                 />
               </FormControl>
               <FormDescription>
-                Tarif appliqué pour le temps d'attente (par tranche de 15 minutes)
+                Tarif spécifique à ce véhicule pour le temps d'attente (par tranche de 15 minutes)
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+        
+        <Separator />
         
         <FormField
           control={form.control}
@@ -76,7 +190,7 @@ const VehicleWaitingRatesForm = ({ settings, onSave, saving }: VehicleWaitingRat
               <div className="space-y-0.5">
                 <FormLabel className="text-base">Tarifs d'attente de nuit</FormLabel>
                 <FormDescription>
-                  Appliquer une majoration au temps d'attente pendant la nuit
+                  Appliquer une majoration au temps d'attente pendant la nuit pour ce véhicule
                 </FormDescription>
               </div>
               <FormControl>
@@ -132,6 +246,7 @@ const VehicleWaitingRatesForm = ({ settings, onSave, saving }: VehicleWaitingRat
                         step="0.01"
                         min="0"
                         {...field}
+                        value={field.value?.toString() || '0'}
                       />
                       <PercentIcon className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                     </div>

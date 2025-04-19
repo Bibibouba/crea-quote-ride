@@ -1,8 +1,8 @@
 
 interface UseRouteHandlerProps {
   routeHandler: (distance: number, duration: number) => {
-    oneWayDistance: number;
-    oneWayDuration: number;
+    estimatedDistance: number;
+    estimatedDuration: number;
   };
   setEstimatedDistance: (distance: number) => void;
   setEstimatedDuration: (duration: number) => void;
@@ -14,9 +14,9 @@ export const useRouteHandler = ({
   setEstimatedDuration
 }: UseRouteHandlerProps) => {
   const handleRouteCalculated = (distance: number, duration: number) => {
-    const { oneWayDistance, oneWayDuration } = routeHandler(distance, duration);
-    setEstimatedDistance(oneWayDistance);
-    setEstimatedDuration(oneWayDuration);
+    const { estimatedDistance: newDistance, estimatedDuration: newDuration } = routeHandler(distance, duration);
+    setEstimatedDistance(newDistance);
+    setEstimatedDuration(newDuration);
   };
   
   return {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import AddressAutocomplete from '@/components/address/AddressAutocomplete';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -34,12 +33,7 @@ interface AddressFormSectionProps {
   estimatedDistance: number;
   estimatedDuration: number;
   onRouteCalculated: (distance: number, duration: number) => void;
-  onReturnRouteCalculated?: (distance: number, duration: number) => void;
   vehicles: Array<{ id: string; name: string; basePrice: number; description: string }>;
-  hasReturnTrip?: boolean;
-  returnToSameAddress?: boolean;
-  customReturnAddress?: string;
-  customReturnCoordinates?: [number, number];
 }
 
 const AddressFormSection: React.FC<AddressFormSectionProps> = ({
@@ -62,12 +56,7 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
   estimatedDistance,
   estimatedDuration,
   onRouteCalculated,
-  onReturnRouteCalculated,
-  vehicles,
-  hasReturnTrip,
-  returnToSameAddress,
-  customReturnAddress,
-  customReturnCoordinates
+  vehicles
 }) => {
 
   const handleDepartureSelect = (address: Address) => {
@@ -187,9 +176,6 @@ const AddressFormSection: React.FC<AddressFormSectionProps> = ({
               departure={departureCoordinates}
               destination={destinationCoordinates}
               onRouteCalculated={onRouteCalculated}
-              returnDestination={customReturnCoordinates}
-              onReturnRouteCalculated={onReturnRouteCalculated}
-              showReturn={hasReturnTrip && !returnToSameAddress}
             />
           </div>
           {estimatedDistance > 0 && estimatedDuration > 0 && (
