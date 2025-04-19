@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMapbox } from '@/hooks/useMapbox';
 
 interface UseRouteCalculationProps {
@@ -20,7 +20,11 @@ export const useRouteCalculation = ({
   const [returnDuration, setReturnDuration] = useState(0);
   const [oneWayDistance, setOneWayDistance] = useState(0);
   const [oneWayDuration, setOneWayDuration] = useState(0);
-  const [totalDuration, setTotalDuration] = useState(0);
+  
+  // Calculate the total distance by combining one-way and return if applicable
+  const totalDistance = useMemo(() => {
+    return oneWayDistance + (hasReturnTrip ? returnDistance : 0);
+  }, [oneWayDistance, returnDistance, hasReturnTrip]);
   
   // Calculate return route when needed
   const calculateReturnRoute = useCallback(async () => {
@@ -70,15 +74,15 @@ export const useRouteCalculation = ({
   }, [hasReturnTrip, returnToSameAddress, customReturnCoordinates, destinationCoordinates, calculateReturnRoute, oneWayDistance, oneWayDuration]);
   
   // Update total duration when component values change
-  useEffect(() => {
-    let total_duration = oneWayDuration;
+  const totalDuration = useMemo(() => {
+    let duration = oneWayDuration;
     
     if (hasReturnTrip) {
-      total_duration += returnDuration;
+      duration += returnDuration;
     }
     
-    setTotalDuration(total_duration);
-  }, [oneWayDistance, oneWayDuration, returnDistance, returnDuration, hasReturnTrip]);
+    return duration;
+  }, [oneWayDuration, returnDuration, hasReturnTrip]);
   
   const handleRouteCalculated = useCallback((distance: number, duration: number) => {
     const roundedDistance = Math.round(distance);
@@ -111,6 +115,7 @@ export const useRouteCalculation = ({
     oneWayDuration,
     returnDistance,
     returnDuration,
+    totalDistance,
     totalDuration,
     handleRouteCalculated,
     handleReturnRouteCalculated
