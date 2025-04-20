@@ -27,6 +27,10 @@ export const TripPriceCalc: React.FC<TripPriceCalcProps> = ({
     return Math.round(distance * 10) / 10;
   };
 
+  const calculateTTC = (priceHT: number, vatRate: number = 10) => {
+    return priceHT * (1 + vatRate / 100);
+  };
+
   return (
     <div className="ml-6 mt-1 space-y-1">
       {quoteDetails?.basePrice && (
@@ -35,12 +39,14 @@ export const TripPriceCalc: React.FC<TripPriceCalcProps> = ({
             Calcul : {hasMinDistanceWarning ? quoteDetails.minDistance : formatDistance(estimatedDistance)} km × {quoteDetails.basePrice.toFixed(2)}€/km HT = {formatPrice(isOneWay ? quoteDetails?.oneWayPriceHT : quoteDetails?.returnPriceHT)}€ HT
           </p>
           <div className="text-xs">
-            <p className="font-medium">{formatPrice(isOneWay ? quoteDetails?.oneWayPriceHT : quoteDetails?.returnPriceHT)}€ HT</p>
+            <p className="font-medium">
+              {formatPrice(isOneWay ? quoteDetails?.oneWayPrice : quoteDetails?.returnPrice)}€ TTC
+            </p>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <p className="text-muted-foreground flex items-center">
-                    {formatPrice(isOneWay ? quoteDetails?.oneWayPrice : quoteDetails?.returnPrice)}€ TTC
+                    {formatPrice(isOneWay ? quoteDetails?.oneWayPriceHT : quoteDetails?.returnPriceHT)}€ HT
                     <InfoIcon className="h-3 w-3 ml-1" />
                   </p>
                 </TooltipTrigger>
