@@ -11,6 +11,8 @@ interface WaitingTimeGaugeProps {
   totalWaitTime: number;
   startTimeDisplay?: string;
   endTimeDisplay?: string;
+  waitStartTime?: Date;
+  waitEndTime?: Date;
 }
 
 export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
@@ -20,7 +22,9 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   waitPriceNight,
   totalWaitTime,
   startTimeDisplay,
-  endTimeDisplay
+  endTimeDisplay,
+  waitStartTime,
+  waitEndTime
 }) => {
   const dayPercentage = (waitTimeDay / totalWaitTime) * 100;
 
