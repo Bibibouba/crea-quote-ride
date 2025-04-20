@@ -1,28 +1,30 @@
 
 import React from 'react';
-import { Moon } from 'lucide-react';
-import { NightRateDisplay } from '../trip-details/NightRateDisplay';
+import { Moon, Sun } from 'lucide-react';
+import { DayNightGauge } from '../DayNightGauge';
+
+interface NightRateInfo {
+  isApplied: boolean;
+  percentage: number;
+  nightStartDisplay: string;
+  nightEndDisplay: string;
+  nightHours: string;
+  dayPercentage?: number;
+  nightPercentage?: number;
+  dayKm?: number;
+  nightKm?: number;
+  dayPrice?: number;
+  nightPrice?: number;
+  nightSurcharge?: number;
+  nightStart?: string;
+  nightEnd?: string;
+}
 
 interface NightRateSectionProps {
   startTime: string;
   endTime: string;
   title: string;
-  nightRateInfo: {
-    isApplied: boolean;
-    percentage: number;
-    nightStartDisplay: string;
-    nightEndDisplay: string;
-    nightHours: string;
-    dayPercentage: number;
-    nightPercentage: number;
-    dayKm?: number;
-    nightKm?: number;
-    dayPrice?: number;
-    nightPrice?: number;
-    nightSurcharge?: number;
-    nightStart: string;
-    nightEnd: string;
-  };
+  nightRateInfo: NightRateInfo;
 }
 
 export const NightRateSection: React.FC<NightRateSectionProps> = ({
@@ -32,35 +34,27 @@ export const NightRateSection: React.FC<NightRateSectionProps> = ({
   nightRateInfo
 }) => {
   return (
-    <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Moon className="h-4 w-4 text-indigo-500" />
-          <span className="text-sm font-medium">{title}</span>
+    <div className="space-y-2">
+      <div className="flex justify-between items-center text-sm">
+        <div className="flex items-center gap-1">
+          {title}
         </div>
-        <div className="flex gap-2 text-xs text-muted-foreground">
-          <span>{startTime}</span>
-          <span>-</span>
-          <span>{endTime}</span>
+        <div className="flex items-center gap-1 text-muted-foreground">
+          {startTime} - {endTime}
         </div>
       </div>
-      <NightRateDisplay
-        title={title}
-        isNightRateApplied={nightRateInfo.isApplied}
-        nightRatePercentage={nightRateInfo.percentage}
-        nightStartDisplay={nightRateInfo.nightStartDisplay}
-        nightEndDisplay={nightRateInfo.nightEndDisplay}
-        nightHours={nightRateInfo.nightHours}
-        dayPercentage={nightRateInfo.dayPercentage}
-        nightPercentage={nightRateInfo.nightPercentage}
-        dayKm={nightRateInfo.dayKm}
-        nightKm={nightRateInfo.nightKm}
-        dayPrice={nightRateInfo.dayPrice}
-        nightPrice={nightRateInfo.nightPrice}
-        nightSurcharge={nightRateInfo.nightSurcharge}
-        nightStart={nightRateInfo.nightStart}
-        nightEnd={nightRateInfo.nightEnd}
-      />
+
+      <div className="relative">
+        <DayNightGauge
+          dayPercentage={nightRateInfo.dayPercentage || 100 - (nightRateInfo.nightPercentage || 0)}
+          nightPercentage={nightRateInfo.nightPercentage || 0}
+          dayKm={nightRateInfo.dayKm}
+          nightKm={nightRateInfo.nightKm}
+          dayPrice={nightRateInfo.dayPrice}
+          nightPrice={nightRateInfo.nightPrice}
+          showValues={true}
+        />
+      </div>
     </div>
   );
 };
