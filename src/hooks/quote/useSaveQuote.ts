@@ -1,27 +1,24 @@
 
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useQuotes } from '@/hooks/useQuotes';
-import { PricingSettings, Vehicle, QuoteDetailsType } from '@/types/quoteForm';
-import { validateQuoteData } from './utils/validateQuoteData';
-import { useClientManagement } from './useClientManagement';
-import { useQuoteEmailSender } from './useQuoteEmailSender';
-import { prepareQuoteData } from './utils/prepareQuoteData';
 import { useSessionManager } from './useSessionManager';
-import { quoteService } from '@/services/quote/quoteService';
+import { validateQuoteData } from './utils/validateQuoteData';
+import { useClientCreator } from './submission/useClientCreator';
+import { useQuoteCreator } from './submission/useQuoteCreator';
+import { useQuoteSender } from './submission/useQuoteSender';
+import { QuoteDetailsType } from '@/types/quoteForm';
 
 interface UseSaveQuoteProps {
-  quoteDetails: QuoteDetailsType | null | undefined;
+  quoteDetails: QuoteDetailsType | null;
   departureAddress: string;
   destinationAddress: string;
-  departureCoordinates: [number, number] | undefined;
-  destinationCoordinates: [number, number] | undefined;
+  departureCoordinates: [number, number];
+  destinationCoordinates: [number, number];
   date: Date;
   time: string;
   hasReturnTrip: boolean;
   returnToSameAddress: boolean;
   customReturnAddress: string;
-  customReturnCoordinates: [number, number] | undefined;
+  customReturnCoordinates: [number, number];
   returnDistance: number;
   returnDuration: number;
   hasWaitingTime: boolean;
@@ -30,49 +27,32 @@ interface UseSaveQuoteProps {
   estimatedDistance: number;
   estimatedDuration: number;
   selectedVehicle: string;
-  vehicles: Vehicle[];
-  pricingSettings: PricingSettings;
+  vehicles: any[];
+  pricingSettings: any;
 }
 
-export const useSaveQuote = ({
-  quoteDetails,
-  departureAddress,
-  destinationAddress,
-  departureCoordinates,
-  destinationCoordinates,
-  date,
-  time,
-  hasReturnTrip,
-  returnToSameAddress,
-  customReturnAddress,
-  customReturnCoordinates,
-  returnDistance,
-  returnDuration,
-  hasWaitingTime,
-  waitingTimeMinutes,
-  waitingTimePrice,
-  estimatedDistance,
-  estimatedDuration,
-  selectedVehicle,
-  vehicles,
-  pricingSettings
-}: UseSaveQuoteProps) => {
+export const useSaveQuote = (props: UseSaveQuoteProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSent, setIsQuoteSent] = useState(false);
-  const { addQuote } = useQuotes();
-  const { toast } = useToast();
-  const { createNewClient } = useClientManagement();
-  const { sendQuoteEmail } = useQuoteEmailSender();
   const { getAuthenticatedUserId } = useSessionManager();
+  const { ensureClientExists } = useClientCreator();
+  const { createQuote } = useQuoteCreator();
+  const { sendQuote } = useQuoteSender();
   
-  const handleSaveQuote = async (firstName?: string, lastName?: string, email?: string, phone?: string, selectedClient?: string) => {
+  const handleSaveQuote = async (
+    firstName?: string,
+    lastName?: string,
+    email?: string,
+    phone?: string,
+    selectedClient?: string
+  ) => {
     const isValid = validateQuoteData({
-      date,
-      departureCoordinates,
-      destinationCoordinates,
-      hasReturnTrip,
-      returnToSameAddress,
-      customReturnAddress
+      date: props.date,
+      departureCoordinates: props.departureCoordinates,
+      destinationCoordinates: props.destinationCoordinates,
+      hasReturnTrip: props.hasReturnTrip,
+      returnToSameAddress: props.returnToSameAddress,
+      customReturnAddress: props.customReturnAddress
     });
     
     if (!isValid) return;
@@ -80,116 +60,60 @@ export const useSaveQuote = ({
     setIsSubmitting(true);
     
     try {
-      const dateTime = new Date(date);
-      const [hours, minutes] = time.split(':');
+      const dateTime = new Date(props.date);
+      const [hours, minutes] = props.time.split(':');
       dateTime.setHours(parseInt(hours), parseInt(minutes));
       
       const driverId = await getAuthenticatedUserId();
-      let finalClientId = selectedClient;
       
-      if ((!selectedClient || selectedClient === '') && firstName && lastName) {
-        finalClientId = await createNewClient(driverId, firstName, lastName, email, phone);
-      }
-      
-      if (!finalClientId) {
-        throw new Error("Aucun client spécifié pour ce devis");
-      }
-      
-      const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
-      if (!selectedVehicleInfo) {
-        throw new Error("Véhicule non trouvé");
-      }
-      
-      if (!quoteDetails) {
-        throw new Error("Erreur lors du calcul du devis");
-      }
-      
-      const quoteData = prepareQuoteData({
+      const clientId = await ensureClientExists({
         driverId,
-        clientId: finalClientId,
-        selectedVehicle,
-        departureAddress,
-        destinationAddress,
-        departureCoordinates,
-        destinationCoordinates,
+        firstName: firstName || '',
+        lastName: lastName || '',
+        email,
+        phone,
+        selectedClient
+      });
+
+      const savedQuote = await createQuote({
+        driverId,
+        clientId,
+        selectedVehicle: props.selectedVehicle,
+        departureAddress: props.departureAddress,
+        destinationAddress: props.destinationAddress,
+        departureCoordinates: props.departureCoordinates,
+        destinationCoordinates: props.destinationCoordinates,
         dateTime,
-        estimatedDistance,
-        estimatedDuration,
-        quoteDetails,
-        hasReturnTrip,
-        hasWaitingTime,
-        waitingTimeMinutes,
-        waitingTimePrice,
-        returnToSameAddress,
-        customReturnAddress,
-        customReturnCoordinates,
-        returnDistance,
-        returnDuration
+        estimatedDistance: props.estimatedDistance,
+        estimatedDuration: props.estimatedDuration,
+        quoteDetails: props.quoteDetails,
+        hasReturnTrip: props.hasReturnTrip,
+        hasWaitingTime: props.hasWaitingTime,
+        waitingTimeMinutes: props.waitingTimeMinutes,
+        waitingTimePrice: props.waitingTimePrice,
+        returnToSameAddress: props.returnToSameAddress,
+        customReturnAddress: props.customReturnAddress,
+        customReturnCoordinates: props.customReturnCoordinates,
+        returnDistance: props.returnDistance,
+        returnDuration: props.returnDuration
       });
-      
-      const savedQuote = await quoteService.createQuote({
-        driverId,
-        clientId: finalClientId,
-        quoteData
-      });
-      
-      console.log("📝 Devis enregistré avec succès:", savedQuote);
-      
+
       if (email) {
-        console.log("📧 Client a fourni une adresse email, tentative d'envoi:", email);
-        
-        try {
-          // Préparation du nom complet du client
-          let fullName = '';
-          if (firstName && lastName) {
-            fullName = `${firstName} ${lastName}`.trim();
-          } else if (firstName) {
-            fullName = firstName.trim();
-          } else if (lastName) {
-            fullName = lastName.trim();
-          } else {
-            fullName = "Client"; // Valeur par défaut si aucun nom n'est fourni
-          }
-          
-          console.log("📧 Préparation de l'envoi d'email à", fullName, "sur", email);
-          
-          await sendQuoteEmail({
-            clientName: fullName,
-            email,
-            quote: savedQuote,
-            departureAddress,
-            destinationAddress
-          });
-          
-          toast({
-            title: 'Devis envoyé',
-            description: 'Le devis a été enregistré et envoyé par email.',
-          });
-          setIsQuoteSent(true);
-        } catch (emailError) {
-          console.error('📧 ❌ Erreur lors de l\'envoi de l\'email:', emailError);
-          toast({
-            title: 'Devis enregistré',
-            description: 'Le devis a été enregistré mais l\'envoi par email a échoué.',
-            variant: 'destructive',
-          });
-          setIsQuoteSent(true);
-        }
-      } else {
-        console.log("📧 Pas d'email fourni, le devis est enregistré sans envoi d'email");
-        toast({
-          title: 'Devis enregistré',
-          description: 'Votre devis a été enregistré avec succès',
+        await sendQuote({
+          email,
+          firstName,
+          lastName,
+          quote: savedQuote,
+          departureAddress: props.departureAddress,
+          destinationAddress: props.destinationAddress
         });
-        setIsQuoteSent(true);
       }
+      
+      setIsQuoteSent(true);
+      
     } catch (error) {
-      console.error('📝 ❌ Erreur lors de l\'enregistrement du devis:', error);
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de l'enregistrement: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
-        variant: 'destructive',
-      });
+      console.error('Error saving quote:', error);
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
