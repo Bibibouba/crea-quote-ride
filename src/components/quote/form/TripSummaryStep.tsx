@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TripHeaderCard } from './steps/TripHeaderCard';
 import { TripSummaryHeader } from './summary/trip-summary/TripSummaryHeader';
@@ -6,6 +5,8 @@ import { TripTimingDetails } from './summary/trip-details/TripTimingDetails';
 import { RouteDetailsSection } from './steps/RouteDetailsSection';
 import { TripPricingSection } from './steps/TripPricingSection';
 import { TripSummaryActions } from './summary/trip-summary/TripSummaryActions';
+import { Card, CardHeader, CardTitle, CardContent } from '@chakra-ui/react';
+import { TripDetailsDisplay } from './summary/trip-details/TripDetailsDisplay';
 
 interface TripSummaryStepProps {
   departureAddress: string;
@@ -99,8 +100,8 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
         quoteDetails={quoteDetails}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="flex flex-col space-y-6">
+      <div className="grid grid-cols-5 gap-6">
+        <div className="col-span-3 space-y-6">
           <RouteDetailsSection
             departureCoordinates={departureCoordinates}
             destinationCoordinates={destinationCoordinates}
@@ -110,26 +111,49 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
             hasReturnTrip={hasReturnTrip}
             returnToSameAddress={returnToSameAddress}
           />
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Aperçu du trajet</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TripDetailsDisplay
+                estimatedDistance={estimatedDistance}
+                estimatedDuration={estimatedDuration}
+                time={time}
+                hasMinDistanceWarning={hasMinDistanceWarning}
+                minDistance={minDistance}
+                hasReturnTrip={hasReturnTrip}
+                returnToSameAddress={returnToSameAddress}
+                returnDistance={returnDistance}
+                returnDuration={returnDuration}
+                hasWaitingTime={hasWaitingTime}
+                waitingTimeMinutes={waitingTimeMinutes}
+              />
+            </CardContent>
+          </Card>
         </div>
-        
-        <TripPricingSection
-          estimatedDistance={estimatedDistance}
-          estimatedDuration={estimatedDuration}
-          time={time}
-          hasMinDistanceWarning={hasMinDistanceWarning}
-          minDistance={minDistance}
-          hasReturnTrip={hasReturnTrip}
-          returnToSameAddress={returnToSameAddress}
-          returnDistance={returnDistance}
-          returnDuration={returnDuration}
-          hasWaitingTime={hasWaitingTime}
-          waitingTimeMinutes={waitingTimeMinutes}
-          quoteDetails={quoteDetails}
-          isNightRate={quoteDetails?.isNightRate}
-          isSunday={quoteDetails?.isSunday}
-          nightHours={quoteDetails?.nightHours}
-          defaultExpanded={true}
-        />
+
+        <div className="col-span-2">
+          <TripPricingSection
+            estimatedDistance={estimatedDistance}
+            estimatedDuration={estimatedDuration}
+            time={time}
+            hasMinDistanceWarning={hasMinDistanceWarning}
+            minDistance={minDistance}
+            hasReturnTrip={hasReturnTrip}
+            returnToSameAddress={returnToSameAddress}
+            returnDistance={returnDistance}
+            returnDuration={returnDuration}
+            hasWaitingTime={hasWaitingTime}
+            waitingTimeMinutes={waitingTimeMinutes}
+            quoteDetails={quoteDetails}
+            isNightRate={quoteDetails?.isNightRate}
+            isSunday={quoteDetails?.isSunday}
+            nightHours={quoteDetails?.nightHours}
+            defaultExpanded={true}
+          />
+        </div>
       </div>
 
       <TripSummaryActions
