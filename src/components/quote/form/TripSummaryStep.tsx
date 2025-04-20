@@ -84,6 +84,29 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     }
   }, [quoteDetails, hasWaitingTime, waitingTimeMinutes]);
 
+  // Calcul précis des heures pour le trajet aller
+  const tripEndTime = (() => {
+    if (!date) return new Date();
+    const [hours, minutes] = time.split(':').map(Number);
+    const arrivalTime = new Date(date);
+    arrivalTime.setHours(hours);
+    arrivalTime.setMinutes(minutes + estimatedDuration);
+    return arrivalTime;
+  })();
+
+  // Temps d'attente : utiliser l'heure de fin réelle calculée par le système
+  // ou calculer manuellement si non disponible
+  const waitEndTime = hasWaitingTime ? 
+    (quoteDetails?.waitEndTime ? 
+      new Date(quoteDetails.waitEndTime) : 
+      new Date(tripEndTime.getTime() + waitingTimeMinutes * 60 * 1000)) 
+    : tripEndTime;
+
+  // Calcul précis de l'heure d'arrivée du retour
+  const returnEndTime = hasReturnTrip ? 
+    new Date(waitEndTime.getTime() + returnDuration * 60 * 1000) 
+    : undefined;
+
   // Night rate info calculation
   const nightRateInfo = {
     isApplied: !!isNightRate,
@@ -105,7 +128,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
   // Return night rate info calculation
   const returnNightRateInfo = hasReturnTrip ? {
     isApplied: !!quoteDetails?.isReturnNightRate,
-    percentage: quoteDetails?.nightRatePercentage || 0,
+    percentage: quoteDetails?.returnNightRatePercentage || 0,
     nightHours: quoteDetails?.returnNightHours || 0,
     totalHours: (returnDuration / 60),
     nightStart: quoteDetails?.nightStartDisplay || '',
@@ -125,28 +148,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     percentage: selectedVehicleInfo?.holiday_sunday_percentage || 0
   } : undefined;
 
-  // Calcul des heures pour l'affichage
-  const tripEndTime = (() => {
-    if (!date) return new Date();
-    const [hours, minutes] = time.split(':').map(Number);
-    const arrivalTime = new Date(date);
-    arrivalTime.setHours(hours);
-    arrivalTime.setMinutes(minutes + estimatedDuration);
-    return arrivalTime;
-  })();
-
-  // Calcul de l'heure de fin d'attente (ou début du retour)
-  const waitEndTime = hasWaitingTime && quoteDetails?.waitEndTime 
-    ? quoteDetails.waitEndTime 
-    : waitingTimeMinutes > 0 
-      ? new Date(tripEndTime.getTime() + waitingTimeMinutes * 60 * 1000)
-      : tripEndTime;
-
-  // Calcul de l'heure d'arrivée du retour
-  const returnEndTime = hasReturnTrip 
-    ? new Date(waitEndTime.getTime() + returnDuration * 60 * 1000)
-    : undefined;
-
+  // Information sur le temps d'attente pour la jauge
   const waitingTimeInfo = hasWaitingTime && waitingTimeMinutes > 0 && quoteDetails ? {
     waitTimeDay: quoteDetails.waitTimeDay || 0,
     waitTimeNight: quoteDetails.waitTimeNight || 0,
@@ -156,6 +158,18 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     waitStartTime: tripEndTime,
     waitEndTime: waitEndTime
   } : undefined;
+
+  // Debug pour vérifier que les heures sont correctes
+  console.log("Calculated trip times:", {
+    tripStartTime: time,
+    tripEndTime: tripEndTime?.toLocaleTimeString(),
+    waitStartTime: tripEndTime?.toLocaleTimeString(),
+    waitEndTime: waitEndTime?.toLocaleTimeString(),
+    returnStartTime: waitEndTime?.toLocaleTimeString(),
+    returnEndTime: returnEndTime?.toLocaleTimeString(),
+    waitingTimeMinutes,
+    returnDuration
+  });
 
   return (
     <div className="space-y-6">

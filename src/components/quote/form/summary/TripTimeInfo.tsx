@@ -72,13 +72,30 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   
   // Formatage des heures pour l'affichage
   const tripStartDisplay = startTime;
-  const tripEndDisplay = endTime;
+  const tripEndDisplay = tripEndTime ? formatTimeDisplay(tripEndTime) : endTime;
   
-  const waitStartDisplay = tripEndTime ? formatTimeDisplay(tripEndTime) : '--:--';
-  const waitEndDisplay = waitingTimeInfo?.waitEndTime ? formatTimeDisplay(waitingTimeInfo.waitEndTime) : '--:--';
+  const waitStartDisplay = tripEndTime ? formatTimeDisplay(tripEndTime) : endTime;
+  const waitEndDisplay = returnStartTime ? formatTimeDisplay(returnStartTime) : '--:--';
   
   const returnStartDisplay = returnStartTime ? formatTimeDisplay(returnStartTime) : '--:--';
   const returnEndDisplay = returnEndTime ? formatTimeDisplay(returnEndTime) : '--:--';
+  
+  // Log des informations pour débogage
+  console.log('TripTimeInfo rendered with times:', {
+    tripStartDisplay,
+    tripEndDisplay,
+    waitStartDisplay,
+    waitEndDisplay,
+    returnStartDisplay,
+    returnEndDisplay,
+    hasReturnTrip,
+    waitingTimeInfo: waitingTimeInfo ? {
+      ...waitingTimeInfo,
+      waitStartTime: waitingTimeInfo.waitStartTime?.toLocaleTimeString(),
+      waitEndTime: waitingTimeInfo.waitEndTime?.toLocaleTimeString()
+    } : null,
+    returnEndTime: returnEndTime?.toLocaleTimeString()
+  });
   
   return (
     <div>
@@ -88,7 +105,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
           Départ: <span className="font-medium ml-1">{startTime}</span>
         </p>
         <p className="flex items-center">
-          Arrivée: <span className="font-medium ml-1">{endTime}</span>
+          Arrivée: <span className="font-medium ml-1">{hasReturnTrip && returnEndTime ? returnEndDisplay : tripEndDisplay}</span>
         </p>
       </div>
       
@@ -134,7 +151,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
             waitPriceNight={waitingTimeInfo.waitPriceNight}
             totalWaitTime={waitingTimeInfo.totalWaitTime}
             waitStartTime={tripEndTime}
-            waitEndTime={waitingTimeInfo.waitEndTime}
+            waitEndTime={returnStartTime}
             startTimeDisplay={waitStartDisplay}
             endTimeDisplay={waitEndDisplay}
           />

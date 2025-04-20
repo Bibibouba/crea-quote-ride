@@ -25,19 +25,20 @@ export const calculateDetailedWaitingPrice = (
   // Déterminer si la majoration de nuit est activée
   const enableNightRates = waitNightEnabled || vehicleSettings?.wait_night_enabled || pricingSettings?.wait_night_enabled || false;
   
+  // Calculer l'heure de début d'attente (après l'arrivée)
+  const [startHours, startMinutes] = startTime.split(':').map(Number);
+  const tripDuration = 60; // Durée estimée du trajet (en minutes)
+  
+  const waitStartDate = new Date(date);
+  waitStartDate.setHours(startHours, startMinutes + tripDuration, 0, 0);
+  
+  // Calculer l'heure de fin d'attente pour le trajet retour
+  const waitEndTime = new Date(waitStartDate.getTime() + waitingTimeMinutes * 60000);
+  
   if (!enableNightRates) {
     // Si pas de majoration de nuit, tout le temps d'attente est au tarif de jour
     const pricePerMinute = (vehicleSettings?.wait_price_per_15min || pricingSettings?.wait_price_per_15min || 7.5) / 15;
     const totalPrice = waitingTimeMinutes * pricePerMinute;
-    
-    // Calculer l'heure de fin d'attente pour le trajet retour
-    const [startHours, startMinutes] = startTime.split(':').map(Number);
-    const tripDuration = 60; // Durée estimée du trajet (en minutes)
-    
-    const waitStartDate = new Date(date);
-    waitStartDate.setHours(startHours, startMinutes + tripDuration, 0, 0);
-    
-    const waitEndTime = new Date(waitStartDate.getTime() + waitingTimeMinutes * 60000);
     
     console.log("Waiting time 100% day rate:", {
       waitingTimeMinutes,
@@ -53,7 +54,7 @@ export const calculateDetailedWaitingPrice = (
       waitPriceDay: totalPrice,
       waitPriceNight: 0,
       totalWaitPrice: totalPrice,
-      waitEndTime // Ajoute l'heure de fin d'attente
+      waitEndTime
     };
   }
   
@@ -61,16 +62,6 @@ export const calculateDetailedWaitingPrice = (
   const waitNightStart = vehicleSettings?.wait_night_start || pricingSettings?.wait_night_start || '20:00';
   const waitNightEnd = vehicleSettings?.wait_night_end || pricingSettings?.wait_night_end || '06:00';
   const waitNightPercentage = vehicleSettings?.wait_night_percentage || pricingSettings?.wait_night_percentage || 10;
-  
-  // Calculer l'heure de début d'attente (après l'arrivée)
-  const [startHours, startMinutes] = startTime.split(':').map(Number);
-  const tripDuration = 60; // Durée estimée du trajet (en minutes)
-  
-  const waitStartDate = new Date(date);
-  waitStartDate.setHours(startHours, startMinutes + tripDuration, 0, 0);
-  
-  // Calculer l'heure de fin d'attente pour le trajet retour
-  const waitEndTime = new Date(waitStartDate.getTime() + waitingTimeMinutes * 60000);
   
   // Créer des objets Date pour le début et la fin de la nuit
   const nightStartHours = parseInt(waitNightStart.split(':')[0]);
@@ -94,8 +85,10 @@ export const calculateDetailedWaitingPrice = (
   let nightMinutes = 0;
   
   // Vérifier minute par minute pour plus de précision
-  for (let i = 0; i < waitingTimeMinutes; i++) {
-    const currentMinute = new Date(waitStartDate.getTime() + i * 60000);
+  let currentMinute = new Date(waitStartDate);
+  const waitEndMinute = new Date(waitEndTime);
+  
+  while (currentMinute < waitEndMinute) {
     let isNight = false;
     
     if (nightEndDate > nightStartDate) {
@@ -117,6 +110,18 @@ export const calculateDetailedWaitingPrice = (
     } else {
       dayMinutes++;
     }
+    
+    // Avancer d'une minute
+    currentMinute.setMinutes(currentMinute.getMinutes() + 1);
+  }
+  
+  // S'assurer que le total des minutes correspond au temps d'attente
+  const totalCalculatedMinutes = dayMinutes + nightMinutes;
+  if (totalCalculatedMinutes < waitingTimeMinutes) {
+    // Ajuster pour s'assurer que le total est correct
+    const difference = waitingTimeMinutes - totalCalculatedMinutes;
+    // Ajouter la différence au tarif de jour par défaut
+    dayMinutes += difference;
   }
   
   // Forcer à 100% jour si waitNightEnabled est désactivé
@@ -150,7 +155,7 @@ export const calculateDetailedWaitingPrice = (
     waitPriceDay: dayPrice,
     waitPriceNight: nightPrice,
     totalWaitPrice: totalPrice,
-    waitEndTime // Ajoute l'heure de fin d'attente
+    waitEndTime
   };
 };
 
