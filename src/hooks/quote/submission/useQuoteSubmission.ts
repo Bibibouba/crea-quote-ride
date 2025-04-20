@@ -29,8 +29,10 @@ interface UseQuoteSubmissionProps {
 }
 
 export const useQuoteSubmission = (props: UseQuoteSubmissionProps) => {
+  // First, initialize the client data hook
   const clientData = useClientData();
   
+  // Then initialize the save quote hook
   const {
     isSubmitting,
     isQuoteSent,

@@ -15,8 +15,7 @@ const SimulatorContainer = () => {
   const [simulatorReady, setSimulatorReady] = useState(true);
   const [activeTab, setActiveTab] = useState<'step1' | 'step2' | 'step3'>('step1');
   const formState = useQuoteForm();
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
-
+  
   // Simulate loading for a more engaging experience
   React.useEffect(() => {
     setSimulatorReady(false);
@@ -27,12 +26,8 @@ const SimulatorContainer = () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  // Add a debug effect to log day/night calculations with cleanup
+  // Add a debug effect to log day/night calculations
   React.useEffect(() => {
-    // Create a new AbortController for this effect
-    const controller = new AbortController();
-    setAbortController(controller);
-
     if (formState.quoteDetails) {
       try {
         console.log("Calcul jour/nuit:", {
@@ -43,6 +38,8 @@ const SimulatorContainer = () => {
           nightPercentage: formState.quoteDetails.nightPercentage,
           isNightRate: formState.quoteDetails.isNightRate,
           nightHours: formState.quoteDetails.nightHours,
+          dayHours: formState.quoteDetails.dayHours,
+          nightRatePercentage: formState.quoteDetails.nightRatePercentage,
           nightStartDisplay: formState.quoteDetails.nightStartDisplay,
           nightEndDisplay: formState.quoteDetails.nightEndDisplay,
           time: formState.time,
@@ -53,12 +50,7 @@ const SimulatorContainer = () => {
         console.warn("Erreur lors du calcul jour/nuit:", error);
       }
     }
-
-    return () => {
-      // Clean up any pending operations
-      controller.abort();
-    };
-  }, [formState.quoteDetails]);
+  }, [formState.quoteDetails, formState.time, formState.estimatedDuration]);
 
   const handleNextStep = () => {
     if (activeTab === 'step1') setActiveTab('step2');
@@ -148,15 +140,6 @@ const SimulatorContainer = () => {
       return Promise.reject(error);
     }
   };
-
-  // Nettoyer les contrôleurs d'abort lors du démontage
-  useEffect(() => {
-    return () => {
-      if (abortController) {
-        abortController.abort();
-      }
-    };
-  }, [abortController]);
 
   return (
     <div className="container max-w-5xl mx-auto py-4 sm:py-8 px-2 sm:px-4">

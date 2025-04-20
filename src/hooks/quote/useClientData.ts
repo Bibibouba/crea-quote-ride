@@ -8,12 +8,15 @@ interface UseClientDataProps {
 }
 
 export const useClientData = ({ clientId }: UseClientDataProps = {}) => {
-  const { clients } = useClients();
+  // Always initialize state variables first, before any conditional logic
   const [selectedClient, setSelectedClient] = useState(clientId || '');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  
+  // Then use other hooks
+  const { clients } = useClients();
   
   // Load client data if clientId is provided
   useEffect(() => {
