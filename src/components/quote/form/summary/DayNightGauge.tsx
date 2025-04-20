@@ -7,9 +7,6 @@ interface DayNightGaugeProps {
   nightPercentage: number;
   dayKm?: number;
   nightKm?: number;
-  dayPrice?: number;
-  nightPrice?: number;
-  showValues?: boolean;
   isWaitingTime?: boolean;
 }
 
@@ -18,9 +15,6 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
   nightPercentage,
   dayKm,
   nightKm,
-  dayPrice,
-  nightPrice,
-  showValues = false,
   isWaitingTime = false
 }) => {
   // Assurons-nous que les pourcentages sont bien des nombres et arrondis
@@ -82,10 +76,7 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
     displayDayKm,
     displayNightKm,
     isWaitingTime,
-    totalPercentage,
-    dayPrice,
-    nightPrice,
-    showValues
+    totalPercentage
   });
 
   return (
@@ -97,12 +88,10 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
             {isWaitingTime ? (
               <>Jour ({adjustedDayPercentage}%)
                 {displayDayKm !== undefined && <span className="text-xs ml-1">({Math.round(displayDayKm)} min)</span>}
-                {showValues && dayPrice !== undefined && <span className="text-xs ml-1">({dayPrice.toFixed(2)}€)</span>}
               </>
             ) : (
               <>Jour ({adjustedDayPercentage}%)
                 {displayDayKm !== undefined && <span className="text-xs ml-1">({displayDayKm.toFixed(1)} km)</span>}
-                {showValues && dayPrice !== undefined && <span className="text-xs ml-1">({dayPrice.toFixed(2)}€)</span>}
               </>
             )}
           </span>
@@ -112,12 +101,10 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
             {isWaitingTime ? (
               <>Nuit ({adjustedNightPercentage}%)
                 {displayNightKm !== undefined && <span className="text-xs ml-1">({Math.round(displayNightKm)} min)</span>}
-                {showValues && nightPrice !== undefined && <span className="text-xs ml-1">({nightPrice.toFixed(2)}€)</span>}
               </>
             ) : (
               <>Nuit ({adjustedNightPercentage}%)
                 {displayNightKm !== undefined && <span className="text-xs ml-1">({displayNightKm.toFixed(1)} km)</span>}
-                {showValues && nightPrice !== undefined && <span className="text-xs ml-1">({nightPrice.toFixed(2)}€)</span>}
               </>
             )}
           </span>
