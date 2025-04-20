@@ -117,6 +117,7 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
             <TripTimeInfo 
               startTime={time} 
               endTime={tripEndTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              finalTimeDisplay={tripEndTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
               nightRateInfo={{
                 isApplied: isNightRateApplied,
                 percentage: nightRatePercentage,

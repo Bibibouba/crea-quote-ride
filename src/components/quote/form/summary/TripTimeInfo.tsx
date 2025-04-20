@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TripTimingHeader } from './trip-timing/TripTimingHeader';
 import { NightRateSection } from './trip-timing/NightRateSection';
@@ -70,13 +71,13 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   const waitEndDisplay = formatTimeDisplay(returnStartTime);
   const returnStartDisplay = formatTimeDisplay(returnStartTime);
   const returnEndDisplay = formatTimeDisplay(returnEndTime);
-  const finalTimeDisplay = formatTimeDisplay(finalArrivalTime);
+  const calculatedFinalTimeDisplay = finalArrivalTime ? formatTimeDisplay(finalArrivalTime) : finalTimeDisplay;
 
   return (
     <div>
       <TripTimingHeader 
         startTime={startTime} 
-        finalTimeDisplay={finalTimeDisplay}
+        finalTimeDisplay={calculatedFinalTimeDisplay}
       />
       
       <div className="space-y-3">
@@ -121,7 +122,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
         {hasReturnTrip && returnNightRateInfo && (
           <NightRateSection
             startTime={returnStartDisplay}
-            endTime={finalTimeDisplay}
+            endTime={calculatedFinalTimeDisplay}
             title="Trajet Retour"
             nightRateInfo={{
               isApplied: returnNightRateInfo.isApplied,
