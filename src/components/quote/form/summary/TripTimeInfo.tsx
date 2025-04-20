@@ -42,6 +42,7 @@ interface TripTimeInfoProps {
     waitPriceDay: number;
     waitPriceNight: number;
     totalWaitTime: number;
+    waitStartTime?: Date;
     waitEndTime?: Date;
   };
   tripEndTime?: Date;
@@ -64,6 +65,21 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   const hasNightRate = nightRateInfo?.isApplied || (returnNightRateInfo?.isApplied ?? false);
   const hasSundayRate = sundayRateInfo?.isApplied ?? false;
   
+  const formatTimeDisplay = (date?: Date) => {
+    if (!date) return '--:--';
+    return format(date, 'HH:mm');
+  };
+  
+  // Formatage des heures pour l'affichage
+  const tripStartDisplay = startTime;
+  const tripEndDisplay = endTime;
+  
+  const waitStartDisplay = tripEndTime ? formatTimeDisplay(tripEndTime) : '--:--';
+  const waitEndDisplay = waitingTimeInfo?.waitEndTime ? formatTimeDisplay(waitingTimeInfo.waitEndTime) : '--:--';
+  
+  const returnStartDisplay = returnStartTime ? formatTimeDisplay(returnStartTime) : '--:--';
+  const returnEndDisplay = returnEndTime ? formatTimeDisplay(returnEndTime) : '--:--';
+  
   return (
     <div>
       <div className="flex justify-between text-sm mb-2">
@@ -85,9 +101,9 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
                 <span className="text-sm font-medium">Trajet Aller</span>
               </div>
               <div className="flex gap-2 text-xs text-muted-foreground">
-                <span>{startTime}</span>
+                <span>{tripStartDisplay}</span>
                 <span>-</span>
-                <span>{endTime}</span>
+                <span>{tripEndDisplay}</span>
               </div>
             </div>
             <NightRateDisplay
@@ -119,6 +135,8 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
             totalWaitTime={waitingTimeInfo.totalWaitTime}
             waitStartTime={tripEndTime}
             waitEndTime={waitingTimeInfo.waitEndTime}
+            startTimeDisplay={waitStartDisplay}
+            endTimeDisplay={waitEndDisplay}
           />
         )}
         
@@ -130,9 +148,9 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
                 <span className="text-sm font-medium">Trajet Retour</span>
               </div>
               <div className="flex gap-2 text-xs text-muted-foreground">
-                <span>{returnStartTime ? format(returnStartTime, 'HH:mm') : '--:--'}</span>
+                <span>{returnStartDisplay}</span>
                 <span>-</span>
-                <span>{returnEndTime ? format(returnEndTime, 'HH:mm') : '--:--'}</span>
+                <span>{returnEndDisplay}</span>
               </div>
             </div>
             <NightRateDisplay

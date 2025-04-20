@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TripTimeInfo } from './summary/TripTimeInfo';
 import { RouteDetailsSection } from './steps/RouteDetailsSection';
 import { TripPricingSection } from './steps/TripPricingSection';
@@ -68,6 +68,22 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
   const hasMinDistanceWarning = quoteDetails?.hasMinDistanceWarning;
   const minDistance = quoteDetails?.minDistance || 0;
 
+  // Log les détails du devis pour le débogage
+  useEffect(() => {
+    console.log('TripSummaryStep rendered with quoteDetails:', quoteDetails);
+    
+    // Stockage de l'info pour débogage via le bouton debug
+    if (typeof window !== 'undefined') {
+      (window as any).quoteDetails = quoteDetails;
+      (window as any).waitingTimeInfo = hasWaitingTime && waitingTimeMinutes > 0 ? {
+        waitTimeDay: quoteDetails?.waitTimeDay || 0,
+        waitTimeNight: quoteDetails?.waitTimeNight || 0,
+        totalWaitTime: waitingTimeMinutes,
+        waitEndTime: quoteDetails?.waitEndTime
+      } : null;
+    }
+  }, [quoteDetails, hasWaitingTime, waitingTimeMinutes]);
+
   // Night rate info calculation
   const nightRateInfo = {
     isApplied: !!isNightRate,
@@ -109,21 +125,37 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     percentage: selectedVehicleInfo?.holiday_sunday_percentage || 0
   } : undefined;
 
+  // Calcul des heures pour l'affichage
+  const tripEndTime = (() => {
+    if (!date) return new Date();
+    const [hours, minutes] = time.split(':').map(Number);
+    const arrivalTime = new Date(date);
+    arrivalTime.setHours(hours);
+    arrivalTime.setMinutes(minutes + estimatedDuration);
+    return arrivalTime;
+  })();
+
+  // Calcul de l'heure de fin d'attente (ou début du retour)
+  const waitEndTime = hasWaitingTime && quoteDetails?.waitEndTime 
+    ? quoteDetails.waitEndTime 
+    : waitingTimeMinutes > 0 
+      ? new Date(tripEndTime.getTime() + waitingTimeMinutes * 60 * 1000)
+      : tripEndTime;
+
+  // Calcul de l'heure d'arrivée du retour
+  const returnEndTime = hasReturnTrip 
+    ? new Date(waitEndTime.getTime() + returnDuration * 60 * 1000)
+    : undefined;
+
   const waitingTimeInfo = hasWaitingTime && waitingTimeMinutes > 0 && quoteDetails ? {
     waitTimeDay: quoteDetails.waitTimeDay || 0,
     waitTimeNight: quoteDetails.waitTimeNight || 0,
     waitPriceDay: quoteDetails.waitPriceDay || 0,
     waitPriceNight: quoteDetails.waitPriceNight || 0,
-    totalWaitTime: waitingTimeMinutes
+    totalWaitTime: waitingTimeMinutes,
+    waitStartTime: tripEndTime,
+    waitEndTime: waitEndTime
   } : undefined;
-
-  const tripEndTime = (() => {
-    const [hours, minutes] = time.split(':').map(Number);
-    const arrivalTime = new Date();
-    arrivalTime.setHours(hours);
-    arrivalTime.setMinutes(minutes + estimatedDuration);
-    return arrivalTime;
-  })();
 
   return (
     <div className="space-y-6">
@@ -156,6 +188,9 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
         sundayRateInfo={sundayRateInfo}
         hasReturnTrip={hasReturnTrip}
         waitingTimeInfo={waitingTimeInfo}
+        tripEndTime={tripEndTime}
+        returnStartTime={waitEndTime}
+        returnEndTime={returnEndTime}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

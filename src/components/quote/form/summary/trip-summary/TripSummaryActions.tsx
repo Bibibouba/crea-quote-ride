@@ -20,10 +20,19 @@ export const TripSummaryActions: React.FC<TripSummaryActionsProps> = ({
       console.log("Données de temps d'attente trouvées:", waitingTimeInfo);
     }
     
-    // Vérifie les données du trajet retour
-    const returnTripInfo = 'returnTripInfo' in window ? (window as any).returnTripInfo : null;
-    if (returnTripInfo) {
-      console.log("Données de trajet retour trouvées:", returnTripInfo);
+    // Vérifie les données du devis complet
+    const quoteDetails = 'quoteDetails' in window ? (window as any).quoteDetails : null;
+    if (quoteDetails) {
+      console.log("Données complètes du devis trouvées:", quoteDetails);
+      
+      // Vérifier spécifiquement les données liées au temps
+      console.log("Données temporelles:", {
+        waitTimeDay: quoteDetails.waitTimeDay,
+        waitTimeNight: quoteDetails.waitTimeNight,
+        waitEndTime: quoteDetails.waitEndTime,
+        returnStartTime: quoteDetails.returnStartTime,
+        returnEndTime: quoteDetails.returnEndTime
+      });
     }
   };
 
