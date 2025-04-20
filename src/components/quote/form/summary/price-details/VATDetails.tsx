@@ -21,37 +21,13 @@ export const VATDetails: React.FC<VATDetailsProps> = ({
       <h3 className="font-semibold text-base mb-2">Détail TVA</h3>
       <div className="space-y-1 text-sm">
         <div className="flex justify-between items-center">
-          <span>Trajets</span>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <span className="flex items-center">
-                  {rideVatRate}% <InfoIcon className="h-3 w-3 ml-1" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Taux de TVA sur les trajets</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <span>Trajets ({rideVatRate}%)</span>
           <span>{formatPrice((quoteDetails.oneWayPrice + quoteDetails.returnPrice) - (quoteDetails.oneWayPriceHT + quoteDetails.returnPriceHT))}</span>
         </div>
         
         {hasWaitingTime && (
           <div className="flex justify-between items-center">
-            <span>Temps d'attente</span>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <span className="flex items-center">
-                    {waitingVatRate}% <InfoIcon className="h-3 w-3 ml-1" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Taux de TVA sur le temps d'attente</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <span>Temps d'attente ({waitingVatRate}%)</span>
             <span>{formatPrice(quoteDetails.waitingTimePrice - quoteDetails.waitingTimePriceHT)}</span>
           </div>
         )}
