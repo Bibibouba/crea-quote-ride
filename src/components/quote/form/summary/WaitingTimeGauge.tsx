@@ -27,13 +27,13 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   startTimeDisplay,
   endTimeDisplay
 }) => {
-  // Vérification supplémentaire pour s'assurer que la jauge s'affiche
-  console.log('WaitingTimeGauge rendered with:', {
+  // Debugging log pour s'assurer que les bonnes valeurs sont reçues
+  console.log('WaitingTimeGauge rendered with raw values:', {
     waitTimeDay,
     waitTimeNight,
     totalWaitTime,
-    waitStartTime,
-    waitEndTime,
+    waitStartTime: waitStartTime?.toISOString(),
+    waitEndTime: waitEndTime?.toISOString(),
     startTimeDisplay,
     endTimeDisplay
   });
@@ -41,39 +41,62 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   // Pas de rendu si pas de temps d'attente
   if (!totalWaitTime || totalWaitTime <= 0) return null;
 
-  // Calcul des pourcentages pour la jauge
-  const dayPercentage = Math.max(0, Math.min(100, (waitTimeDay / totalWaitTime) * 100));
-  const nightPercentage = Math.max(0, Math.min(100, (waitTimeNight / totalWaitTime) * 100));
-
-  // Vérifier si on a un cas de 100% jour / 0% nuit
-  const isFullDayRate = nightPercentage < 1 || !waitTimeNight || waitTimeNight <= 0;
-
-  // S'assurer que les pourcentages sont valides et totalisent bien 100%
-  const adjustedDayPercentage = isFullDayRate ? 100 : Math.round(dayPercentage);
-  const adjustedNightPercentage = isFullDayRate ? 0 : Math.round(nightPercentage);
+  // Correction critique: S'assurer que waitTimeDay + waitTimeNight = totalWaitTime
+  // Si les temps calculés ne correspondent pas au temps total, recalculer les proportions
+  let adjustedDayTime = waitTimeDay;
+  let adjustedNightTime = waitTimeNight;
   
-  // S'assurer que la somme est 100%
-  const totalPercent = adjustedDayPercentage + adjustedNightPercentage;
-  let finalDayPercent = adjustedDayPercentage;
-  let finalNightPercent = adjustedNightPercentage;
+  const calculatedTotal = waitTimeDay + waitTimeNight;
   
-  if (totalPercent !== 100 && !isFullDayRate) {
-    // Ajuster pour arriver à 100%
-    if (adjustedDayPercentage > adjustedNightPercentage) {
-      finalDayPercent = 100 - adjustedNightPercentage;
+  if (Math.abs(calculatedTotal - totalWaitTime) > 1) { // Tolérance de 1 minute pour les erreurs d'arrondi
+    console.log('Correcting wait time discrepancy:', {
+      originalTotal: calculatedTotal,
+      expectedTotal: totalWaitTime,
+      difference: totalWaitTime - calculatedTotal
+    });
+    
+    // Si le total calculé diffère du total attendu, ajuster proportionnellement
+    if (calculatedTotal > 0) {
+      const ratio = totalWaitTime / calculatedTotal;
+      adjustedDayTime = Math.round(waitTimeDay * ratio);
+      adjustedNightTime = Math.round(waitTimeNight * ratio);
+      
+      // S'assurer que la somme est exactement égale à totalWaitTime
+      const newTotal = adjustedDayTime + adjustedNightTime;
+      if (newTotal !== totalWaitTime) {
+        const diff = totalWaitTime - newTotal;
+        // Ajouter la différence au jour ou à la nuit, selon lequel est non nul
+        if (adjustedDayTime > 0) {
+          adjustedDayTime += diff;
+        } else {
+          adjustedNightTime += diff;
+        }
+      }
     } else {
-      finalNightPercent = 100 - adjustedDayPercentage;
+      // Si pas de répartition jour/nuit, tout attribuer au jour par défaut
+      adjustedDayTime = totalWaitTime;
+      adjustedNightTime = 0;
     }
   }
 
+  // Calcul des pourcentages pour la jauge
+  const dayPercentage = Math.max(0, Math.min(100, (adjustedDayTime / totalWaitTime) * 100));
+  const nightPercentage = Math.max(0, Math.min(100, (adjustedNightTime / totalWaitTime) * 100));
+
+  // Vérifier si on a un cas de 100% jour / 0% nuit
+  const isFullDayRate = nightPercentage < 1 || !adjustedNightTime || adjustedNightTime <= 0;
+
+  // S'assurer que les pourcentages sont valides et totalisent bien 100%
+  const finalDayPercent = isFullDayRate ? 100 : Math.round(dayPercentage);
+  const finalNightPercent = isFullDayRate ? 0 : Math.round(nightPercentage);
+
   console.log('Calculated percentages for waiting time gauge:', { 
-    waitTimeDay,
-    waitTimeNight,
+    adjustedDayTime,
+    adjustedNightTime,
     totalWaitTime,
     dayPercentage, 
     nightPercentage, 
     isFullDayRate, 
-    total: dayPercentage + nightPercentage,
     finalDayPercent,
     finalNightPercent,
     startTimeDisplay,
@@ -100,14 +123,14 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
       <DayNightGauge
         dayPercentage={finalDayPercent}
         nightPercentage={finalNightPercent}
-        dayKm={waitTimeDay}
-        nightKm={waitTimeNight}
+        dayKm={adjustedDayTime}
+        nightKm={adjustedNightTime}
         isWaitingTime={true}
       />
       {(waitPriceDay > 0 || waitPriceNight > 0) && (
         <div className="flex justify-between text-xs mt-1 text-muted-foreground">
-          <span>{Math.round(waitTimeDay)} min (jour)</span>
-          <span>{isFullDayRate ? '0' : Math.round(waitTimeNight)} min (nuit)</span>
+          <span>{Math.round(adjustedDayTime)} min (jour)</span>
+          <span>{isFullDayRate ? '0' : Math.round(adjustedNightTime)} min (nuit)</span>
         </div>
       )}
     </div>

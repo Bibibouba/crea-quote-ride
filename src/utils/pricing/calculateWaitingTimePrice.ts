@@ -22,6 +22,12 @@ export const calculateDetailedWaitingPrice = (
     };
   }
   
+  console.log('Calculating waiting time price with:', {
+    waitingTimeMinutes,
+    startTime,
+    date: date?.toISOString()
+  });
+  
   // Déterminer si la majoration de nuit est activée
   const enableNightRates = waitNightEnabled || vehicleSettings?.wait_night_enabled || pricingSettings?.wait_night_enabled || false;
   
@@ -117,11 +123,24 @@ export const calculateDetailedWaitingPrice = (
   
   // S'assurer que le total des minutes correspond au temps d'attente
   const totalCalculatedMinutes = dayMinutes + nightMinutes;
-  if (totalCalculatedMinutes < waitingTimeMinutes) {
+  
+  if (totalCalculatedMinutes !== waitingTimeMinutes) {
+    console.log('Waiting time minutes mismatch:', {
+      calculated: totalCalculatedMinutes,
+      expected: waitingTimeMinutes,
+      diff: waitingTimeMinutes - totalCalculatedMinutes
+    });
+    
     // Ajuster pour s'assurer que le total est correct
-    const difference = waitingTimeMinutes - totalCalculatedMinutes;
-    // Ajouter la différence au tarif de jour par défaut
-    dayMinutes += difference;
+    if (totalCalculatedMinutes < waitingTimeMinutes) {
+      // Ajouter la différence au tarif de jour par défaut
+      dayMinutes += (waitingTimeMinutes - totalCalculatedMinutes);
+    } else if (totalCalculatedMinutes > waitingTimeMinutes) {
+      // Réduire proportionnellement
+      const ratio = waitingTimeMinutes / totalCalculatedMinutes;
+      dayMinutes = Math.round(dayMinutes * ratio);
+      nightMinutes = waitingTimeMinutes - dayMinutes;
+    }
   }
   
   // Forcer à 100% jour si waitNightEnabled est désactivé

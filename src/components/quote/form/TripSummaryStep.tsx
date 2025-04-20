@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { TripTimeInfo } from './summary/TripTimeInfo';
 import { RouteDetailsSection } from './steps/RouteDetailsSection';
@@ -68,11 +67,9 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
   const hasMinDistanceWarning = quoteDetails?.hasMinDistanceWarning;
   const minDistance = quoteDetails?.minDistance || 0;
 
-  // Log les détails du devis pour le débogage
   useEffect(() => {
     console.log('TripSummaryStep rendered with quoteDetails:', quoteDetails);
     
-    // Stockage de l'info pour débogage via le bouton debug
     if (typeof window !== 'undefined') {
       (window as any).quoteDetails = quoteDetails;
       (window as any).waitingTimeInfo = hasWaitingTime && waitingTimeMinutes > 0 ? {
@@ -84,7 +81,6 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     }
   }, [quoteDetails, hasWaitingTime, waitingTimeMinutes]);
 
-  // Calcul précis des heures pour le trajet aller
   const tripEndTime = (() => {
     if (!date) return new Date();
     const [hours, minutes] = time.split(':').map(Number);
@@ -94,20 +90,27 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     return arrivalTime;
   })();
 
-  // Temps d'attente : utiliser l'heure de fin réelle calculée par le système
-  // ou calculer manuellement si non disponible
   const waitEndTime = hasWaitingTime ? 
     (quoteDetails?.waitEndTime ? 
       new Date(quoteDetails.waitEndTime) : 
       new Date(tripEndTime.getTime() + waitingTimeMinutes * 60 * 1000)) 
     : tripEndTime;
 
-  // Calcul précis de l'heure d'arrivée du retour
+  let correctedWaitEndTime = waitEndTime;
+  if (hasWaitingTime && waitingTimeMinutes > 0) {
+    correctedWaitEndTime = new Date(tripEndTime.getTime() + waitingTimeMinutes * 60 * 1000);
+    console.log('Corrected wait end time:', {
+      originalWaitEndTime: waitEndTime.toLocaleTimeString(),
+      correctedWaitEndTime: correctedWaitEndTime.toLocaleTimeString(),
+      waitingTimeMinutes,
+      tripEndTime: tripEndTime.toLocaleTimeString()
+    });
+  }
+
   const returnEndTime = hasReturnTrip ? 
-    new Date(waitEndTime.getTime() + returnDuration * 60 * 1000) 
+    new Date(correctedWaitEndTime.getTime() + returnDuration * 60 * 1000) 
     : undefined;
 
-  // Night rate info calculation
   const nightRateInfo = {
     isApplied: !!isNightRate,
     percentage: quoteDetails?.nightRatePercentage || 0,
@@ -125,7 +128,6 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     nightPercentage: quoteDetails?.nightPercentage
   };
   
-  // Return night rate info calculation
   const returnNightRateInfo = hasReturnTrip ? {
     isApplied: !!quoteDetails?.isReturnNightRate,
     percentage: quoteDetails?.returnNightRatePercentage || 0,
@@ -148,7 +150,6 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     percentage: selectedVehicleInfo?.holiday_sunday_percentage || 0
   } : undefined;
 
-  // Information sur le temps d'attente pour la jauge
   const waitingTimeInfo = hasWaitingTime && waitingTimeMinutes > 0 && quoteDetails ? {
     waitTimeDay: quoteDetails.waitTimeDay || 0,
     waitTimeNight: quoteDetails.waitTimeNight || 0,
@@ -156,16 +157,15 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     waitPriceNight: quoteDetails.waitPriceNight || 0,
     totalWaitTime: waitingTimeMinutes,
     waitStartTime: tripEndTime,
-    waitEndTime: waitEndTime
+    waitEndTime: correctedWaitEndTime
   } : undefined;
 
-  // Debug pour vérifier que les heures sont correctes
   console.log("Calculated trip times:", {
     tripStartTime: time,
     tripEndTime: tripEndTime?.toLocaleTimeString(),
     waitStartTime: tripEndTime?.toLocaleTimeString(),
-    waitEndTime: waitEndTime?.toLocaleTimeString(),
-    returnStartTime: waitEndTime?.toLocaleTimeString(),
+    waitEndTime: correctedWaitEndTime?.toLocaleTimeString(),
+    returnStartTime: correctedWaitEndTime?.toLocaleTimeString(),
     returnEndTime: returnEndTime?.toLocaleTimeString(),
     waitingTimeMinutes,
     returnDuration
@@ -203,7 +203,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
         hasReturnTrip={hasReturnTrip}
         waitingTimeInfo={waitingTimeInfo}
         tripEndTime={tripEndTime}
-        returnStartTime={waitEndTime}
+        returnStartTime={correctedWaitEndTime}
         returnEndTime={returnEndTime}
       />
       

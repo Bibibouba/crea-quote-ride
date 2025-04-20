@@ -42,6 +42,27 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
     }
   }
   
+  // Pour le temps d'attente, s'assurer que les valeurs affichées sont cohérentes
+  let displayDayKm = dayKm;
+  let displayNightKm = nightKm;
+  
+  if (isWaitingTime && dayKm !== undefined && nightKm !== undefined) {
+    const totalMinutes = (dayKm + nightKm);
+    
+    // Si les minutes ne correspondent pas aux pourcentages, ajuster les valeurs affichées
+    if (totalMinutes > 0 && Math.abs(adjustedDayPercentage - (dayKm / totalMinutes * 100)) > 5) {
+      console.log('Adjusting displayed wait time minutes to match percentages:', {
+        original: { dayKm, nightKm, totalMinutes },
+        dayPercentage: adjustedDayPercentage,
+        nightPercentage: adjustedNightPercentage
+      });
+      
+      // Recalculer en fonction des pourcentages
+      displayDayKm = Math.round((adjustedDayPercentage / 100) * totalMinutes);
+      displayNightKm = Math.round((adjustedNightPercentage / 100) * totalMinutes);
+    }
+  }
+  
   // Debug pour vérifier les valeurs
   console.log('DayNightGauge values:', {
     originalDayPercentage: dayPercentage,
@@ -50,8 +71,10 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
     formattedNightPercentage,
     adjustedDayPercentage,
     adjustedNightPercentage,
-    dayKm,
-    nightKm,
+    originalDayKm: dayKm,
+    originalNightKm: nightKm,
+    displayDayKm,
+    displayNightKm,
     isWaitingTime,
     totalPercentage
   });
@@ -64,11 +87,11 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
           <span className="text-sm font-medium">
             {isWaitingTime ? (
               <>Jour ({adjustedDayPercentage}%)
-                {dayKm !== undefined && <span className="text-xs ml-1">({Math.round(dayKm)} min)</span>}
+                {displayDayKm !== undefined && <span className="text-xs ml-1">({Math.round(displayDayKm)} min)</span>}
               </>
             ) : (
               <>Jour ({adjustedDayPercentage}%)
-                {dayKm !== undefined && <span className="text-xs ml-1">({dayKm.toFixed(1)} km)</span>}
+                {displayDayKm !== undefined && <span className="text-xs ml-1">({displayDayKm.toFixed(1)} km)</span>}
               </>
             )}
           </span>
@@ -77,11 +100,11 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
           <span className="text-sm font-medium">
             {isWaitingTime ? (
               <>Nuit ({adjustedNightPercentage}%)
-                {nightKm !== undefined && <span className="text-xs ml-1">({Math.round(nightKm)} min)</span>}
+                {displayNightKm !== undefined && <span className="text-xs ml-1">({Math.round(displayNightKm)} min)</span>}
               </>
             ) : (
               <>Nuit ({adjustedNightPercentage}%)
-                {nightKm !== undefined && <span className="text-xs ml-1">({nightKm.toFixed(1)} km)</span>}
+                {displayNightKm !== undefined && <span className="text-xs ml-1">({displayNightKm.toFixed(1)} km)</span>}
               </>
             )}
           </span>
