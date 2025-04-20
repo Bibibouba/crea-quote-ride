@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TripHeaderCard } from './steps/TripHeaderCard';
 import { TripSummaryHeader } from './summary/trip-summary/TripSummaryHeader';
@@ -5,8 +6,8 @@ import { TripTimingDetails } from './summary/trip-details/TripTimingDetails';
 import { RouteDetailsSection } from './steps/RouteDetailsSection';
 import { TripPricingSection } from './steps/TripPricingSection';
 import { TripSummaryActions } from './summary/trip-summary/TripSummaryActions';
-import { Card, CardHeader, CardTitle, CardContent } from '@chakra-ui/react';
-import { TripDetailsDisplay } from './summary/trip-details/TripDetailsDisplay';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { TripDetailsDisplay } from './steps/TripDetailsDisplay';
 
 interface TripSummaryStepProps {
   departureAddress: string;
