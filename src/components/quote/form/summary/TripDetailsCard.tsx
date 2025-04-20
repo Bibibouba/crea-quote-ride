@@ -1,10 +1,11 @@
-import { Separator } from '@/components/ui/separator';
-import { Vehicle } from '@/types/quoteForm';
-import { ArrowRight } from 'lucide-react';
+
+import React from 'react';
+import { Vehicle, QuoteDetailsType } from '@/types/quoteForm';
 import { PriceFormatter } from './PriceFormatter';
+import { Separator } from '@/components/ui/separator';
+import { ArrowRight } from 'lucide-react';
 import { ReturnTripDisplay } from './ReturnTripDisplay';
-import { QuoteDetailsType } from '@/types/quoteForm';
-import { TripTimeInfo, NightRateInfo, SundayRateInfo } from './TripTimeInfo';
+import { TripTimeInfo } from './TripTimeInfo';
 import { WaitingTimeDetailDisplay } from './WaitingTimeDetailDisplay';
 import { ExactPriceDetails } from './ExactPriceDetails';
 import { WaitingTimeGauge } from './WaitingTimeGauge';
@@ -66,39 +67,6 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
   sundayRate,
   quoteDetails
 }) => {
-  const formatTimeDisplay = (date: Date) => {
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-  };
-
-  const nightRateInfo: NightRateInfo | undefined = isNightRateApplied ? {
-    isApplied: true,
-    percentage: nightRatePercentage,
-    nightHours,
-    totalHours: nightHours + dayHours,
-    nightStart: nightRateStart,
-    nightEnd: nightRateEnd,
-    nightSurcharge: quoteDetails?.nightSurcharge,
-    dayKm: quoteDetails?.dayKm,
-    nightKm: quoteDetails?.nightKm,
-    totalKm: quoteDetails?.totalKm,
-    dayPrice: quoteDetails?.dayPrice,
-    nightPrice: quoteDetails?.nightPrice
-  } : undefined;
-
-  const sundayRateInfo: SundayRateInfo | undefined = isSunday && sundayRate > 0 ? {
-    isApplied: true,
-    percentage: sundayRate,
-  } : undefined;
-
-  const hasCompleteDetails = quoteDetails && 
-    quoteDetails.dayKm !== undefined && 
-    quoteDetails.nightKm !== undefined &&
-    quoteDetails.dayPrice !== undefined &&
-    quoteDetails.nightPrice !== undefined &&
-    quoteDetails.totalPriceHT !== undefined &&
-    quoteDetails.totalVAT !== undefined &&
-    quoteDetails.totalPrice !== undefined;
-
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="space-y-4">
@@ -128,7 +96,7 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
             totalTTC={quoteDetails.totalPrice}
           />
         ) : (
-          <>
+          <div className="space-y-4">
             <div className="flex justify-between">
               <div className="flex items-center">
                 <ArrowRight className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -139,9 +107,22 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
             
             <TripTimeInfo 
               startTime={time} 
-              endTime={formatTimeDisplay(tripEndTime)}
-              nightRateInfo={nightRateInfo}
-              sundayRateInfo={sundayRateInfo}
+              endTime={tripEndTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              nightRateInfo={{
+                isApplied: isNightRateApplied,
+                percentage: nightRatePercentage,
+                nightHours,
+                totalHours: nightHours + dayHours,
+                nightStart: nightRateStart,
+                nightEnd: nightRateEnd,
+                nightSurcharge: quoteDetails?.nightSurcharge,
+                dayKm: quoteDetails?.dayKm,
+                nightKm: quoteDetails?.nightKm,
+                totalKm: quoteDetails?.totalKm,
+                dayPrice: quoteDetails?.dayPrice,
+                nightPrice: quoteDetails?.nightPrice
+              }}
+              sundayRateInfo={isSunday ? { isApplied: true, percentage: sundayRate } : undefined}
             />
             
             {hasWaitingTime && waitingTimeMinutes > 0 && quoteDetails?.waitTimeDay !== undefined && (
@@ -178,7 +159,7 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
                 <PriceFormatter price={totalPrice} />
               </p>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
