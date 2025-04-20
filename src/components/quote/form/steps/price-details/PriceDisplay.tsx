@@ -18,7 +18,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
   return (
     <div className="text-xs">
       <p className="font-medium">
-        {formatPrice(priceTTC)}€ TTC
+        {formatPrice(priceTTC)}€ <span className="font-bold">TTC</span>
       </p>
       <TooltipProvider>
         <Tooltip>

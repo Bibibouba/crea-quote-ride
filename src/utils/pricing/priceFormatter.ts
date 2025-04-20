@@ -3,7 +3,7 @@ export const formatPrice = (price?: number | string | null) => {
   if (price === undefined || price === null) return "0.0";
   const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
   if (isNaN(numericPrice) || typeof numericPrice !== 'number') return "0.0";
-  return numericPrice.toFixed(1);
+  return numericPrice.toFixed(2);
 };
 
 export const formatDistance = (distance: number) => {
