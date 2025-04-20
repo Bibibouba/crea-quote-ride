@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TripTimingHeader } from './trip-timing/TripTimingHeader';
 import { NightRateSection } from './trip-timing/NightRateSection';
@@ -26,6 +25,7 @@ interface NightRateInfo {
 interface TripTimeInfoProps {
   startTime: string;
   endTime: string;
+  finalTimeDisplay: string;
   nightRateInfo: NightRateInfo;
   returnNightRateInfo?: NightRateInfo;
   sundayRateInfo?: { isApplied: boolean; percentage: number };
@@ -48,6 +48,7 @@ interface TripTimeInfoProps {
 export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   startTime,
   endTime,
+  finalTimeDisplay,
   nightRateInfo,
   returnNightRateInfo,
   sundayRateInfo,
@@ -58,7 +59,6 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   returnEndTime,
   finalArrivalTime
 }) => {
-  // Format times for display
   const formatTimeDisplay = (date?: Date) => {
     if (!date) return '--:--';
     return format(date, 'HH:mm');
