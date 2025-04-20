@@ -1,51 +1,31 @@
 
-import { useState } from 'react';
 import { useAddressForm } from './useAddressForm';
-import { useClientData } from './useClientData';
 import { useFormState } from './useFormState';
-import { usePricing } from '@/hooks/use-pricing';
-import { useQuoteDetails } from './useQuoteDetails';
-import { useRouteCalculation } from './useRouteCalculation';
-import { useSaveQuote } from './useSaveQuote';
 import { useTripOptions } from './useTripOptions';
-import { useVehicleData } from './useVehicleData';
-import { useWaitingTimeCalculation } from './useWaitingTimeCalculation';
-import { waitingTimeOptions as generateWaitingTimeOptions } from '@/utils/waitingTimeOptions';
-import { QuoteDetailsType } from '@/types/quoteForm';
-import { useFormReset } from './useFormReset';
+import { useRouteCalculation } from './useRouteCalculation';
 import { useRouteHandler } from './useRouteHandler';
 import { useCalculateQuote } from './useCalculateQuote';
+import { useFormReset } from './useFormReset';
+import { useVehicleState } from './vehicle/useVehicleState';
+import { usePriceCalculations } from './pricing/usePriceCalculations';
+import { useQuoteSubmission } from './submission/useQuoteSubmission';
+import { waitingTimeOptions } from '@/utils/waitingTimeOptions';
+import { QuoteFormStateProps } from '@/types/quoteForm';
 
-/**
- * Legacy hook for backward compatibility
- * This hook composes smaller hooks to maintain the same API
- */
-export const useQuoteForm = () => {
-  // Load pricing settings
-  const { pricingSettings } = usePricing();
-  
-  // Get vehicle data
-  const {
-    vehicles,
-    vehicleTypes,
-    isLoadingVehicles,
-    selectedVehicle,
-    setSelectedVehicle
-  } = useVehicleData();
+export const useQuoteForm = ({ clientId, onSuccess }: QuoteFormStateProps = {}) => {
+  // Get vehicle and pricing data
+  const vehicleState = useVehicleState();
   
   // Get waiting time options
-  const waitingTimeOptions = generateWaitingTimeOptions();
+  const waitingTimeOptionsList = waitingTimeOptions();
   
   // Address form state
   const addressForm = useAddressForm();
   
   // Trip options state
-  const tripOptions = useTripOptions({ waitingTimeOptions });
+  const tripOptions = useTripOptions({ waitingTimeOptions: waitingTimeOptionsList });
   
-  // Client data state
-  const clientData = useClientData();
-  
-  // Form state (UI state)
+  // Form UI state
   const formState = useFormState();
   
   // Route calculation
@@ -59,50 +39,25 @@ export const useQuoteForm = () => {
     destinationCoordinates: addressForm.destinationCoordinates,
     customReturnCoordinates: addressForm.customReturnCoordinates
   });
-  
-  // Calculate waiting time price
-  const {
-    waitingTimePrice
-  } = useWaitingTimeCalculation({
+
+  // Price calculations
+  const { waitingTimePrice, quoteDetails } = usePriceCalculations({
     hasWaitingTime: tripOptions.hasWaitingTime,
     waitingTimeMinutes: tripOptions.waitingTimeMinutes,
-    selectedVehicle,
-    vehicles,
-    pricingSettings,
+    selectedVehicle: vehicleState.selectedVehicle,
+    vehicles: vehicleState.vehicles,
+    pricingSettings: vehicleState.pricingSettings,
     time: tripOptions.time,
-    date: tripOptions.date
-  });
-  
-  // Calculate quote details
-  const { quoteDetails } = useQuoteDetails({
-    selectedVehicle,
+    date: tripOptions.date,
     estimatedDistance: tripOptions.estimatedDistance,
     returnDistance,
     hasReturnTrip: tripOptions.hasReturnTrip,
-    returnToSameAddress: tripOptions.returnToSameAddress,
-    vehicles,
-    hasWaitingTime: tripOptions.hasWaitingTime,
-    waitingTimePrice,
-    time: tripOptions.time,
-    date: tripOptions.date,
-    pricingSettings
+    returnToSameAddress: tripOptions.returnToSameAddress
   });
-  
-  // Use our new route handler hook
-  const { handleRouteCalculated } = useRouteHandler({
-    routeHandler,
-    setEstimatedDistance: tripOptions.setEstimatedDistance,
-    setEstimatedDuration: tripOptions.setEstimatedDuration
-  });
-  
-  // Save quote logic
-  const {
-    isSubmitting,
-    isQuoteSent,
-    setIsQuoteSent,
-    handleSaveQuote
-  } = useSaveQuote({
-    quoteDetails: quoteDetails as QuoteDetailsType,
+
+  // Quote submission
+  const quoteSubmission = useQuoteSubmission({
+    quoteDetails,
     departureAddress: addressForm.departureAddress,
     destinationAddress: addressForm.destinationAddress,
     departureCoordinates: addressForm.departureCoordinates,
@@ -120,11 +75,19 @@ export const useQuoteForm = () => {
     waitingTimePrice,
     estimatedDistance: tripOptions.estimatedDistance,
     estimatedDuration: tripOptions.estimatedDuration,
-    selectedVehicle,
-    vehicles,
-    pricingSettings
+    selectedVehicle: vehicleState.selectedVehicle,
+    vehicles: vehicleState.vehicles,
+    pricingSettings: vehicleState.pricingSettings,
+    onSuccess
   });
-  
+
+  // Use the calculate quote hook
+  const { handleCalculateQuote } = useCalculateQuote({
+    handleSubmit: formState.handleSubmit,
+    departureCoordinates: addressForm.departureCoordinates,
+    destinationCoordinates: addressForm.destinationCoordinates
+  });
+
   // Use the form reset hook
   const { resetForm } = useFormReset({
     setDepartureAddress: addressForm.setDepartureAddress,
@@ -143,111 +106,50 @@ export const useQuoteForm = () => {
     setWaitingTimeMinutes: tripOptions.setWaitingTimeMinutes,
     setReturnToSameAddress: tripOptions.setReturnToSameAddress,
     setShowQuote: formState.setShowQuote,
-    setIsQuoteSent,
-    setFirstName: clientData.setFirstName,
-    setLastName: clientData.setLastName,
-    setEmail: clientData.setEmail,
-    setPhone: clientData.setPhone,
-    setSelectedVehicle,
-    vehicles
+    setIsQuoteSent: quoteSubmission.setIsQuoteSent,
+    setFirstName: quoteSubmission.setFirstName,
+    setLastName: quoteSubmission.setLastName,
+    setEmail: quoteSubmission.setEmail,
+    setPhone: quoteSubmission.setPhone,
+    setSelectedVehicle: vehicleState.setSelectedVehicle,
+    vehicles: vehicleState.vehicles
   });
-  
-  // Use the calculate quote hook
-  const { handleCalculateQuote } = useCalculateQuote({
-    handleSubmit: formState.handleSubmit,
-    departureCoordinates: addressForm.departureCoordinates,
-    destinationCoordinates: addressForm.destinationCoordinates
-  });
-  
-  // Calculate base price
-  const basePrice = vehicles.find(v => v.id === selectedVehicle)?.basePrice || 1.8;
-  
+
+  // Handle route calculation
+  const handleRouteCalculated = (distance: number, duration: number) => {
+    const { estimatedDistance, estimatedDuration } = routeHandler(distance, duration);
+    tripOptions.setEstimatedDistance(estimatedDistance);
+    tripOptions.setEstimatedDuration(estimatedDuration);
+  };
+
   return {
     // Address state
-    departureAddress: addressForm.departureAddress,
-    setDepartureAddress: addressForm.setDepartureAddress,
-    destinationAddress: addressForm.destinationAddress,
-    setDestinationAddress: addressForm.setDestinationAddress,
-    departureCoordinates: addressForm.departureCoordinates,
-    setDepartureCoordinates: addressForm.setDepartureCoordinates,
-    destinationCoordinates: addressForm.destinationCoordinates,
-    setDestinationCoordinates: addressForm.setDestinationCoordinates,
+    ...addressForm,
     
-    // Trip state
-    date: tripOptions.date,
-    setDate: tripOptions.setDate,
-    time: tripOptions.time,
-    setTime: tripOptions.setTime,
-    passengers: tripOptions.passengers,
-    setPassengers: tripOptions.setPassengers,
+    // Trip options
+    ...tripOptions,
     
-    // UI state
-    showQuote: formState.showQuote,
-    setShowQuote: formState.setShowQuote,
-    isLoading: formState.isLoading,
-    setIsLoading: formState.setIsLoading,
+    // Form state
+    ...formState,
     
-    // Quote status
-    isSubmitting,
-    isQuoteSent,
-    setIsQuoteSent,
-    
-    // Client info
-    firstName: clientData.firstName,
-    setFirstName: clientData.setFirstName,
-    lastName: clientData.lastName,
-    setLastName: clientData.setLastName,
-    email: clientData.email,
-    setEmail: clientData.setEmail,
-    phone: clientData.phone,
-    setPhone: clientData.setPhone,
+    // Vehicle state
+    ...vehicleState,
     
     // Route data
-    estimatedDistance: tripOptions.estimatedDistance,
-    setEstimatedDistance: tripOptions.setEstimatedDistance,
-    estimatedDuration: tripOptions.estimatedDuration,
-    setEstimatedDuration: tripOptions.setEstimatedDuration,
-    
-    // Options
-    hasReturnTrip: tripOptions.hasReturnTrip,
-    setHasReturnTrip: tripOptions.setHasReturnTrip,
-    hasWaitingTime: tripOptions.hasWaitingTime,
-    setHasWaitingTime: tripOptions.setHasWaitingTime,
-    waitingTimeMinutes: tripOptions.waitingTimeMinutes,
-    setWaitingTimeMinutes: tripOptions.setWaitingTimeMinutes,
-    waitingTimePrice,
-    returnToSameAddress: tripOptions.returnToSameAddress,
-    setReturnToSameAddress: tripOptions.setReturnToSameAddress,
-    customReturnAddress: addressForm.customReturnAddress,
-    setCustomReturnAddress: addressForm.setCustomReturnAddress,
-    customReturnCoordinates: addressForm.customReturnCoordinates,
-    setCustomReturnCoordinates: addressForm.setCustomReturnCoordinates,
-    
-    // Return data
     returnDistance,
     returnDuration,
     
-    // Vehicle data
-    vehicles,
-    vehicleTypes,
-    isLoadingVehicles,
-    selectedVehicle,
-    setSelectedVehicle,
-    basePrice,
+    // Quote submission
+    ...quoteSubmission,
     
-    // Options data
-    waitingTimeOptions,
-    
-    // Quote details
+    // Calculated values
+    waitingTimePrice,
     quoteDetails,
+    waitingTimeOptions: waitingTimeOptionsList,
     
     // Handlers
-    handleDepartureAddressSelect: addressForm.handleDepartureAddressSelect,
-    handleDestinationAddressSelect: addressForm.handleDestinationAddressSelect,
-    handleReturnAddressSelect: addressForm.handleReturnAddressSelect,
-    handleRouteCalculated,
     handleCalculateQuote,
-    resetForm,
-    handleSaveQuote
+    handleRouteCalculated,
+    resetForm
   };
 };
