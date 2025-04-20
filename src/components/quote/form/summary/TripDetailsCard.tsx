@@ -1,4 +1,3 @@
-
 import { Separator } from '@/components/ui/separator';
 import { Vehicle } from '@/types/quoteForm';
 import { ArrowRight } from 'lucide-react';
@@ -8,6 +7,7 @@ import { QuoteDetailsType } from '@/types/quoteForm';
 import { TripTimeInfo, NightRateInfo, SundayRateInfo } from './TripTimeInfo';
 import { WaitingTimeDetailDisplay } from './WaitingTimeDetailDisplay';
 import { ExactPriceDetails } from './ExactPriceDetails';
+import { WaitingTimeGauge } from './WaitingTimeGauge';
 
 interface TripDetailsCardProps {
   selectedVehicle: string;
@@ -70,7 +70,6 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
   };
 
-  // Prepare data for TripTimeInfo component
   const nightRateInfo: NightRateInfo | undefined = isNightRateApplied ? {
     isApplied: true,
     percentage: nightRatePercentage,
@@ -91,7 +90,6 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
     percentage: sundayRate,
   } : undefined;
 
-  // Vérifier si nous avons les détails complets pour utiliser le composant ExactPriceDetails
   const hasCompleteDetails = quoteDetails && 
     quoteDetails.dayKm !== undefined && 
     quoteDetails.nightKm !== undefined &&
@@ -117,7 +115,6 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
           <p>{basePrice.toFixed(2)}€/km</p>
         </div>
         
-        {/* Afficher soit ExactPriceDetails, soit le détail standard basé sur le trip */}
         {hasCompleteDetails ? (
           <ExactPriceDetails 
             dayKm={quoteDetails.dayKm}
@@ -132,7 +129,6 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
           />
         ) : (
           <>
-            {/* Trajet aller */}
             <div className="flex justify-between">
               <div className="flex items-center">
                 <ArrowRight className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -141,7 +137,6 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
               <PriceFormatter price={estimatedPrice} />
             </div>
             
-            {/* Afficher les infos de tarif de nuit et dimanche avant waiting time et return trip */}
             <TripTimeInfo 
               startTime={time} 
               endTime={formatTimeDisplay(tripEndTime)}
@@ -149,7 +144,16 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
               sundayRateInfo={sundayRateInfo}
             />
             
-            {/* Display detailed waiting time information */}
+            {hasWaitingTime && waitingTimeMinutes > 0 && quoteDetails?.waitTimeDay !== undefined && (
+              <WaitingTimeGauge
+                waitTimeDay={quoteDetails.waitTimeDay}
+                waitTimeNight={quoteDetails.waitTimeNight}
+                waitPriceDay={quoteDetails.waitPriceDay}
+                waitPriceNight={quoteDetails.waitPriceNight}
+                totalWaitTime={waitingTimeMinutes}
+              />
+            )}
+            
             <WaitingTimeDetailDisplay 
               hasWaitingTime={hasWaitingTime}
               waitingTimeMinutes={waitingTimeMinutes}
@@ -157,7 +161,6 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
               quoteDetails={quoteDetails}
             />
             
-            {/* Display return trip information */}
             <ReturnTripDisplay 
               hasReturnTrip={hasReturnTrip}
               returnToSameAddress={returnToSameAddress}
