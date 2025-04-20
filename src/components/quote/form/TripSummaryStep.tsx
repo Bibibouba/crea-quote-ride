@@ -110,25 +110,26 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
             hasReturnTrip={hasReturnTrip}
             returnToSameAddress={returnToSameAddress}
           />
-
-          <TripPricingSection
-            estimatedDistance={estimatedDistance}
-            estimatedDuration={estimatedDuration}
-            time={time}
-            hasMinDistanceWarning={hasMinDistanceWarning}
-            minDistance={minDistance}
-            hasReturnTrip={hasReturnTrip}
-            returnToSameAddress={returnToSameAddress}
-            returnDistance={returnDistance}
-            returnDuration={returnDuration}
-            hasWaitingTime={hasWaitingTime}
-            waitingTimeMinutes={waitingTimeMinutes}
-            quoteDetails={quoteDetails}
-            isNightRate={quoteDetails?.isNightRate}
-            isSunday={quoteDetails?.isSunday}
-            nightHours={quoteDetails?.nightHours}
-          />
         </div>
+        
+        <TripPricingSection
+          estimatedDistance={estimatedDistance}
+          estimatedDuration={estimatedDuration}
+          time={time}
+          hasMinDistanceWarning={hasMinDistanceWarning}
+          minDistance={minDistance}
+          hasReturnTrip={hasReturnTrip}
+          returnToSameAddress={returnToSameAddress}
+          returnDistance={returnDistance}
+          returnDuration={returnDuration}
+          hasWaitingTime={hasWaitingTime}
+          waitingTimeMinutes={waitingTimeMinutes}
+          quoteDetails={quoteDetails}
+          isNightRate={quoteDetails?.isNightRate}
+          isSunday={quoteDetails?.isSunday}
+          nightHours={quoteDetails?.nightHours}
+          defaultExpanded={true}
+        />
       </div>
 
       <TripSummaryActions

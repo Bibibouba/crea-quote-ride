@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QuoteDetailsType } from '@/types/quoteForm';
@@ -23,6 +22,7 @@ interface TripPricingSectionProps {
   isNightRate?: boolean;
   isSunday?: boolean;
   nightHours?: number;
+  defaultExpanded?: boolean;
 }
 
 export const TripPricingSection: React.FC<TripPricingSectionProps> = ({
@@ -40,13 +40,12 @@ export const TripPricingSection: React.FC<TripPricingSectionProps> = ({
   quoteDetails,
   isNightRate,
   isSunday,
-  nightHours
+  nightHours,
+  defaultExpanded = false
 }) => {
-  // Utilisation d'un ref pour suivre si le composant est monté
   const isMounted = useRef(true);
-  const [showDetailedView, setShowDetailedView] = useState(false);
+  const [showDetailedView, setShowDetailedView] = useState(defaultExpanded);
   
-  // Cleanup lors du démontage du composant
   useEffect(() => {
     return () => {
       isMounted.current = false;
