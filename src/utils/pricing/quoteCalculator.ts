@@ -74,10 +74,11 @@ export const calculateQuoteDetails = (
       waitTimeNight: 0,
       waitPriceDay: 0,
       waitPriceNight: 0,
-      totalWaitPrice: 0
+      totalWaitPrice: 0,
+      waitEndTime: null
     };
 
-  // Calculate return trip pricing if needed
+  // Calculate return trip pricing if needed using the waiting time end time
   const returnTripDetails = calculateReturnTripDetails(
     hasReturnTrip,
     returnToSameAddress,
@@ -88,7 +89,8 @@ export const calculateQuoteDetails = (
     pricingSettings,
     (estimatedDistance / 60) * 60,
     hasWaitingTime,
-    waitingTimePrice
+    waitingTimePrice,
+    waitingTimeDetails.waitEndTime
   );
 
   // Calculate final prices including VAT and Sunday rates

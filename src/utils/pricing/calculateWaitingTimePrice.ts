@@ -17,7 +17,8 @@ export const calculateDetailedWaitingPrice = (
       waitTimeNight: 0,
       waitPriceDay: 0,
       waitPriceNight: 0,
-      totalWaitPrice: 0
+      totalWaitPrice: 0,
+      waitEndTime: null
     };
   }
   
@@ -29,10 +30,21 @@ export const calculateDetailedWaitingPrice = (
     const pricePerMinute = (vehicleSettings?.wait_price_per_15min || pricingSettings?.wait_price_per_15min || 7.5) / 15;
     const totalPrice = waitingTimeMinutes * pricePerMinute;
     
+    // Calculer l'heure de fin d'attente pour le trajet retour
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const tripDuration = 60; // Durée estimée du trajet (en minutes)
+    
+    const waitStartDate = new Date(date);
+    waitStartDate.setHours(startHours, startMinutes + tripDuration, 0, 0);
+    
+    const waitEndTime = new Date(waitStartDate.getTime() + waitingTimeMinutes * 60000);
+    
     console.log("Waiting time 100% day rate:", {
       waitingTimeMinutes,
       pricePerMinute,
-      totalPrice
+      totalPrice,
+      waitStartDate: waitStartDate.toLocaleTimeString(),
+      waitEndTime: waitEndTime.toLocaleTimeString()
     });
     
     return {
@@ -40,7 +52,8 @@ export const calculateDetailedWaitingPrice = (
       waitTimeNight: 0,
       waitPriceDay: totalPrice,
       waitPriceNight: 0,
-      totalWaitPrice: totalPrice
+      totalWaitPrice: totalPrice,
+      waitEndTime // Ajoute l'heure de fin d'attente
     };
   }
   
@@ -51,10 +64,13 @@ export const calculateDetailedWaitingPrice = (
   
   // Calculer l'heure de début d'attente (après l'arrivée)
   const [startHours, startMinutes] = startTime.split(':').map(Number);
-  const tripDuration = 60; // Durée estimée du trajet (en minutes) - corrigé à 60 minutes fixes
+  const tripDuration = 60; // Durée estimée du trajet (en minutes)
   
   const waitStartDate = new Date(date);
   waitStartDate.setHours(startHours, startMinutes + tripDuration, 0, 0);
+  
+  // Calculer l'heure de fin d'attente pour le trajet retour
+  const waitEndTime = new Date(waitStartDate.getTime() + waitingTimeMinutes * 60000);
   
   // Créer des objets Date pour le début et la fin de la nuit
   const nightStartHours = parseInt(waitNightStart.split(':')[0]);
@@ -123,7 +139,9 @@ export const calculateDetailedWaitingPrice = (
     dayPrice,
     nightPrice,
     totalPrice,
-    enableNightRates
+    enableNightRates,
+    waitStartTime: waitStartDate.toLocaleTimeString(),
+    waitEndTime: waitEndTime.toLocaleTimeString()
   });
   
   return {
@@ -131,7 +149,8 @@ export const calculateDetailedWaitingPrice = (
     waitTimeNight: nightMinutes,
     waitPriceDay: dayPrice,
     waitPriceNight: nightPrice,
-    totalWaitPrice: totalPrice
+    totalWaitPrice: totalPrice,
+    waitEndTime // Ajoute l'heure de fin d'attente
   };
 };
 

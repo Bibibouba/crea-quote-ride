@@ -15,7 +15,8 @@ export const calculateReturnTripDetails = (
   pricingSettings: any,
   estimatedDurationMinutes: number,
   hasWaitingTime: boolean,
-  waitingTimeMinutes: number
+  waitingTimeMinutes: number,
+  waitingTimeEndTime?: Date | null
 ) => {
   if (!hasReturnTrip) {
     return {
@@ -35,20 +36,28 @@ export const calculateReturnTripDetails = (
     };
   }
   
-  // Calculate the estimated arrival time to determine when the return trip will start
-  const arrivalTime = new Date(departureTime.getTime() + estimatedDurationMinutes * 60 * 1000);
+  let returnStartTime;
   
-  // If there's waiting time, add it to the arrival time to get the return start time
-  const waitingTimeMinutesValue = hasWaitingTime ? waitingTimeMinutes : 0;
-  const returnStartTime = new Date(arrivalTime.getTime() + (waitingTimeMinutesValue * 60 * 1000));
-  
-  console.log("Return trip timing:", {
-    departureTime: departureTime.toLocaleTimeString(),
-    arrivalTime: arrivalTime.toLocaleTimeString(),
-    returnStartTime: returnStartTime.toLocaleTimeString(),
-    estimatedDurationMinutes,
-    waitingTimeMinutes: waitingTimeMinutesValue
-  });
+  // Utiliser l'heure de fin d'attente si disponible
+  if (waitingTimeEndTime && hasWaitingTime) {
+    returnStartTime = new Date(waitingTimeEndTime);
+    console.log("Using waiting time end for return trip start:", returnStartTime.toLocaleTimeString());
+  } else {
+    // Méthode originale: calculer à partir de l'heure de départ + durée du trajet
+    const arrivalTime = new Date(departureTime.getTime() + estimatedDurationMinutes * 60 * 1000);
+    
+    // Si pas d'heure de fin d'attente mais temps d'attente présent, calculer
+    const waitingTimeMinutesValue = hasWaitingTime ? waitingTimeMinutes : 0;
+    returnStartTime = new Date(arrivalTime.getTime() + (waitingTimeMinutesValue * 60 * 1000));
+    
+    console.log("Calculated return trip timing:", {
+      departureTime: departureTime.toLocaleTimeString(),
+      arrivalTime: arrivalTime.toLocaleTimeString(),
+      returnStartTime: returnStartTime.toLocaleTimeString(),
+      estimatedDurationMinutes,
+      waitingTimeMinutes: waitingTimeMinutesValue
+    });
+  }
 
   const returnTripDistance = returnToSameAddress ? estimatedDistance : returnDistance;
   
@@ -68,7 +77,13 @@ export const calculateReturnTripDetails = (
   const returnTotalKm = returnSplit.totalKm;
   
   console.log("Day/Night split for return trip:", {
-    returnDayKm, returnNightKm, returnDayPercentage, returnNightPercentage, returnNightHours, returnDayHours
+    returnStartTime: returnStartTime.toLocaleTimeString(),
+    returnDayKm, 
+    returnNightKm, 
+    returnDayPercentage, 
+    returnNightPercentage, 
+    returnNightHours, 
+    returnDayHours
   });
   
   // Calculate night rate for return trip

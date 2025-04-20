@@ -13,6 +13,18 @@ export const TripSummaryActions: React.FC<TripSummaryActionsProps> = ({
 }) => {
   const addDebuggingInfo = () => {
     console.log("Vérification des données de tarification et attente...");
+    
+    // Vérifie s'il existe des objets dans la page avec des informations sur le temps d'attente
+    const waitingTimeInfo = 'waitingTimeInfo' in window ? (window as any).waitingTimeInfo : null;
+    if (waitingTimeInfo) {
+      console.log("Données de temps d'attente trouvées:", waitingTimeInfo);
+    }
+    
+    // Vérifie les données du trajet retour
+    const returnTripInfo = 'returnTripInfo' in window ? (window as any).returnTripInfo : null;
+    if (returnTripInfo) {
+      console.log("Données de trajet retour trouvées:", returnTripInfo);
+    }
   };
 
   return (

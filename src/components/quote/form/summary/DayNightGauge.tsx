@@ -26,10 +26,14 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
   let adjustedNightPercentage = formattedNightPercentage;
   
   const totalPercentage = adjustedDayPercentage + adjustedNightPercentage;
+  
+  // Ajustement des pourcentages pour s'assurer qu'ils totalisent 100%
   if (totalPercentage !== 100) {
-    if (formattedNightPercentage === 0) {
+    if (formattedNightPercentage < 1) {
       adjustedDayPercentage = 100;
-    } else if (formattedDayPercentage === 0) {
+      adjustedNightPercentage = 0;
+    } else if (formattedDayPercentage < 1) {
+      adjustedDayPercentage = 0;
       adjustedNightPercentage = 100;
     } else {
       // Normalisation proportionnelle
@@ -48,7 +52,8 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
     adjustedNightPercentage,
     dayKm,
     nightKm,
-    isWaitingTime
+    isWaitingTime,
+    totalPercentage
   });
 
   return (
@@ -59,7 +64,7 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
           <span className="text-sm font-medium">
             {isWaitingTime ? (
               <>Jour ({adjustedDayPercentage}%)
-                {dayKm !== undefined && <span className="text-xs ml-1">({dayKm} min)</span>}
+                {dayKm !== undefined && <span className="text-xs ml-1">({Math.round(dayKm)} min)</span>}
               </>
             ) : (
               <>Jour ({adjustedDayPercentage}%)
@@ -72,7 +77,7 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
           <span className="text-sm font-medium">
             {isWaitingTime ? (
               <>Nuit ({adjustedNightPercentage}%)
-                {nightKm !== undefined && <span className="text-xs ml-1">({nightKm} min)</span>}
+                {nightKm !== undefined && <span className="text-xs ml-1">({Math.round(nightKm)} min)</span>}
               </>
             ) : (
               <>Nuit ({adjustedNightPercentage}%)
