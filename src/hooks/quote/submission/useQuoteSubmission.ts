@@ -7,14 +7,14 @@ interface UseQuoteSubmissionProps {
   quoteDetails: QuoteDetailsType | null;
   departureAddress: string;
   destinationAddress: string;
-  departureCoordinates: [number, number]; // Changed from optional to required
-  destinationCoordinates: [number, number]; // Changed from optional to required
+  departureCoordinates: [number, number]; 
+  destinationCoordinates: [number, number]; 
   date: Date;
   time: string;
   hasReturnTrip: boolean;
   returnToSameAddress: boolean;
   customReturnAddress: string;
-  customReturnCoordinates?: [number, number];
+  customReturnCoordinates: [number, number];
   returnDistance: number;
   returnDuration: number;
   hasWaitingTime: boolean;

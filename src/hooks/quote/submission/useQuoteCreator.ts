@@ -63,6 +63,8 @@ export const useQuoteCreator = () => {
         driverId,
         clientId,
         quoteData: {
+          driver_id: driverId,
+          client_id: clientId,
           vehicle_id: selectedVehicle,
           departure_location: departureAddress,
           arrival_location: destinationAddress,

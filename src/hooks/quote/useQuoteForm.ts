@@ -58,6 +58,10 @@ export const useQuoteForm = ({ clientId, onSuccess }: QuoteFormStateProps = {}) 
   // Only create quote submission if we have coordinates
   let quoteSubmission = null;
   if (addressForm.departureCoordinates && addressForm.destinationCoordinates) {
+    // Ensure we have default return coordinates if needed
+    const customReturnCoordinates = addressForm.customReturnCoordinates || 
+      (tripOptions.returnToSameAddress ? addressForm.departureCoordinates : addressForm.destinationCoordinates);
+    
     quoteSubmission = useQuoteSubmission({
       quoteDetails,
       departureAddress: addressForm.departureAddress,
@@ -69,7 +73,7 @@ export const useQuoteForm = ({ clientId, onSuccess }: QuoteFormStateProps = {}) 
       hasReturnTrip: tripOptions.hasReturnTrip,
       returnToSameAddress: tripOptions.returnToSameAddress,
       customReturnAddress: addressForm.customReturnAddress,
-      customReturnCoordinates: addressForm.customReturnCoordinates,
+      customReturnCoordinates,
       returnDistance,
       returnDuration,
       hasWaitingTime: tripOptions.hasWaitingTime,

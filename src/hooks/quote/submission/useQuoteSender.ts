@@ -1,5 +1,6 @@
 
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useQuoteEmailSender } from '../useQuoteEmailSender';
 import { Quote } from '@/types/quote';
 
