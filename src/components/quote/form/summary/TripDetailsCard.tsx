@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Vehicle, QuoteDetailsType } from '@/types/quoteForm';
 import { PriceFormatter } from './PriceFormatter';
@@ -67,6 +66,8 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
   sundayRate,
   quoteDetails
 }) => {
+  const hasCompleteDetails = !!quoteDetails?.dayKm && !!quoteDetails?.nightKm;
+
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="space-y-4">
