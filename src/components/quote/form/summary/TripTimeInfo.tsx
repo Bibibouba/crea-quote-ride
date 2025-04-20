@@ -5,6 +5,7 @@ import { DayNightGauge } from './DayNightGauge';
 import { NightRateDisplay } from './trip-details/NightRateDisplay';
 import { SundayRateInfo } from './trip-details/SundayRateInfo';
 import { WaitingTimeGauge } from './WaitingTimeGauge';
+import { format } from 'date-fns';
 
 interface NightRateInfo {
   isApplied: boolean;
@@ -41,7 +42,11 @@ interface TripTimeInfoProps {
     waitPriceDay: number;
     waitPriceNight: number;
     totalWaitTime: number;
+    waitEndTime?: Date;
   };
+  tripEndTime?: Date;
+  returnStartTime?: Date;
+  returnEndTime?: Date;
 }
 
 export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
@@ -51,7 +56,10 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   returnNightRateInfo,
   sundayRateInfo,
   hasReturnTrip = false,
-  waitingTimeInfo
+  waitingTimeInfo,
+  tripEndTime,
+  returnStartTime,
+  returnEndTime
 }) => {
   const hasNightRate = nightRateInfo?.isApplied || (returnNightRateInfo?.isApplied ?? false);
   const hasSundayRate = sundayRateInfo?.isApplied ?? false;
@@ -71,9 +79,16 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
       <div className="space-y-3">
         {nightRateInfo && (
           <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="flex items-center gap-2 mb-2">
-              <Sun className="h-4 w-4 text-amber-500" />
-              <span className="text-sm font-medium">Trajet Aller</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Sun className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-medium">Trajet Aller</span>
+              </div>
+              <div className="flex gap-2 text-xs text-muted-foreground">
+                <span>{startTime}</span>
+                <span>-</span>
+                <span>{endTime}</span>
+              </div>
             </div>
             <NightRateDisplay
               title="Trajet aller"
@@ -95,7 +110,6 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
           </div>
         )}
         
-        {/* Ajout de la jauge de temps d'attente entre les trajets aller et retour */}
         {waitingTimeInfo && waitingTimeInfo.totalWaitTime > 0 && (
           <WaitingTimeGauge
             waitTimeDay={waitingTimeInfo.waitTimeDay}
@@ -103,14 +117,23 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
             waitPriceDay={waitingTimeInfo.waitPriceDay}
             waitPriceNight={waitingTimeInfo.waitPriceNight}
             totalWaitTime={waitingTimeInfo.totalWaitTime}
+            waitStartTime={tripEndTime}
+            waitEndTime={waitingTimeInfo.waitEndTime}
           />
         )}
         
         {hasReturnTrip && returnNightRateInfo && (
           <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="flex items-center gap-2 mb-2">
-              <Moon className="h-4 w-4 text-indigo-500" />
-              <span className="text-sm font-medium">Trajet Retour</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Moon className="h-4 w-4 text-indigo-500" />
+                <span className="text-sm font-medium">Trajet Retour</span>
+              </div>
+              <div className="flex gap-2 text-xs text-muted-foreground">
+                <span>{returnStartTime ? format(returnStartTime, 'HH:mm') : '--:--'}</span>
+                <span>-</span>
+                <span>{returnEndTime ? format(returnEndTime, 'HH:mm') : '--:--'}</span>
+              </div>
             </div>
             <NightRateDisplay
               title="Trajet retour"

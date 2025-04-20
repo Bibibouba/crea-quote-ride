@@ -2,6 +2,7 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
 import { DayNightGauge } from './DayNightGauge';
+import { format } from 'date-fns';
 
 interface WaitingTimeGaugeProps {
   waitTimeDay: number;
@@ -9,6 +10,8 @@ interface WaitingTimeGaugeProps {
   waitPriceDay: number;
   waitPriceNight: number;
   totalWaitTime: number;
+  waitStartTime?: Date;
+  waitEndTime?: Date;
 }
 
 export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
@@ -16,13 +19,17 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   waitTimeNight,
   waitPriceDay,
   waitPriceNight,
-  totalWaitTime
+  totalWaitTime,
+  waitStartTime,
+  waitEndTime
 }) => {
   // Vérification supplémentaire pour s'assurer que la jauge s'affiche
   console.log('WaitingTimeGauge rendered with:', {
     waitTimeDay,
     waitTimeNight,
-    totalWaitTime
+    totalWaitTime,
+    waitStartTime,
+    waitEndTime
   });
 
   // Pas de rendu si pas de temps d'attente
@@ -46,11 +53,23 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
     total: dayPercentage + nightPercentage
   });
 
+  const formatTime = (date?: Date) => {
+    if (!date) return '';
+    return format(date, 'HH:mm');
+  };
+
   return (
     <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200 mt-2 mb-2">
-      <div className="flex items-center gap-2 mb-2">
-        <Clock className="h-4 w-4 text-orange-500" />
-        <span className="text-sm font-medium">Temps d'attente</span>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-orange-500" />
+          <span className="text-sm font-medium">Temps d'attente</span>
+        </div>
+        <div className="flex gap-2 text-xs text-muted-foreground">
+          <span>{formatTime(waitStartTime)}</span>
+          <span>-</span>
+          <span>{formatTime(waitEndTime)}</span>
+        </div>
       </div>
       <DayNightGauge
         dayPercentage={isFullDayRate ? 100 : Math.round(dayPercentage)}
