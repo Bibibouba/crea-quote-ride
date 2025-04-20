@@ -1,11 +1,11 @@
+
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
 import { TripTimeInfo } from './summary/TripTimeInfo';
 import { RouteDetailsSection } from './steps/RouteDetailsSection';
 import { TripPricingSection } from './steps/TripPricingSection';
 import { TripHeaderCard } from './steps/TripHeaderCard';
+import { TripSummaryHeader } from './summary/trip-summary/TripSummaryHeader';
+import { TripSummaryActions } from './summary/trip-summary/TripSummaryActions';
 
 interface TripSummaryStepProps {
   departureAddress: string;
@@ -67,56 +67,41 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
   const isSunday = quoteDetails?.isSunday;
   const hasMinDistanceWarning = quoteDetails?.hasMinDistanceWarning;
   const minDistance = quoteDetails?.minDistance || 0;
-  const nightHours = quoteDetails?.nightHours || 0;
-  const nightRatePercentage = quoteDetails?.nightRatePercentage || 0;
-  const nightStartDisplay = quoteDetails?.nightStartDisplay || '';
-  const nightEndDisplay = quoteDetails?.nightEndDisplay || '';
-  const dayKm = quoteDetails?.dayKm;
-  const nightKm = quoteDetails?.nightKm;
-  const totalKm = quoteDetails?.totalKm || estimatedDistance;
-  
-  const returnDayKm = quoteDetails?.returnDayKm;
-  const returnNightKm = quoteDetails?.returnNightKm;
-  const returnTotalKm = quoteDetails?.returnTotalKm || returnDistance;
-  const returnNightHours = quoteDetails?.returnNightHours || 0;
-  const returnDayPercentage = quoteDetails?.returnDayPercentage;
-  const returnNightPercentage = quoteDetails?.returnNightPercentage;
-  const returnDayPrice = quoteDetails?.returnDayPrice;
-  const returnNightPrice = quoteDetails?.returnNightPrice;
-  const returnNightSurcharge = quoteDetails?.returnNightSurcharge;
 
+  // Night rate info calculation
   const nightRateInfo = {
     isApplied: !!isNightRate,
-    percentage: nightRatePercentage,
-    nightHours: nightHours,
+    percentage: quoteDetails?.nightRatePercentage || 0,
+    nightHours: quoteDetails?.nightHours || 0,
     totalHours: (estimatedDuration / 60),
-    nightStart: nightStartDisplay,
-    nightEnd: nightEndDisplay,
+    nightStart: quoteDetails?.nightStartDisplay || '',
+    nightEnd: quoteDetails?.nightEndDisplay || '',
     nightSurcharge: quoteDetails?.nightSurcharge,
-    dayKm: dayKm,
-    nightKm: nightKm,
-    totalKm: totalKm,
+    dayKm: quoteDetails?.dayKm,
+    nightKm: quoteDetails?.nightKm,
+    totalKm: quoteDetails?.totalKm || estimatedDistance,
     dayPrice: quoteDetails?.dayPrice,
     nightPrice: quoteDetails?.nightPrice,
     dayPercentage: quoteDetails?.dayPercentage,
     nightPercentage: quoteDetails?.nightPercentage
   };
   
+  // Return night rate info calculation
   const returnNightRateInfo = hasReturnTrip ? {
     isApplied: !!quoteDetails?.isReturnNightRate,
-    percentage: nightRatePercentage,
-    nightHours: returnNightHours,
+    percentage: quoteDetails?.nightRatePercentage || 0,
+    nightHours: quoteDetails?.returnNightHours || 0,
     totalHours: (returnDuration / 60),
-    nightStart: nightStartDisplay,
-    nightEnd: nightEndDisplay,
-    nightSurcharge: returnNightSurcharge,
-    dayKm: returnDayKm,
-    nightKm: returnNightKm,
-    totalKm: returnTotalKm,
-    dayPrice: returnDayPrice,
-    nightPrice: returnNightPrice,
-    dayPercentage: returnDayPercentage,
-    nightPercentage: returnNightPercentage
+    nightStart: quoteDetails?.nightStartDisplay || '',
+    nightEnd: quoteDetails?.nightEndDisplay || '',
+    nightSurcharge: quoteDetails?.returnNightSurcharge,
+    dayKm: quoteDetails?.returnDayKm,
+    nightKm: quoteDetails?.returnNightKm,
+    totalKm: quoteDetails?.returnTotalKm || returnDistance,
+    dayPrice: quoteDetails?.returnDayPrice,
+    nightPrice: quoteDetails?.returnNightPrice,
+    dayPercentage: quoteDetails?.returnDayPercentage,
+    nightPercentage: quoteDetails?.returnNightPercentage
   } : undefined;
 
   const sundayRateInfo = isSunday ? {
@@ -156,16 +141,11 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
         waitingTimeMinutes={waitingTimeMinutes}
       />
       
-      {hasMinDistanceWarning && (
-        <Alert variant="warning" className="bg-amber-50 border-amber-200">
-          <AlertCircle className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-800">Distance minimale</AlertTitle>
-          <AlertDescription className="text-amber-700">
-            La distance de ce trajet ({estimatedDistance} km) est inférieure à la distance minimale facturée pour ce véhicule ({minDistance} km).
-            Un supplément sera appliqué pour atteindre la distance minimale.
-          </AlertDescription>
-        </Alert>
-      )}
+      <TripSummaryHeader
+        hasMinDistanceWarning={hasMinDistanceWarning}
+        estimatedDistance={estimatedDistance}
+        minDistance={minDistance}
+      />
       
       <TripTimeInfo
         startTime={time}
@@ -204,18 +184,14 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
           quoteDetails={quoteDetails}
           isNightRate={isNightRate}
           isSunday={isSunday}
-          nightHours={nightHours}
+          nightHours={nightRateInfo.nightHours}
         />
       </div>
       
-      <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
-        <Button variant="outline" onClick={handlePreviousStep} className="w-full sm:w-auto order-1 sm:order-none">
-          Retour
-        </Button>
-        <Button onClick={handleNextStep} className="w-full sm:w-auto order-0 sm:order-none">
-          Continuer
-        </Button>
-      </div>
+      <TripSummaryActions
+        handlePreviousStep={handlePreviousStep}
+        handleNextStep={handleNextStep}
+      />
     </div>
   );
 };
