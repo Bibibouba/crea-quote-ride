@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Vehicle, QuoteDetailsType } from '@/types/quoteForm';
 import { PriceFormatter } from './PriceFormatter';
@@ -66,6 +67,7 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
   sundayRate,
   quoteDetails
 }) => {
+  // Check if we have complete details to display the exact price breakdown
   const hasCompleteDetails = !!quoteDetails?.dayKm && !!quoteDetails?.nightKm;
 
   return (
