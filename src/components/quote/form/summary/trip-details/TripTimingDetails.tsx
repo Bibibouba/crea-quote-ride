@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TripTimeInfo } from '../../summary/TripTimeInfo';
 import { calculateTripTimes } from '@/utils/time/tripTimeCalculator';
@@ -64,7 +63,7 @@ export const TripTimingDetails: React.FC<TripTimingDetailsProps> = ({
 
   const returnNightRateInfo = hasReturnTrip ? {
     isApplied: !!quoteDetails?.isReturnNightRate,
-    percentage: quoteDetails?.returnNightRatePercentage || 0,
+    percentage: quoteDetails?.returnNightPercentage || 0,
     nightHours: quoteDetails?.returnNightHours || 0,
     totalHours: (returnDuration / 60),
     nightStart: quoteDetails?.nightStartDisplay || '',

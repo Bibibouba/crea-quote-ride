@@ -1,7 +1,6 @@
 
-/**
- * Calcule le prix du temps d'attente en tenant compte des tarifs de jour et de nuit
- */
+import { calculateMinuteSplit } from './waiting-time/calculateMinuteSplit';
+
 export const calculateDetailedWaitingPrice = (
   hasWaitingTime: boolean,
   waitingTimeMinutes: number,
@@ -28,21 +27,21 @@ export const calculateDetailedWaitingPrice = (
     date: date?.toISOString()
   });
   
-  // Déterminer si la majoration de nuit est activée
-  const enableNightRates = waitNightEnabled || vehicleSettings?.wait_night_enabled || pricingSettings?.wait_night_enabled || false;
+  // Determine if night rates are enabled
+  const enableNightRates = waitNightEnabled || 
+    vehicleSettings?.wait_night_enabled || 
+    pricingSettings?.wait_night_enabled || 
+    false;
   
-  // Calculer l'heure de début d'attente (après l'arrivée)
+  // Calculate wait start time
   const [startHours, startMinutes] = startTime.split(':').map(Number);
-  const tripDuration = 60; // Durée estimée du trajet (en minutes)
+  const tripDuration = 60; // Estimated trip duration in minutes
   
   const waitStartDate = new Date(date);
   waitStartDate.setHours(startHours, startMinutes + tripDuration, 0, 0);
   
-  // Calculer l'heure de fin d'attente pour le trajet retour
-  const waitEndTime = new Date(waitStartDate.getTime() + waitingTimeMinutes * 60000);
-  
   if (!enableNightRates) {
-    // Si pas de majoration de nuit, tout le temps d'attente est au tarif de jour
+    // If night rates are disabled, all waiting time is at day rate
     const pricePerMinute = (vehicleSettings?.wait_price_per_15min || pricingSettings?.wait_price_per_15min || 7.5) / 15;
     const totalPrice = waitingTimeMinutes * pricePerMinute;
     
@@ -50,8 +49,7 @@ export const calculateDetailedWaitingPrice = (
       waitingTimeMinutes,
       pricePerMinute,
       totalPrice,
-      waitStartDate: waitStartDate.toLocaleTimeString(),
-      waitEndTime: waitEndTime.toLocaleTimeString()
+      waitStartDate: waitStartDate.toLocaleTimeString()
     });
     
     return {
@@ -60,96 +58,24 @@ export const calculateDetailedWaitingPrice = (
       waitPriceDay: totalPrice,
       waitPriceNight: 0,
       totalWaitPrice: totalPrice,
-      waitEndTime
+      waitEndTime: new Date(waitStartDate.getTime() + waitingTimeMinutes * 60000)
     };
   }
   
-  // Récupérer les paramètres de tarif de nuit
+  // Get night rate settings
   const waitNightStart = vehicleSettings?.wait_night_start || pricingSettings?.wait_night_start || '20:00';
   const waitNightEnd = vehicleSettings?.wait_night_end || pricingSettings?.wait_night_end || '06:00';
   const waitNightPercentage = vehicleSettings?.wait_night_percentage || pricingSettings?.wait_night_percentage || 10;
   
-  // Créer des objets Date pour le début et la fin de la nuit
-  const nightStartHours = parseInt(waitNightStart.split(':')[0]);
-  const nightStartMinutes = parseInt(waitNightStart.split(':')[1]);
-  const nightEndHours = parseInt(waitNightEnd.split(':')[0]);
-  const nightEndMinutes = parseInt(waitNightEnd.split(':')[1]);
+  // Calculate day/night minute split
+  const { dayMinutes, nightMinutes, waitEndTime } = calculateMinuteSplit(
+    waitStartDate,
+    waitingTimeMinutes,
+    waitNightStart,
+    waitNightEnd
+  );
   
-  const nightStartDate = new Date(date);
-  nightStartDate.setHours(nightStartHours, nightStartMinutes, 0, 0);
-  
-  const nightEndDate = new Date(date);
-  nightEndDate.setHours(nightEndHours, nightEndMinutes, 0, 0);
-  
-  // Si la fin de nuit est avant le début, cela signifie qu'elle est le jour suivant
-  if (nightEndDate <= nightStartDate) {
-    nightEndDate.setDate(nightEndDate.getDate() + 1);
-  }
-  
-  // Calculer la répartition des minutes d'attente entre jour et nuit
-  let dayMinutes = 0;
-  let nightMinutes = 0;
-  
-  // Vérifier minute par minute pour plus de précision
-  let currentMinute = new Date(waitStartDate);
-  const waitEndMinute = new Date(waitEndTime);
-  
-  while (currentMinute < waitEndMinute) {
-    let isNight = false;
-    
-    if (nightEndDate > nightStartDate) {
-      // Cas simple : nuit dans la même journée
-      isNight = currentMinute >= nightStartDate && currentMinute < nightEndDate;
-    } else {
-      // Cas où la nuit chevauche minuit
-      const currentHour = currentMinute.getHours();
-      const currentMin = currentMinute.getMinutes();
-      const totalCurrentMinutes = currentHour * 60 + currentMin;
-      const totalNightStartMinutes = nightStartHours * 60 + nightStartMinutes;
-      const totalNightEndMinutes = nightEndHours * 60 + nightEndMinutes;
-      
-      isNight = totalCurrentMinutes >= totalNightStartMinutes || totalCurrentMinutes < totalNightEndMinutes;
-    }
-    
-    if (isNight) {
-      nightMinutes++;
-    } else {
-      dayMinutes++;
-    }
-    
-    // Avancer d'une minute
-    currentMinute.setMinutes(currentMinute.getMinutes() + 1);
-  }
-  
-  // S'assurer que le total des minutes correspond au temps d'attente
-  const totalCalculatedMinutes = dayMinutes + nightMinutes;
-  
-  if (totalCalculatedMinutes !== waitingTimeMinutes) {
-    console.log('Waiting time minutes mismatch:', {
-      calculated: totalCalculatedMinutes,
-      expected: waitingTimeMinutes,
-      diff: waitingTimeMinutes - totalCalculatedMinutes
-    });
-    
-    // Ajuster pour s'assurer que le total est correct
-    if (totalCalculatedMinutes < waitingTimeMinutes) {
-      // Ajouter la différence au tarif de jour par défaut
-      dayMinutes += (waitingTimeMinutes - totalCalculatedMinutes);
-    } else if (totalCalculatedMinutes > waitingTimeMinutes) {
-      // Réduire proportionnellement
-      const ratio = waitingTimeMinutes / totalCalculatedMinutes;
-      dayMinutes = Math.round(dayMinutes * ratio);
-      nightMinutes = waitingTimeMinutes - dayMinutes;
-    }
-  }
-  
-  // Forcer à 100% jour si waitNightEnabled est désactivé
-  if (!enableNightRates) {
-    dayMinutes = waitingTimeMinutes;
-    nightMinutes = 0;
-  }
-  
-  // Calculer les prix en fonction des minutes
+  // Calculate prices based on minutes
   const pricePerMinute = (vehicleSettings?.wait_price_per_15min || pricingSettings?.wait_price_per_15min || 7.5) / 15;
   const dayPrice = dayMinutes * pricePerMinute;
   const nightPrice = nightMinutes * pricePerMinute * (1 + (waitNightPercentage / 100));
@@ -178,9 +104,6 @@ export const calculateDetailedWaitingPrice = (
   };
 };
 
-/**
- * Version simplifiée pour le calcul du prix d'attente (compatibilité ancienne)
- */
 export const calculateWaitingTimePrice = (
   hasWaitingTime: boolean,
   waitingTimeMinutes: number,
