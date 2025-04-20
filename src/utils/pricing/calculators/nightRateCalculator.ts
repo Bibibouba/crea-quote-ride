@@ -10,11 +10,14 @@ export const calculateNightRate = (
   nightRatePercentage: number
 ) => {
   const dayPrice = dayKm * basePrice;
-  const nightPrice = nightKm * basePrice;
   
-  // Import the already existing nightSurcharge calculator
+  // Calculate night price: first the base price, then add the percentage
+  const nightBasePrice = nightKm * basePrice;
+  const nightPrice = nightBasePrice * (1 + nightRatePercentage / 100);
+  
+  // Calculate night surcharge separately for reporting
   const nightSurcharge = isNightRateEnabled && nightKm > 0 
-    ? (nightPrice * (nightRatePercentage / 100))
+    ? nightBasePrice * (nightRatePercentage / 100)
     : 0;
   
   return {
@@ -23,6 +26,6 @@ export const calculateNightRate = (
     dayPrice,
     nightPrice,
     nightSurcharge,
-    totalWithNightRate: dayPrice + nightPrice + nightSurcharge
+    totalWithNightRate: dayPrice + nightPrice
   };
 };
