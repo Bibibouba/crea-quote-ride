@@ -1,186 +1,42 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useClientSimulator } from '@/hooks/useClientSimulator';
+import React from 'react';
 import SimulatorLoading from './SimulatorLoading';
 import SimulatorHeader from './steps/SimulatorHeader';
 import SimulatorTabs from './SimulatorTabs';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useQuoteForm } from '@/hooks/useQuoteForm';
+import SimulatorAlert from './SimulatorAlert';
+import SuccessState from './SuccessState';
+import { useSimulator } from '@/hooks/useSimulator';
 
 const SimulatorContainer = () => {
-  const { isSubmitting, isQuoteSent, submitQuote, resetForm, navigateToDashboard } = useClientSimulator();
-  const [simulatorReady, setSimulatorReady] = useState(true);
-  const [activeTab, setActiveTab] = useState<'step1' | 'step2' | 'step3'>('step1');
-  const formState = useQuoteForm();
-  
-  // Simulate loading for a more engaging experience
-  React.useEffect(() => {
-    setSimulatorReady(false);
-    const timeout = setTimeout(() => {
-      setSimulatorReady(true);
-    }, 1500);
-    
-    return () => clearTimeout(timeout);
-  }, []);
-
-  // Add a debug effect to log day/night calculations
-  React.useEffect(() => {
-    if (formState.quoteDetails) {
-      try {
-        console.log("Calcul jour/nuit:", {
-          dayKm: formState.quoteDetails.dayKm,
-          nightKm: formState.quoteDetails.nightKm,
-          totalKm: formState.quoteDetails.totalKm,
-          dayPercentage: formState.quoteDetails.dayPercentage,
-          nightPercentage: formState.quoteDetails.nightPercentage,
-          isNightRate: formState.quoteDetails.isNightRate,
-          nightHours: formState.quoteDetails.nightHours,
-          dayHours: formState.quoteDetails.dayHours,
-          nightRatePercentage: formState.quoteDetails.nightRatePercentage,
-          nightStartDisplay: formState.quoteDetails.nightStartDisplay,
-          nightEndDisplay: formState.quoteDetails.nightEndDisplay,
-          time: formState.time,
-          estimatedDuration: formState.estimatedDuration
-        });
-      } catch (error) {
-        // Ne rien faire si une erreur se produit pendant le logging
-        console.warn("Erreur lors du calcul jour/nuit:", error);
-      }
-    }
-  }, [formState.quoteDetails, formState.time, formState.estimatedDuration]);
-
-  const handleNextStep = () => {
-    if (activeTab === 'step1') setActiveTab('step2');
-    else if (activeTab === 'step2') setActiveTab('step3');
-  };
-
-  const handlePreviousStep = () => {
-    if (activeTab === 'step3') setActiveTab('step2');
-    else if (activeTab === 'step2') setActiveTab('step1');
-  };
-
-  const handleSubmit = async () => {
-    if (!formState.quoteDetails) return Promise.reject(new Error("Quote details not available"));
-
-    try {
-      // Log quote details for debugging
-      console.log('Submitting quote with details:', {
-        dayKm: formState.quoteDetails.dayKm,
-        nightKm: formState.quoteDetails.nightKm,
-        dayPrice: formState.quoteDetails.dayPrice,
-        nightPrice: formState.quoteDetails.nightPrice,
-        isNightRate: formState.quoteDetails.isNightRate,
-        nightHours: formState.quoteDetails.nightHours,
-        nightRatePercentage: formState.quoteDetails.nightRatePercentage,
-        waitTimeDay: formState.quoteDetails.waitTimeDay,
-        waitTimeNight: formState.quoteDetails.waitTimeNight,
-        waitPriceDay: formState.quoteDetails.waitPriceDay,
-        waitPriceNight: formState.quoteDetails.waitPriceNight,
-        isSunday: formState.quoteDetails.isSunday,
-        sundaySurcharge: formState.quoteDetails.sundaySurcharge,
-        totalPriceHT: formState.quoteDetails.totalPriceHT,
-        totalVAT: formState.quoteDetails.totalVAT,
-        totalPrice: formState.quoteDetails.totalPrice
-      });
-
-      const quoteData = {
-        vehicle_id: formState.selectedVehicle,
-        departure_location: formState.departureAddress,
-        arrival_location: formState.destinationAddress,
-        departure_coordinates: formState.departureCoordinates,
-        arrival_coordinates: formState.destinationCoordinates,
-        distance_km: formState.estimatedDistance,
-        duration_minutes: formState.estimatedDuration,
-        ride_date: formState.date.toISOString(),
-        amount: formState.quoteDetails.totalPrice,
-        has_return_trip: formState.hasReturnTrip,
-        has_waiting_time: formState.hasWaitingTime,
-        waiting_time_minutes: formState.waitingTimeMinutes,
-        waiting_time_price: formState.quoteDetails.waitingTimePrice,
-        return_to_same_address: formState.returnToSameAddress,
-        custom_return_address: formState.customReturnAddress,
-        return_coordinates: formState.customReturnCoordinates,
-        return_distance_km: formState.returnDistance,
-        return_duration_minutes: formState.returnDuration,
-        has_night_rate: formState.quoteDetails.isNightRate || false,
-        night_hours: formState.quoteDetails.nightHours || 0,
-        night_rate_percentage: formState.quoteDetails.nightRatePercentage || 0,
-        night_surcharge: formState.quoteDetails.nightSurcharge || 0,
-        is_sunday_holiday: formState.quoteDetails.isSunday || false,
-        sunday_holiday_percentage: formState.quoteDetails.sundayRate || 0,
-        sunday_holiday_surcharge: formState.quoteDetails.sundaySurcharge || 0,
-        day_km: formState.quoteDetails.dayKm || 0,
-        night_km: formState.quoteDetails.nightKm || 0,
-        day_price: formState.quoteDetails.dayPrice || 0,
-        night_price: formState.quoteDetails.nightPrice || 0,
-        wait_time_day: formState.quoteDetails.waitTimeDay || 0,
-        wait_time_night: formState.quoteDetails.waitTimeNight || 0,
-        wait_price_day: formState.quoteDetails.waitPriceDay || 0,
-        wait_price_night: formState.quoteDetails.waitPriceNight || 0,
-        total_ht: formState.quoteDetails.totalPriceHT || 0,
-        vat: formState.quoteDetails.totalVAT || 0,
-        total_ttc: formState.quoteDetails.totalPrice || 0
-      };
-
-      console.log('Submitting with data:', quoteData);
-
-      const clientData = {
-        firstName: formState.firstName,
-        lastName: formState.lastName,
-        email: formState.email,
-        phone: formState.phone
-      };
-
-      return submitQuote(quoteData, clientData);
-    } catch (error) {
-      console.error("Erreur lors de la soumission du devis:", error);
-      return Promise.reject(error);
-    }
-  };
+  const {
+    simulatorReady,
+    isSubmitting,
+    isQuoteSent,
+    activeTab,
+    setActiveTab,
+    formState,
+    handleNextStep,
+    handlePreviousStep,
+    handleSubmit,
+    resetForm,
+    navigateToDashboard
+  } = useSimulator();
 
   return (
     <div className="container max-w-5xl mx-auto py-4 sm:py-8 px-2 sm:px-4">
       <SimulatorHeader />
       
       <div className="mb-4 sm:mb-6">
-        <Alert variant="default" className="bg-blue-50 border-blue-200 text-sm sm:text-base">
-          <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-          <AlertTitle className="text-blue-800 text-base sm:text-lg">Simulateur de tarification</AlertTitle>
-          <AlertDescription className="text-blue-700">
-            Ce simulateur vous permet d'obtenir un devis instantané pour votre trajet. 
-            Les tarifs affichés incluent toutes les charges, y compris les majorations pour les trajets de nuit 
-            et les dimanches/jours fériés le cas échéant.
-          </AlertDescription>
-        </Alert>
+        <SimulatorAlert />
       </div>
       
       {!simulatorReady ? (
         <SimulatorLoading />
       ) : isQuoteSent ? (
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader className="space-y-1 sm:space-y-2">
-            <CardTitle className="text-green-800 text-lg sm:text-xl">Devis envoyé avec succès</CardTitle>
-            <CardDescription className="text-green-700 text-sm sm:text-base">
-              Votre demande de devis a été envoyée. Vous recevrez une confirmation par email.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-green-700 text-sm sm:text-base">
-              Merci d'avoir utilisé notre simulateur de tarification. Notre équipe va traiter votre demande dans les plus brefs délais.
-            </p>
-          </CardContent>
-          <CardFooter className="flex flex-col sm:flex-row gap-4">
-            <Button onClick={resetForm} variant="outline" className="w-full sm:w-auto">
-              Créer un nouveau devis
-            </Button>
-            <Button onClick={navigateToDashboard} className="w-full sm:w-auto">
-              Retour à l'accueil
-            </Button>
-          </CardFooter>
-        </Card>
+        <SuccessState 
+          onReset={resetForm}
+          onNavigateDashboard={navigateToDashboard}
+        />
       ) : (
         <div className="w-full">
           <SimulatorTabs
