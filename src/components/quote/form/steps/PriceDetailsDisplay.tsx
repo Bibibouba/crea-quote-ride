@@ -32,119 +32,127 @@ export const PriceDetailsDisplay: React.FC<PriceDetailsDisplayProps> = ({
 }) => {
   const formatPrice = (price?: number | string | null) => {
     if (price === undefined || price === null) return "0.0";
-    
     const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
-    
     if (isNaN(numericPrice) || typeof numericPrice !== 'number') return "0.0";
-    
     return numericPrice.toFixed(1);
+  };
+
+  const formatDistance = (distance: number) => {
+    return Math.round(distance * 10) / 10;
   };
 
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-start">
-        <div className="text-sm">
+        <div className="text-sm w-full">
           <div className="flex items-center">
             <ArrowRight className="h-4 w-4 mr-2 flex-shrink-0" />
             <p className="font-medium">Trajet aller</p>
           </div>
-          {quoteDetails?.basePrice && (
-            <p className="text-xs text-muted-foreground ml-6 mt-0.5">
-              {quoteDetails.hasMinDistanceWarning ? 
-                `${quoteDetails.minDistance} km (min.) × ${quoteDetails.basePrice.toFixed(2)}€/km HT` : 
-                `${estimatedDistance} km × ${quoteDetails.basePrice.toFixed(2)}€/km HT`}
-            </p>
-          )}
-        </div>
-        <div className="text-right">
-          <p className="text-sm font-medium">{formatPrice(quoteDetails?.oneWayPriceHT)}€ HT</p>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-xs text-muted-foreground flex items-center justify-end">
-                  {formatPrice(quoteDetails?.oneWayPrice)}€ TTC
-                  <InfoIcon className="h-3 w-3 ml-1" />
+          <div className="ml-6 mt-1 space-y-1">
+            {quoteDetails?.basePrice && (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Calcul : {quoteDetails.hasMinDistanceWarning ? quoteDetails.minDistance : formatDistance(estimatedDistance)} km × {quoteDetails.basePrice.toFixed(2)}€/km HT = {formatPrice(quoteDetails?.oneWayPriceHT)}€ HT
                 </p>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">TVA {quoteDetails?.rideVatRate || 10}% sur le transport</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                <div className="text-xs">
+                  <p className="font-medium">{formatPrice(quoteDetails?.oneWayPriceHT)}€ HT</p>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="text-muted-foreground flex items-center">
+                          {formatPrice(quoteDetails?.oneWayPrice)}€ TTC
+                          <InfoIcon className="h-3 w-3 ml-1" />
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">TVA {quoteDetails?.rideVatRate || 10}% sur le transport</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
       
       {/* Détail du calcul jour/nuit pour le trajet aller si applicable */}
       {isNightRate && quoteDetails?.dayKm > 0 && quoteDetails?.nightKm > 0 && (
         <div className="ml-6 space-y-1 p-2 bg-secondary/20 rounded-md text-xs">
-          <div className="flex justify-between">
-            <p>Tarif de jour ({Math.round(quoteDetails.dayKm * 10) / 10} km):</p>
-            <p className="font-medium">{formatPrice(quoteDetails.dayPrice)}€ HT</p>
-          </div>
-          <div className="flex justify-between">
-            <p>
-              Tarif de nuit ({Math.round(quoteDetails.nightKm * 10) / 10} km) 
-              <span className="text-muted-foreground ml-1">
-                (+{quoteDetails.nightRatePercentage}%)
-              </span>:
-            </p>
-            <p className="font-medium">{formatPrice(quoteDetails.nightPrice)}€ HT</p>
+          <div className="space-y-1">
+            <p>Détail du calcul :</p>
+            <div className="ml-2">
+              <p>• Tarif de jour : {formatDistance(quoteDetails.dayKm)} km × {quoteDetails.basePrice.toFixed(2)}€/km = {formatPrice(quoteDetails.dayPrice)}€ HT</p>
+              <p>• Tarif de nuit : {formatDistance(quoteDetails.nightKm)} km × {quoteDetails.basePrice.toFixed(2)}€/km (+{quoteDetails.nightRatePercentage}%) = {formatPrice(quoteDetails.nightPrice)}€ HT</p>
+            </div>
           </div>
         </div>
       )}
       
       {hasWaitingTime && (
-        <div className="flex justify-between">
-          <p className="text-sm">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
-          <div className="text-right">
-            <p className="text-sm font-medium">{formatPrice(quoteDetails?.waitingTimePriceHT)}€ HT</p>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className="text-xs text-muted-foreground flex items-center justify-end">
-                    {formatPrice(quoteDetails?.waitingTimePrice)}€ TTC
-                    <InfoIcon className="h-3 w-3 ml-1" />
-                  </p>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">TVA {quoteDetails?.waitingVatRate || 20}% sur le temps d'attente</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+        <div className="flex justify-between items-start">
+          <div className="text-sm w-full">
+            <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
+            <div className="ml-6 mt-1 space-y-1">
+              <p className="text-xs text-muted-foreground">
+                Calcul : {waitingTimeMinutes} minutes × {((quoteDetails?.waitingTimePriceHT || 0) / waitingTimeMinutes).toFixed(2)}€/min HT = {formatPrice(quoteDetails?.waitingTimePriceHT)}€ HT
+              </p>
+              <div className="text-xs">
+                <p className="font-medium">{formatPrice(quoteDetails?.waitingTimePriceHT)}€ HT</p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-muted-foreground flex items-center">
+                        {formatPrice(quoteDetails?.waitingTimePrice)}€ TTC
+                        <InfoIcon className="h-3 w-3 ml-1" />
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">TVA {quoteDetails?.waitingVatRate || 20}% sur le temps d'attente</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
           </div>
         </div>
       )}
       
       {hasReturnTrip && (
         <div className="flex justify-between items-start">
-          <div className="text-sm">
+          <div className="text-sm w-full">
             <div className="flex items-center">
               <ArrowLeft className="h-4 w-4 mr-2 flex-shrink-0" />
               <p className="font-medium">Trajet retour</p>
             </div>
-            {quoteDetails?.basePrice && (
-              <p className="text-xs text-muted-foreground ml-6 mt-0.5">
-                {quoteDetails.hasMinDistanceWarning && (returnToSameAddress ? estimatedDistance : returnDistance) < quoteDetails.minDistance ? 
-                  `${quoteDetails.minDistance} km (min.) × ${quoteDetails.basePrice.toFixed(2)}€/km HT` : 
-                  `${returnToSameAddress ? estimatedDistance : returnDistance} km × ${quoteDetails.basePrice.toFixed(2)}€/km HT`}
-              </p>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-medium">{formatPrice(quoteDetails?.returnPriceHT)}€ HT</p>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className="text-xs text-muted-foreground flex items-center justify-end">
-                    {formatPrice(quoteDetails?.returnPrice)}€ TTC
-                    <InfoIcon className="h-3 w-3 ml-1" />
+            <div className="ml-6 mt-1 space-y-1">
+              {quoteDetails?.basePrice && (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    Calcul : {quoteDetails.hasMinDistanceWarning && (returnToSameAddress ? estimatedDistance : returnDistance) < quoteDetails.minDistance ? 
+                      `${quoteDetails.minDistance} km × ${quoteDetails.basePrice.toFixed(2)}€/km HT` : 
+                      `${formatDistance(returnToSameAddress ? estimatedDistance : returnDistance)} km × ${quoteDetails.basePrice.toFixed(2)}€/km HT`} = {formatPrice(quoteDetails?.returnPriceHT)}€ HT
                   </p>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">TVA {quoteDetails?.rideVatRate || 10}% sur le transport</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                  <div className="text-xs">
+                    <p className="font-medium">{formatPrice(quoteDetails?.returnPriceHT)}€ HT</p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-muted-foreground flex items-center">
+                            {formatPrice(quoteDetails?.returnPrice)}€ TTC
+                            <InfoIcon className="h-3 w-3 ml-1" />
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">TVA {quoteDetails?.rideVatRate || 10}% sur le transport</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
