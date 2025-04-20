@@ -29,14 +29,14 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   if (!totalWaitTime || totalWaitTime <= 0) return null;
 
   // Calcul des pourcentages pour la jauge
-  const dayPercentage = (waitTimeDay / totalWaitTime) * 100;
-  const nightPercentage = (waitTimeNight / totalWaitTime) * 100;
+  const dayPercentage = Math.max(0, Math.min(100, (waitTimeDay / totalWaitTime) * 100));
+  const nightPercentage = Math.max(0, Math.min(100, (waitTimeNight / totalWaitTime) * 100));
 
   // S'assurer que les pourcentages sont valides
   console.log('Calculated percentages:', { dayPercentage, nightPercentage });
 
   return (
-    <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200">
+    <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200 mt-2 mb-2">
       <div className="flex items-center gap-2 mb-2">
         <Clock className="h-4 w-4 text-orange-500" />
         <span className="text-sm font-medium">Temps d'attente</span>
@@ -48,6 +48,12 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
         nightKm={waitTimeNight}
         isWaitingTime={true}
       />
+      {(waitPriceDay > 0 || waitPriceNight > 0) && (
+        <div className="flex justify-between text-xs mt-1 text-muted-foreground">
+          <span>{waitTimeDay} min (jour)</span>
+          <span>{waitTimeNight} min (nuit)</span>
+        </div>
+      )}
     </div>
   );
 };

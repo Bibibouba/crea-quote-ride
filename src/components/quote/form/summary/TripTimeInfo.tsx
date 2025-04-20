@@ -1,10 +1,12 @@
 
 import React from 'react';
-import { Moon, Calendar } from 'lucide-react';
+import { Clock, Sun, Moon, Calendar } from 'lucide-react';
 import { DayNightGauge } from './DayNightGauge';
-import { formatHours } from '@/lib/formatHours';
+import { NightRateDisplay } from './trip-details/NightRateDisplay';
+import { SundayRateInfo } from './trip-details/SundayRateInfo';
+import { WaitingTimeGauge } from './WaitingTimeGauge';
 
-export interface NightRateInfo {
+interface NightRateInfo {
   isApplied: boolean;
   percentage: number;
   nightHours: number;
@@ -21,7 +23,7 @@ export interface NightRateInfo {
   nightPercentage?: number;
 }
 
-export interface SundayRateInfo {
+interface SundayRateInfo {
   isApplied: boolean;
   percentage: number;
 }
@@ -29,10 +31,17 @@ export interface SundayRateInfo {
 interface TripTimeInfoProps {
   startTime: string;
   endTime: string;
-  nightRateInfo?: NightRateInfo;
+  nightRateInfo: NightRateInfo;
   returnNightRateInfo?: NightRateInfo;
   sundayRateInfo?: SundayRateInfo;
   hasReturnTrip?: boolean;
+  waitingTimeInfo?: {
+    waitTimeDay: number;
+    waitTimeNight: number;
+    waitPriceDay: number;
+    waitPriceNight: number;
+    totalWaitTime: number;
+  };
 }
 
 export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
@@ -41,120 +50,101 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   nightRateInfo,
   returnNightRateInfo,
   sundayRateInfo,
-  hasReturnTrip
+  hasReturnTrip = false,
+  waitingTimeInfo
 }) => {
-  // Toujours afficher la jauge si nous avons des informations sur le trajet de nuit
-  const shouldDisplayGauge = !!nightRateInfo;
-  
-  // Utiliser directement les pourcentages calculés s'ils sont disponibles
-  const dayPercentage = nightRateInfo?.dayPercentage !== undefined 
-    ? nightRateInfo.dayPercentage 
-    : nightRateInfo && nightRateInfo.totalKm && nightRateInfo.dayKm
-      ? (nightRateInfo.dayKm / nightRateInfo.totalKm) * 100
-      : nightRateInfo?.totalHours 
-        ? ((nightRateInfo.totalHours - nightRateInfo.nightHours) / nightRateInfo.totalHours) * 100
-        : 100;
-  
-  const nightPercentage = nightRateInfo?.nightPercentage !== undefined
-    ? nightRateInfo.nightPercentage
-    : 100 - dayPercentage;
-
-  // Pour le retour
-  const returnDayPercentage = returnNightRateInfo?.dayPercentage !== undefined 
-    ? returnNightRateInfo.dayPercentage 
-    : returnNightRateInfo && returnNightRateInfo.totalKm && returnNightRateInfo.dayKm
-      ? (returnNightRateInfo.dayKm / returnNightRateInfo.totalKm) * 100
-      : returnNightRateInfo?.totalHours 
-        ? ((returnNightRateInfo.totalHours - returnNightRateInfo.nightHours) / returnNightRateInfo.totalHours) * 100
-        : 100;
-  
-  const returnNightPercentage = returnNightRateInfo?.nightPercentage !== undefined
-    ? returnNightRateInfo.nightPercentage
-    : 100 - returnDayPercentage;
-
-  // Format the night hours for display
-  const formattedNightHours = nightRateInfo?.nightHours 
-    ? formatHours(nightRateInfo.nightHours)
-    : '';
-  
-  const formattedReturnNightHours = returnNightRateInfo?.nightHours 
-    ? formatHours(returnNightRateInfo.nightHours)
-    : '';
+  const hasNightRate = nightRateInfo?.isApplied || (returnNightRateInfo?.isApplied ?? false);
+  const hasSundayRate = sundayRateInfo?.isApplied ?? false;
   
   return (
-    <div className="bg-secondary/20 p-3 rounded-md mt-2 text-sm space-y-3">
-      {shouldDisplayGauge && (
-        <>
-          {/* Trajet aller */}
-          <div>
-            <div className="flex items-center text-xs text-muted-foreground mb-1">
-              <Moon className="h-3 w-3 mr-1" />
-              <span>
-                {nightRateInfo?.isApplied ? (
-                  `Trajet aller: Tarif de nuit appliqué (${nightRateInfo.percentage}% de majoration entre ${nightRateInfo.nightStart} et ${nightRateInfo.nightEnd})`
-                ) : (
-                  "Trajet aller: Répartition jour/nuit du trajet"
-                )}
-                {formattedNightHours && <span className="ml-1">- {formattedNightHours} en horaires de nuit</span>}
-              </span>
-            </div>
-            
-            <DayNightGauge 
-              dayPercentage={dayPercentage} 
-              nightPercentage={nightPercentage}
-              dayKm={nightRateInfo?.dayKm}
-              nightKm={nightRateInfo?.nightKm}
-            />
-            
-            {nightRateInfo?.isApplied && nightRateInfo.dayPrice !== undefined && nightRateInfo.nightPrice !== undefined && (
-              <div className="flex justify-between text-xs mt-1">
-                <span>{nightRateInfo.dayPrice.toFixed(1)}€ (tarif jour)</span>
-                <span>{nightRateInfo.nightPrice.toFixed(1)}€ + {nightRateInfo.nightSurcharge?.toFixed(1) || '0.0'}€ de majoration (tarif nuit)</span>
-              </div>
-            )}
-          </div>
-          
-          {/* Trajet retour */}
-          {hasReturnTrip && returnNightRateInfo && (
-            <div className="mt-3 pt-3 border-t border-muted">
-              <div className="flex items-center text-xs text-muted-foreground mb-1">
-                <Moon className="h-3 w-3 mr-1" />
-                <span>
-                  {returnNightRateInfo?.isApplied ? (
-                    `Trajet retour: Tarif de nuit appliqué (${returnNightRateInfo.percentage}% de majoration entre ${returnNightRateInfo.nightStart} et ${returnNightRateInfo.nightEnd})`
-                  ) : (
-                    "Trajet retour: Répartition jour/nuit du trajet"
-                  )}
-                  {formattedReturnNightHours && <span className="ml-1">- {formattedReturnNightHours} en horaires de nuit</span>}
-                </span>
-              </div>
-              
-              <DayNightGauge 
-                dayPercentage={returnDayPercentage} 
-                nightPercentage={returnNightPercentage}
-                dayKm={returnNightRateInfo?.dayKm}
-                nightKm={returnNightRateInfo?.nightKm}
-              />
-              
-              {returnNightRateInfo?.isApplied && returnNightRateInfo.dayPrice !== undefined && returnNightRateInfo.nightPrice !== undefined && (
-                <div className="flex justify-between text-xs mt-1">
-                  <span>{returnNightRateInfo.dayPrice.toFixed(1)}€ (tarif jour)</span>
-                  <span>{returnNightRateInfo.nightPrice.toFixed(1)}€ + {returnNightRateInfo.nightSurcharge?.toFixed(1) || '0.0'}€ de majoration (tarif nuit)</span>
-                </div>
-              )}
-            </div>
-          )}
-        </>
-      )}
+    <div>
+      <div className="flex justify-between text-sm mb-2">
+        <p className="flex items-center">
+          <Clock className="h-4 w-4 mr-1" />
+          Départ: <span className="font-medium ml-1">{startTime}</span>
+        </p>
+        <p className="flex items-center">
+          Arrivée: <span className="font-medium ml-1">{endTime}</span>
+        </p>
+      </div>
       
-      {sundayRateInfo && sundayRateInfo.isApplied && (
-        <div className="flex items-center text-xs text-muted-foreground">
-          <Calendar className="h-3 w-3 mr-1" />
-          <span>
-            Majoration dimanche/jour férié appliquée ({sundayRateInfo.percentage}%)
-          </span>
-        </div>
-      )}
+      <div className="space-y-3">
+        {nightRateInfo && (
+          <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Sun className="h-4 w-4 text-amber-500" />
+              <span className="text-sm font-medium">Trajet Aller</span>
+            </div>
+            <NightRateDisplay
+              title="Trajet aller"
+              isNightRateApplied={nightRateInfo.isApplied}
+              nightRatePercentage={nightRateInfo.percentage}
+              nightStartDisplay={nightRateInfo.nightStart}
+              nightEndDisplay={nightRateInfo.nightEnd}
+              nightHours={nightRateInfo.nightHours > 0 ? `${nightRateInfo.nightHours.toFixed(1)}h` : ''}
+              dayPercentage={nightRateInfo.dayPercentage || 100 - (nightRateInfo.nightPercentage || 0)}
+              nightPercentage={nightRateInfo.nightPercentage || 0}
+              dayKm={nightRateInfo.dayKm}
+              nightKm={nightRateInfo.nightKm}
+              dayPrice={nightRateInfo.dayPrice}
+              nightPrice={nightRateInfo.nightPrice}
+              nightSurcharge={nightRateInfo.nightSurcharge}
+              nightStart={nightRateInfo.nightStart}
+              nightEnd={nightRateInfo.nightEnd}
+            />
+          </div>
+        )}
+        
+        {/* Ajout de la jauge de temps d'attente entre les trajets aller et retour */}
+        {waitingTimeInfo && waitingTimeInfo.totalWaitTime > 0 && (
+          <WaitingTimeGauge
+            waitTimeDay={waitingTimeInfo.waitTimeDay}
+            waitTimeNight={waitingTimeInfo.waitTimeNight}
+            waitPriceDay={waitingTimeInfo.waitPriceDay}
+            waitPriceNight={waitingTimeInfo.waitPriceNight}
+            totalWaitTime={waitingTimeInfo.totalWaitTime}
+          />
+        )}
+        
+        {hasReturnTrip && returnNightRateInfo && (
+          <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Moon className="h-4 w-4 text-indigo-500" />
+              <span className="text-sm font-medium">Trajet Retour</span>
+            </div>
+            <NightRateDisplay
+              title="Trajet retour"
+              isNightRateApplied={returnNightRateInfo.isApplied}
+              nightRatePercentage={returnNightRateInfo.percentage}
+              nightStartDisplay={returnNightRateInfo.nightStart}
+              nightEndDisplay={returnNightRateInfo.nightEnd}
+              nightHours={returnNightRateInfo.nightHours > 0 ? `${returnNightRateInfo.nightHours.toFixed(1)}h` : ''}
+              dayPercentage={returnNightRateInfo.dayPercentage || 100 - (returnNightRateInfo.nightPercentage || 0)}
+              nightPercentage={returnNightRateInfo.nightPercentage || 0}
+              dayKm={returnNightRateInfo.dayKm}
+              nightKm={returnNightRateInfo.nightKm}
+              dayPrice={returnNightRateInfo.dayPrice}
+              nightPrice={returnNightRateInfo.nightPrice}
+              nightSurcharge={returnNightRateInfo.nightSurcharge}
+              nightStart={returnNightRateInfo.nightStart}
+              nightEnd={returnNightRateInfo.nightEnd}
+            />
+          </div>
+        )}
+        
+        {hasSundayRate && sundayRateInfo && (
+          <div className="py-2 px-2 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar className="h-4 w-4 text-blue-500" />
+              <span className="text-sm font-medium">Majoration dimanche/jour férié</span>
+            </div>
+            <SundayRateInfo
+              isApplied={sundayRateInfo.isApplied}
+              percentage={sundayRateInfo.percentage}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -124,6 +124,14 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
     percentage: selectedVehicleInfo?.holiday_sunday_percentage || 0
   } : undefined;
 
+  const waitingTimeInfo = hasWaitingTime && waitingTimeMinutes > 0 && quoteDetails ? {
+    waitTimeDay: quoteDetails.waitTimeDay || 0,
+    waitTimeNight: quoteDetails.waitTimeNight || 0,
+    waitPriceDay: quoteDetails.waitPriceDay || 0,
+    waitPriceNight: quoteDetails.waitPriceNight || 0,
+    totalWaitTime: waitingTimeMinutes
+  } : undefined;
+
   const tripEndTime = (() => {
     const [hours, minutes] = time.split(':').map(Number);
     const arrivalTime = new Date();
@@ -167,6 +175,7 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
         returnNightRateInfo={returnNightRateInfo}
         sundayRateInfo={sundayRateInfo}
         hasReturnTrip={hasReturnTrip}
+        waitingTimeInfo={waitingTimeInfo}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

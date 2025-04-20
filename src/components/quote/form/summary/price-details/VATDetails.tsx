@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { formatPrice } from '@/utils/pricing/priceFormatter';
-import { InfoIcon } from 'lucide-react';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 
 interface VATDetailsProps {
   quoteDetails: any;
@@ -13,22 +11,26 @@ export const VATDetails: React.FC<VATDetailsProps> = ({
   quoteDetails,
   hasWaitingTime
 }) => {
-  const rideVatRate = 10;  // Explicitly set ride VAT to 10%
-  const waitingVatRate = 20;  // Explicitly set waiting time VAT to 20%
+  const rideVatRate = 10;  // Taux de TVA pour les trajets: 10%
+  const waitingVatRate = 20;  // Taux de TVA pour le temps d'attente: 20%
+
+  // Calculs de TVA
+  const oneWayVAT = (quoteDetails.oneWayPrice + quoteDetails.returnPrice) - (quoteDetails.oneWayPriceHT + quoteDetails.returnPriceHT);
+  const waitingTimeVAT = quoteDetails.waitingTimePrice - quoteDetails.waitingTimePriceHT;
 
   return (
     <div className="bg-slate-50 border rounded-md p-3">
       <h3 className="font-semibold text-base mb-2">Détail TVA</h3>
       <div className="space-y-1 text-sm">
         <div className="flex justify-between items-center">
-          <span>Trajets ({rideVatRate}%)</span>
-          <span>{formatPrice((quoteDetails.oneWayPrice + quoteDetails.returnPrice) - (quoteDetails.oneWayPriceHT + quoteDetails.returnPriceHT))}</span>
+          <span className="flex items-center">Trajets <span className="font-medium ml-1">({rideVatRate}%)</span></span>
+          <span>{formatPrice(oneWayVAT)} TVA</span>
         </div>
         
         {hasWaitingTime && (
           <div className="flex justify-between items-center">
-            <span>Temps d'attente ({waitingVatRate}%)</span>
-            <span>{formatPrice(quoteDetails.waitingTimePrice - quoteDetails.waitingTimePriceHT)}</span>
+            <span className="flex items-center">Temps d'attente <span className="font-medium ml-1">({waitingVatRate}%)</span></span>
+            <span>{formatPrice(waitingTimeVAT)} TVA</span>
           </div>
         )}
         

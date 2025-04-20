@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { formatPrice } from '@/utils/pricing/priceFormatter';
+import { InfoIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TripSegmentDetailsProps {
   title: string;
@@ -8,10 +10,13 @@ interface TripSegmentDetailsProps {
   nightKm?: number;
   dayPrice?: number;
   nightPrice?: number;
-  basePrice: number;
+  basePrice?: number;
   nightRatePercentage?: number;
   nightStartDisplay?: string;
   nightEndDisplay?: string;
+  showVAT?: boolean;
+  vatRate?: number;
+  vatAmount?: number;
 }
 
 export const TripSegmentDetails: React.FC<TripSegmentDetailsProps> = ({
@@ -23,55 +28,81 @@ export const TripSegmentDetails: React.FC<TripSegmentDetailsProps> = ({
   basePrice,
   nightRatePercentage,
   nightStartDisplay,
-  nightEndDisplay
+  nightEndDisplay,
+  showVAT = true,
+  vatRate = 10,
+  vatAmount
 }) => {
-  if (!dayKm && !nightKm) return null;
-
+  const totalKm = (dayKm || 0) + (nightKm || 0);
+  const totalPriceHT = (dayPrice || 0) + (nightPrice || 0);
+  
   return (
-    <div className="text-sm">
-      {dayKm > 0 && (
-        <div>
-          <div className="flex justify-between font-medium">
-            <span>Segment 1 (Tarif jour)</span>
-            <span>{formatPrice(dayPrice)}</span>
+    <div className="space-y-1 text-sm">
+      {basePrice && (
+        <div className="text-xs text-muted-foreground">
+          <div className="flex justify-between">
+            <span>Prix de base</span>
+            <span>{basePrice.toFixed(2)}€/km</span>
           </div>
-          <div className="text-xs text-muted-foreground">
-            <div className="flex justify-between">
-              <span>{nightStartDisplay && nightEndDisplay ? 
-                `${nightEndDisplay} - ${nightStartDisplay}` : 
-                "Période jour"}</span>
-              <span>{Math.round(dayKm * 10) / 10} km</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{Math.round(dayKm * 10) / 10} km × {basePrice.toFixed(2)}€/km HT</span>
-              <span>
-                {formatPrice(dayPrice)} HT
-              </span>
-            </div>
+        </div>
+      )}
+
+      {dayKm !== undefined && dayPrice !== undefined && (
+        <div className="flex justify-between">
+          <div className="flex">
+            <span>Tarif jour</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <InfoIcon className="h-3 w-3 ml-1 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="text-xs">
+                  <p>Portion du trajet effectuée en journée</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="flex flex-col items-end">
+            <span>{formatPrice(dayPrice)}</span>
+            <span className="text-xs text-muted-foreground">{dayKm.toFixed(1)} km</span>
           </div>
         </div>
       )}
       
-      {nightKm > 0 && (
-        <div className="text-sm mt-2">
-          <div className="flex justify-between font-medium">
-            <span>Segment 2 (Tarif nuit)</span>
+      {nightKm !== undefined && nightPrice !== undefined && nightKm > 0 && (
+        <div className="flex justify-between">
+          <div className="flex">
+            <span>Tarif nuit</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <InfoIcon className="h-3 w-3 ml-1 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="text-xs">
+                  <p>Portion du trajet effectuée de nuit ({nightStartDisplay} - {nightEndDisplay})</p>
+                  <p>Majoration: {nightRatePercentage}%</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="flex flex-col items-end">
             <span>{formatPrice(nightPrice)}</span>
+            <span className="text-xs text-muted-foreground">{nightKm.toFixed(1)} km</span>
           </div>
-          <div className="text-xs text-muted-foreground">
-            <div className="flex justify-between">
-              <span>{nightStartDisplay && nightEndDisplay ? 
-                `${nightStartDisplay} - ${nightEndDisplay}` : 
-                "Période nuit"}</span>
-              <span>{Math.round(nightKm * 10) / 10} km</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{Math.round(nightKm * 10) / 10} km × {basePrice.toFixed(2)}€/km HT (+{nightRatePercentage}%)</span>
-              <span>
-                {formatPrice(nightPrice)} HT
-              </span>
-            </div>
-          </div>
+        </div>
+      )}
+      
+      {showVAT && (
+        <div className="flex justify-between text-sm pt-1">
+          <span>Sous-total HT</span>
+          <span>{formatPrice(totalPriceHT)}</span>
+        </div>
+      )}
+      
+      {showVAT && (
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>TVA ({vatRate}%)</span>
+          <span>{formatPrice(vatAmount || (totalPriceHT * vatRate / 100))}</span>
         </div>
       )}
     </div>
