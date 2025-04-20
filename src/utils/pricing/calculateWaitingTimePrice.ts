@@ -29,6 +29,12 @@ export const calculateDetailedWaitingPrice = (
     const pricePerMinute = (vehicleSettings?.wait_price_per_15min || pricingSettings?.wait_price_per_15min || 7.5) / 15;
     const totalPrice = waitingTimeMinutes * pricePerMinute;
     
+    console.log("Waiting time 100% day rate:", {
+      waitingTimeMinutes,
+      pricePerMinute,
+      totalPrice
+    });
+    
     return {
       waitTimeDay: waitingTimeMinutes,
       waitTimeNight: 0,
@@ -45,7 +51,7 @@ export const calculateDetailedWaitingPrice = (
   
   // Calculer l'heure de début d'attente (après l'arrivée)
   const [startHours, startMinutes] = startTime.split(':').map(Number);
-  const tripDuration = waitingTimeMinutes > 0 ? 60 : 0; // Durée estimée du trajet (en minutes)
+  const tripDuration = 60; // Durée estimée du trajet (en minutes) - corrigé à 60 minutes fixes
   
   const waitStartDate = new Date(date);
   waitStartDate.setHours(startHours, startMinutes + tripDuration, 0, 0);
@@ -97,6 +103,12 @@ export const calculateDetailedWaitingPrice = (
     }
   }
   
+  // Forcer à 100% jour si waitNightEnabled est désactivé
+  if (!enableNightRates) {
+    dayMinutes = waitingTimeMinutes;
+    nightMinutes = 0;
+  }
+  
   // Calculer les prix en fonction des minutes
   const pricePerMinute = (vehicleSettings?.wait_price_per_15min || pricingSettings?.wait_price_per_15min || 7.5) / 15;
   const dayPrice = dayMinutes * pricePerMinute;
@@ -110,7 +122,8 @@ export const calculateDetailedWaitingPrice = (
     pricePerMinute,
     dayPrice,
     nightPrice,
-    totalPrice
+    totalPrice,
+    enableNightRates
   });
   
   return {

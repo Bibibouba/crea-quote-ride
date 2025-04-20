@@ -11,17 +11,27 @@ export const TripSummaryActions: React.FC<TripSummaryActionsProps> = ({
   handlePreviousStep,
   handleNextStep
 }) => {
+  const addDebuggingInfo = () => {
+    console.log("Vérification des données de tarification et attente...");
+  };
+
   return (
     <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
       <Button 
         variant="outline" 
-        onClick={handlePreviousStep} 
+        onClick={() => {
+          addDebuggingInfo();
+          handlePreviousStep();
+        }} 
         className="w-full sm:w-auto order-1 sm:order-none"
       >
         Retour
       </Button>
       <Button 
-        onClick={handleNextStep} 
+        onClick={() => {
+          addDebuggingInfo();
+          handleNextStep();
+        }} 
         className="w-full sm:w-auto order-0 sm:order-none"
       >
         Continuer

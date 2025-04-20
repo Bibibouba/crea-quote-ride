@@ -32,8 +32,16 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   const dayPercentage = Math.max(0, Math.min(100, (waitTimeDay / totalWaitTime) * 100));
   const nightPercentage = Math.max(0, Math.min(100, (waitTimeNight / totalWaitTime) * 100));
 
+  // Vérifier si on a un cas de 100% jour / 0% nuit
+  const isFullDayRate = nightPercentage === 0 || !waitTimeNight || waitTimeNight <= 0;
+
   // S'assurer que les pourcentages sont valides
-  console.log('Calculated percentages:', { dayPercentage, nightPercentage });
+  console.log('Calculated percentages:', { 
+    dayPercentage, 
+    nightPercentage, 
+    isFullDayRate, 
+    total: dayPercentage + nightPercentage
+  });
 
   return (
     <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200 mt-2 mb-2">
@@ -42,8 +50,8 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
         <span className="text-sm font-medium">Temps d'attente</span>
       </div>
       <DayNightGauge
-        dayPercentage={dayPercentage}
-        nightPercentage={nightPercentage}
+        dayPercentage={isFullDayRate ? 100 : dayPercentage}
+        nightPercentage={isFullDayRate ? 0 : nightPercentage}
         dayKm={waitTimeDay}
         nightKm={waitTimeNight}
         isWaitingTime={true}
@@ -51,7 +59,7 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
       {(waitPriceDay > 0 || waitPriceNight > 0) && (
         <div className="flex justify-between text-xs mt-1 text-muted-foreground">
           <span>{waitTimeDay} min (jour)</span>
-          <span>{waitTimeNight} min (nuit)</span>
+          <span>{isFullDayRate ? '0' : waitTimeNight} min (nuit)</span>
         </div>
       )}
     </div>
