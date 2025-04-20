@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TripHeaderCard } from './steps/TripHeaderCard';
 import { TripSummaryHeader } from './summary/trip-summary/TripSummaryHeader';
@@ -99,33 +100,35 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <RouteDetailsSection
-          departureCoordinates={departureCoordinates}
-          destinationCoordinates={destinationCoordinates}
-          customReturnCoordinates={customReturnCoordinates}
-          handleRouteCalculated={handleRouteCalculated}
-          handleReturnRouteCalculated={handleReturnRouteCalculated}
-          hasReturnTrip={hasReturnTrip}
-          returnToSameAddress={returnToSameAddress}
-        />
+        <div className="flex flex-col space-y-6">
+          <RouteDetailsSection
+            departureCoordinates={departureCoordinates}
+            destinationCoordinates={destinationCoordinates}
+            customReturnCoordinates={customReturnCoordinates}
+            handleRouteCalculated={handleRouteCalculated}
+            handleReturnRouteCalculated={handleReturnRouteCalculated}
+            hasReturnTrip={hasReturnTrip}
+            returnToSameAddress={returnToSameAddress}
+          />
 
-        <TripPricingSection
-          estimatedDistance={estimatedDistance}
-          estimatedDuration={estimatedDuration}
-          time={time}
-          hasMinDistanceWarning={hasMinDistanceWarning}
-          minDistance={minDistance}
-          hasReturnTrip={hasReturnTrip}
-          returnToSameAddress={returnToSameAddress}
-          returnDistance={returnDistance}
-          returnDuration={returnDuration}
-          hasWaitingTime={hasWaitingTime}
-          waitingTimeMinutes={waitingTimeMinutes}
-          quoteDetails={quoteDetails}
-          isNightRate={quoteDetails?.isNightRate}
-          isSunday={quoteDetails?.isSunday}
-          nightHours={quoteDetails?.nightHours}
-        />
+          <TripPricingSection
+            estimatedDistance={estimatedDistance}
+            estimatedDuration={estimatedDuration}
+            time={time}
+            hasMinDistanceWarning={hasMinDistanceWarning}
+            minDistance={minDistance}
+            hasReturnTrip={hasReturnTrip}
+            returnToSameAddress={returnToSameAddress}
+            returnDistance={returnDistance}
+            returnDuration={returnDuration}
+            hasWaitingTime={hasWaitingTime}
+            waitingTimeMinutes={waitingTimeMinutes}
+            quoteDetails={quoteDetails}
+            isNightRate={quoteDetails?.isNightRate}
+            isSunday={quoteDetails?.isSunday}
+            nightHours={quoteDetails?.nightHours}
+          />
+        </div>
       </div>
 
       <TripSummaryActions
