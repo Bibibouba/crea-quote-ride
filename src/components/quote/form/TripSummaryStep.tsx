@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TripHeaderCard } from './steps/TripHeaderCard';
 import { TripSummaryHeader } from './summary/trip-summary/TripSummaryHeader';
@@ -112,27 +111,6 @@ const TripSummaryStep: React.FC<TripSummaryStepProps> = (props) => {
             hasReturnTrip={hasReturnTrip}
             returnToSameAddress={returnToSameAddress}
           />
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl">Aperçu du trajet</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <TripDetailsDisplay
-                estimatedDistance={estimatedDistance}
-                estimatedDuration={estimatedDuration}
-                time={time}
-                hasMinDistanceWarning={hasMinDistanceWarning}
-                minDistance={minDistance}
-                hasReturnTrip={hasReturnTrip}
-                returnToSameAddress={returnToSameAddress}
-                returnDistance={returnDistance}
-                returnDuration={returnDuration}
-                hasWaitingTime={hasWaitingTime}
-                waitingTimeMinutes={waitingTimeMinutes}
-              />
-            </CardContent>
-          </Card>
         </div>
 
         <div className="col-span-2">
