@@ -7,7 +7,9 @@ interface UseTripOptionsProps {
 }
 
 export const useTripOptions = ({ waitingTimeOptions }: UseTripOptionsProps) => {
-  const [date, setDate] = useState<Date>(new Date());
+  // Use current date as default
+  const today = new Date();
+  const [date, setDate] = useState<Date>(today);
   const [time, setTime] = useState('12:00');
   const [passengers, setPassengers] = useState('1');
   const [hasReturnTrip, setHasReturnTrip] = useState(false);
@@ -22,9 +24,18 @@ export const useTripOptions = ({ waitingTimeOptions }: UseTripOptionsProps) => {
     setEstimatedDuration(Math.round(duration));
   };
   
+  // Custom date setter that validates the date
+  const safeSetDate = (newDate: Date | undefined) => {
+    if (newDate instanceof Date && !isNaN(newDate.getTime())) {
+      setDate(newDate);
+    } else {
+      setDate(today); // Fallback to today if invalid
+    }
+  };
+  
   return {
     date,
-    setDate,
+    setDate: safeSetDate,
     time,
     setTime,
     passengers,

@@ -43,8 +43,11 @@ export const calculateQuoteDetails = (
     };
   }
 
+  // Validate date
+  const validDate = date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
+
   // Set up departure time
-  const departureTime = new Date(date);
+  const departureTime = new Date(validDate);
   const [hours, minutes] = time.split(':').map(Number);
   departureTime.setHours(hours, minutes, 0, 0);
 
@@ -63,7 +66,7 @@ export const calculateQuoteDetails = (
       waitingTimePrice,
       pricingSettings,
       time,
-      date,
+      validDate,
       selectedVehicle,
       selectedVehicle.wait_night_enabled
     ) : {
@@ -89,9 +92,9 @@ export const calculateQuoteDetails = (
   );
 
   // Calculate final prices including VAT and Sunday rates
-  const isSunday = date.getDay() === 0;
+  const isSunday = validDate.getDay() === 0;
   const globalPrices = calculateGlobalPrice(
-    date,
+    validDate,
     oneWayTripPrice.totalPriceWithNightRate,
     returnTripDetails.returnPriceWithNightRate,
     waitingTimeDetails.totalWaitPrice,

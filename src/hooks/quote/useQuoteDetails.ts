@@ -38,6 +38,9 @@ export const useQuoteDetails = ({
       return;
     }
     
+    // Ensure we have a valid date
+    const validDate = date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
+    
     const calculatedQuote = calculateQuoteDetails(
       selectedVehicle,
       estimatedDistance,
@@ -48,7 +51,7 @@ export const useQuoteDetails = ({
       hasWaitingTime,
       waitingTimePrice,
       time,
-      date,
+      validDate,
       pricingSettings
     );
     
@@ -62,7 +65,7 @@ export const useQuoteDetails = ({
       departureCoordinates: [0, 0], // This would be set elsewhere
       destinationCoordinates: [0, 0], // This would be set elsewhere
       time,
-      date,
+      date: validDate,
       // Copy all properties from calculatedQuote
       ...calculatedQuote
     };

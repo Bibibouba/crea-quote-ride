@@ -52,6 +52,11 @@ export const useSimulator = () => {
     if (!formState.quoteDetails) return Promise.reject(new Error("Quote details not available"));
 
     try {
+      // Make sure we have a valid date
+      const rideDate = formState.date instanceof Date && !isNaN(formState.date.getTime())
+        ? formState.date.toISOString()
+        : new Date().toISOString();
+
       const quoteData = {
         vehicle_id: formState.selectedVehicle,
         departure_location: formState.departureAddress,
@@ -60,7 +65,7 @@ export const useSimulator = () => {
         arrival_coordinates: formState.destinationCoordinates,
         distance_km: formState.estimatedDistance,
         duration_minutes: formState.estimatedDuration,
-        ride_date: formState.date.toISOString(),
+        ride_date: rideDate,
         amount: formState.quoteDetails.totalPrice,
         has_return_trip: formState.hasReturnTrip,
         has_waiting_time: formState.hasWaitingTime,
