@@ -11,6 +11,7 @@ import { usePriceCalculations } from './pricing/usePriceCalculations';
 import { useQuoteSubmission } from './submission/useQuoteSubmission';
 import { waitingTimeOptions } from '@/utils/waitingTimeOptions';
 import { QuoteFormStateProps } from '@/types/quoteForm';
+import { useMemo } from 'react';
 
 export const useQuoteForm = ({ clientId, onSuccess }: QuoteFormStateProps = {}) => {
   // Get vehicle and pricing data
@@ -55,57 +56,51 @@ export const useQuoteForm = ({ clientId, onSuccess }: QuoteFormStateProps = {}) 
     returnToSameAddress: tripOptions.returnToSameAddress
   });
 
-  // Only create quote submission if we have coordinates
-  let quoteSubmission = null;
-  if (addressForm.departureCoordinates && addressForm.destinationCoordinates) {
-    // Ensure we have default return coordinates if needed
-    const customReturnCoordinates = addressForm.customReturnCoordinates || 
-      (tripOptions.returnToSameAddress ? addressForm.departureCoordinates : addressForm.destinationCoordinates);
-    
-    quoteSubmission = useQuoteSubmission({
-      quoteDetails,
-      departureAddress: addressForm.departureAddress,
-      destinationAddress: addressForm.destinationAddress,
-      departureCoordinates: addressForm.departureCoordinates,
-      destinationCoordinates: addressForm.destinationCoordinates,
-      date: tripOptions.date,
-      time: tripOptions.time,
-      hasReturnTrip: tripOptions.hasReturnTrip,
-      returnToSameAddress: tripOptions.returnToSameAddress,
-      customReturnAddress: addressForm.customReturnAddress,
-      customReturnCoordinates,
-      returnDistance,
-      returnDuration,
-      hasWaitingTime: tripOptions.hasWaitingTime,
-      waitingTimeMinutes: tripOptions.waitingTimeMinutes,
-      waitingTimePrice,
-      estimatedDistance: tripOptions.estimatedDistance,
-      estimatedDuration: tripOptions.estimatedDuration,
-      selectedVehicle: vehicleState.selectedVehicle,
-      vehicles: vehicleState.vehicles,
-      pricingSettings: vehicleState.pricingSettings,
-      onSuccess
-    });
-  } else {
-    // Create a stub with required properties if coordinates are missing
-    quoteSubmission = {
-      isSubmitting: false,
-      isQuoteSent: false,
-      setIsQuoteSent: () => {},
-      handleSaveQuote: async () => {
-        console.error("Cannot save quote without coordinates");
-      },
-      firstName: "",
-      setFirstName: () => {},
-      lastName: "",
-      setLastName: () => {},
-      email: "",
-      setEmail: () => {},
-      phone: "",
-      setPhone: () => {},
-      selectedClient: ""
-    };
-  }
+  // Use a memoized value for default return coordinates
+  const defaultReturnCoordinates = useMemo(() => {
+    if (tripOptions.returnToSameAddress && addressForm.departureCoordinates) {
+      return addressForm.departureCoordinates;
+    } else if (addressForm.destinationCoordinates) {
+      return addressForm.destinationCoordinates;
+    }
+    return [0, 0] as [number, number]; // Provide a fallback default value
+  }, [
+    tripOptions.returnToSameAddress, 
+    addressForm.departureCoordinates, 
+    addressForm.destinationCoordinates
+  ]);
+  
+  // Only create quote submission if we have valid coordinates
+  const coordinatesValid = Boolean(
+    addressForm.departureCoordinates && 
+    addressForm.destinationCoordinates
+  );
+  
+  // Quote submission setup
+  const quoteSubmission = useQuoteSubmission({
+    quoteDetails,
+    departureAddress: addressForm.departureAddress,
+    destinationAddress: addressForm.destinationAddress,
+    departureCoordinates: addressForm.departureCoordinates || [0, 0],
+    destinationCoordinates: addressForm.destinationCoordinates || [0, 0],
+    date: tripOptions.date,
+    time: tripOptions.time,
+    hasReturnTrip: tripOptions.hasReturnTrip,
+    returnToSameAddress: tripOptions.returnToSameAddress,
+    customReturnAddress: addressForm.customReturnAddress,
+    customReturnCoordinates: addressForm.customReturnCoordinates || defaultReturnCoordinates,
+    returnDistance,
+    returnDuration,
+    hasWaitingTime: tripOptions.hasWaitingTime,
+    waitingTimeMinutes: tripOptions.waitingTimeMinutes,
+    waitingTimePrice,
+    estimatedDistance: tripOptions.estimatedDistance,
+    estimatedDuration: tripOptions.estimatedDuration,
+    selectedVehicle: vehicleState.selectedVehicle,
+    vehicles: vehicleState.vehicles,
+    pricingSettings: vehicleState.pricingSettings,
+    onSuccess
+  });
 
   // Use the calculate quote hook
   const { handleCalculateQuote } = useCalculateQuote({
