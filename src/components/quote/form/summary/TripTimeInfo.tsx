@@ -48,6 +48,7 @@ interface TripTimeInfoProps {
   tripEndTime?: Date;
   returnStartTime?: Date;
   returnEndTime?: Date;
+  finalArrivalTime?: Date;
 }
 
 export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
@@ -60,7 +61,8 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   waitingTimeInfo,
   tripEndTime,
   returnStartTime,
-  returnEndTime
+  returnEndTime,
+  finalArrivalTime
 }) => {
   const hasNightRate = nightRateInfo?.isApplied || (returnNightRateInfo?.isApplied ?? false);
   const hasSundayRate = sundayRateInfo?.isApplied ?? false;
@@ -70,7 +72,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
     return format(date, 'HH:mm');
   };
   
-  // Formatage des heures pour l'affichage
+  // Format times for display
   const tripStartDisplay = startTime;
   const tripEndDisplay = tripEndTime ? formatTimeDisplay(tripEndTime) : endTime;
   
@@ -80,7 +82,10 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   const returnStartDisplay = returnStartTime ? formatTimeDisplay(returnStartTime) : '--:--';
   const returnEndDisplay = returnEndTime ? formatTimeDisplay(returnEndTime) : '--:--';
   
-  // Log des informations pour débogage
+  // Final arrival time display - this will be used at the top right and for return trip
+  const finalTimeDisplay = finalArrivalTime ? formatTimeDisplay(finalArrivalTime) : (hasReturnTrip ? returnEndDisplay : tripEndDisplay);
+  
+  // Log information for debugging
   console.log('TripTimeInfo rendered with times:', {
     tripStartDisplay,
     tripEndDisplay,
@@ -88,13 +93,15 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
     waitEndDisplay,
     returnStartDisplay,
     returnEndDisplay,
+    finalTimeDisplay,
     hasReturnTrip,
     waitingTimeInfo: waitingTimeInfo ? {
       ...waitingTimeInfo,
       waitStartTime: waitingTimeInfo.waitStartTime?.toLocaleTimeString(),
       waitEndTime: waitingTimeInfo.waitEndTime?.toLocaleTimeString()
     } : null,
-    returnEndTime: returnEndTime?.toLocaleTimeString()
+    returnEndTime: returnEndTime?.toLocaleTimeString(),
+    finalArrivalTime: finalArrivalTime?.toLocaleTimeString()
   });
   
   return (
@@ -105,7 +112,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
           Départ: <span className="font-medium ml-1">{startTime}</span>
         </p>
         <p className="flex items-center">
-          Arrivée: <span className="font-medium ml-1">{hasReturnTrip && returnEndTime ? returnEndDisplay : tripEndDisplay}</span>
+          Arrivée: <span className="font-medium ml-1">{finalTimeDisplay}</span>
         </p>
       </div>
       
@@ -167,7 +174,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
               <div className="flex gap-2 text-xs text-muted-foreground">
                 <span>{returnStartDisplay}</span>
                 <span>-</span>
-                <span>{returnEndDisplay}</span>
+                <span>{finalTimeDisplay}</span>
               </div>
             </div>
             <NightRateDisplay

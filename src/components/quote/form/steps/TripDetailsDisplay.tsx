@@ -30,16 +30,27 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
   hasWaitingTime,
   waitingTimeMinutes
 }) => {
-  // Calculer la distance totale (aller + retour si applicable)
+  // Calculate total distance (outbound + return if applicable)
   const totalDistance = hasReturnTrip 
     ? estimatedDistance + (returnToSameAddress ? estimatedDistance : returnDistance)
     : estimatedDistance;
   
-  // Calculer la durée totale (aller + temps d'attente + retour si applicable)
+  // Calculate total duration (outbound + waiting time + return if applicable)
   const waitingDuration = hasWaitingTime ? waitingTimeMinutes : 0;
   const totalDuration = hasReturnTrip 
     ? estimatedDuration + waitingDuration + (returnToSameAddress ? estimatedDuration : returnDuration)
     : estimatedDuration;
+
+  // Calculate the final arrival time
+  const calculateFinalArrivalTime = () => {
+    if (!time) return "Non spécifiée";
+    
+    const [hours, minutes] = time.split(':').map(Number);
+    const arrivalTime = new Date();
+    arrivalTime.setHours(hours);
+    arrivalTime.setMinutes(minutes + totalDuration);
+    return format(arrivalTime, 'HH:mm');
+  };
 
   return (
     <div className="space-y-2">
@@ -91,7 +102,7 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
       {hasWaitingTime && (
         <div className="flex justify-between">
           <p className="text-sm text-muted-foreground">  - Temps d'attente</p>
-          <p className="text-sm text-muted-foreground">{formatDuration(waitingDuration)}</p>
+          <p className="text-sm text-muted-foreground">{formatDuration(waitingTimeMinutes)}</p>
         </div>
       )}
       
@@ -112,18 +123,9 @@ export const TripDetailsDisplay: React.FC<TripDetailsDisplayProps> = ({
       <div className="flex justify-between">
         <p className="text-sm">Heure d'arrivée estimée</p>
         <p className="text-sm font-medium">
-          {time ? (
-            (() => {
-              const [hours, minutes] = time.split(':').map(Number);
-              const arrivalTime = new Date();
-              arrivalTime.setHours(hours);
-              arrivalTime.setMinutes(minutes + totalDuration);
-              return format(arrivalTime, 'HH:mm');
-            })()
-          ) : "Non spécifiée"}
+          {calculateFinalArrivalTime()}
         </p>
       </div>
     </div>
   );
 };
-

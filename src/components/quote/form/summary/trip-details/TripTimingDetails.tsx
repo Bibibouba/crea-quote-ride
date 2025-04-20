@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TripTimeInfo } from '../../summary/TripTimeInfo';
 import { calculateTripTimes } from '@/utils/time/tripTimeCalculator';
@@ -33,6 +34,10 @@ export const TripTimingDetails: React.FC<TripTimingDetailsProps> = ({
     hasReturnTrip,
     returnDuration
   );
+
+  // Determine the final arrival time based on the trip configuration
+  const finalArrivalTime = hasReturnTrip ? returnEndTime : 
+                         (hasWaitingTime ? waitEndTime : tripEndTime);
 
   const waitingTimeInfo = hasWaitingTime && waitingTimeMinutes > 0 && quoteDetails ? {
     waitTimeDay: quoteDetails.waitTimeDay || 0,
@@ -81,8 +86,11 @@ export const TripTimingDetails: React.FC<TripTimingDetailsProps> = ({
   return (
     <TripTimeInfo
       startTime={time}
-      endTime={tripEndTime.getHours().toString().padStart(2, '0') + ':' + 
-              tripEndTime.getMinutes().toString().padStart(2, '0')}
+      endTime={finalArrivalTime ? 
+        finalArrivalTime.getHours().toString().padStart(2, '0') + ':' + 
+        finalArrivalTime.getMinutes().toString().padStart(2, '0') : 
+        tripEndTime.getHours().toString().padStart(2, '0') + ':' + 
+        tripEndTime.getMinutes().toString().padStart(2, '0')}
       nightRateInfo={nightRateInfo}
       returnNightRateInfo={returnNightRateInfo}
       hasReturnTrip={hasReturnTrip}
@@ -90,6 +98,7 @@ export const TripTimingDetails: React.FC<TripTimingDetailsProps> = ({
       tripEndTime={tripEndTime}
       returnStartTime={waitEndTime}
       returnEndTime={returnEndTime}
+      finalArrivalTime={finalArrivalTime}
       sundayRateInfo={quoteDetails?.isSunday ? {
         isApplied: true,
         percentage: quoteDetails?.sundayRate || 0
