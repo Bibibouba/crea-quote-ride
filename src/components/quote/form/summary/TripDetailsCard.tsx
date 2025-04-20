@@ -76,6 +76,18 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
                                     quoteDetails?.waitTimeDay !== undefined &&
                                     quoteDetails?.waitTimeNight !== undefined;
 
+  // Calculate final arrival time
+  const finalArrivalTime = new Date(tripEndTime);
+  if (hasWaitingTime) {
+    finalArrivalTime.setMinutes(finalArrivalTime.getMinutes() + waitingTimeMinutes);
+  }
+  if (hasReturnTrip) {
+    finalArrivalTime.setMinutes(finalArrivalTime.getMinutes() + returnDuration);
+  }
+  
+  // Format the final arrival time for display
+  const finalTimeDisplay = finalArrivalTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="space-y-4">
@@ -117,7 +129,7 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
             <TripTimeInfo 
               startTime={time} 
               endTime={tripEndTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-              finalTimeDisplay={tripEndTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              finalTimeDisplay={finalTimeDisplay}
               nightRateInfo={{
                 isApplied: isNightRateApplied,
                 percentage: nightRatePercentage,

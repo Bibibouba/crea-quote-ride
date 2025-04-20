@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TripTimeInfo } from '../../summary/TripTimeInfo';
 import { calculateTripTimes } from '@/utils/time/tripTimeCalculator';
@@ -91,11 +92,7 @@ export const TripTimingDetails: React.FC<TripTimingDetailsProps> = ({
   return (
     <TripTimeInfo
       startTime={time}
-      endTime={finalArrivalTime ? 
-        finalArrivalTime.getHours().toString().padStart(2, '0') + ':' + 
-        finalArrivalTime.getMinutes().toString().padStart(2, '0') : 
-        tripEndTime.getHours().toString().padStart(2, '0') + ':' + 
-        tripEndTime.getMinutes().toString().padStart(2, '0')}
+      endTime={formattedFinalTimeDisplay}
       finalTimeDisplay={formattedFinalTimeDisplay}
       nightRateInfo={nightRateInfo}
       returnNightRateInfo={returnNightRateInfo}

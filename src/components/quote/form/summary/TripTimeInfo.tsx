@@ -71,13 +71,15 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
   const waitEndDisplay = formatTimeDisplay(returnStartTime);
   const returnStartDisplay = formatTimeDisplay(returnStartTime);
   const returnEndDisplay = formatTimeDisplay(returnEndTime);
-  const calculatedFinalTimeDisplay = finalArrivalTime ? formatTimeDisplay(finalArrivalTime) : finalTimeDisplay;
+  
+  // Prioritize the provided finalTimeDisplay over calculating from finalArrivalTime
+  const displayFinalTime = finalTimeDisplay || formatTimeDisplay(finalArrivalTime);
 
   return (
     <div>
       <TripTimingHeader 
         startTime={startTime} 
-        finalTimeDisplay={calculatedFinalTimeDisplay}
+        finalTimeDisplay={displayFinalTime}
       />
       
       <div className="space-y-3">
@@ -122,7 +124,7 @@ export const TripTimeInfo: React.FC<TripTimeInfoProps> = ({
         {hasReturnTrip && returnNightRateInfo && (
           <NightRateSection
             startTime={returnStartDisplay}
-            endTime={calculatedFinalTimeDisplay}
+            endTime={displayFinalTime}
             title="Trajet Retour"
             nightRateInfo={{
               isApplied: returnNightRateInfo.isApplied,
