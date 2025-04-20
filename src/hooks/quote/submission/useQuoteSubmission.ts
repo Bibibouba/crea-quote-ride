@@ -7,8 +7,8 @@ interface UseQuoteSubmissionProps {
   quoteDetails: QuoteDetailsType | null;
   departureAddress: string;
   destinationAddress: string;
-  departureCoordinates?: [number, number];
-  destinationCoordinates?: [number, number];
+  departureCoordinates: [number, number]; // Changed from optional to required
+  destinationCoordinates: [number, number]; // Changed from optional to required
   date: Date;
   time: string;
   hasReturnTrip: boolean;
