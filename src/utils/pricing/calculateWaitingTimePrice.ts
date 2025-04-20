@@ -1,3 +1,4 @@
+
 /**
  * Calcule le prix du temps d'attente en tenant compte des tarifs de jour et de nuit
  */

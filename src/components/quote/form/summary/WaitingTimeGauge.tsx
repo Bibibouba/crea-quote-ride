@@ -18,10 +18,22 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   waitPriceNight,
   totalWaitTime
 }) => {
-  if (!totalWaitTime) return null;
+  // Vérification supplémentaire pour s'assurer que la jauge s'affiche
+  console.log('WaitingTimeGauge rendered with:', {
+    waitTimeDay,
+    waitTimeNight,
+    totalWaitTime
+  });
 
+  // Pas de rendu si pas de temps d'attente
+  if (!totalWaitTime || totalWaitTime <= 0) return null;
+
+  // Calcul des pourcentages pour la jauge
   const dayPercentage = (waitTimeDay / totalWaitTime) * 100;
   const nightPercentage = (waitTimeNight / totalWaitTime) * 100;
+
+  // S'assurer que les pourcentages sont valides
+  console.log('Calculated percentages:', { dayPercentage, nightPercentage });
 
   return (
     <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200">

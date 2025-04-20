@@ -69,6 +69,12 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
 }) => {
   // Check if we have complete details to display the exact price breakdown
   const hasCompleteDetails = !!quoteDetails?.dayKm && !!quoteDetails?.nightKm;
+  
+  // Conditions pour afficher la jauge de temps d'attente
+  const shouldShowWaitingTimeGauge = hasWaitingTime && 
+                                    waitingTimeMinutes > 0 && 
+                                    quoteDetails?.waitTimeDay !== undefined &&
+                                    quoteDetails?.waitTimeNight !== undefined;
 
   return (
     <div className="rounded-lg border bg-card p-4">
@@ -128,12 +134,13 @@ export const TripDetailsCard: React.FC<TripDetailsCardProps> = ({
               sundayRateInfo={isSunday ? { isApplied: true, percentage: sundayRate } : undefined}
             />
             
-            {hasWaitingTime && waitingTimeMinutes > 0 && quoteDetails?.waitTimeDay !== undefined && (
+            {/* Modifier la condition d'affichage pour la jauge de temps d'attente */}
+            {shouldShowWaitingTimeGauge && (
               <WaitingTimeGauge
-                waitTimeDay={quoteDetails.waitTimeDay}
-                waitTimeNight={quoteDetails.waitTimeNight}
-                waitPriceDay={quoteDetails.waitPriceDay}
-                waitPriceNight={quoteDetails.waitPriceNight}
+                waitTimeDay={quoteDetails.waitTimeDay || 0}
+                waitTimeNight={quoteDetails.waitTimeNight || 0}
+                waitPriceDay={quoteDetails.waitPriceDay || 0}
+                waitPriceNight={quoteDetails.waitPriceNight || 0}
                 totalWaitTime={waitingTimeMinutes}
               />
             )}
