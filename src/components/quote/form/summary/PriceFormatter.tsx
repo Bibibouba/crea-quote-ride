@@ -4,9 +4,18 @@ import React from 'react';
 interface PriceFormatterProps {
   price: number | string | null | undefined;
   showDecimals?: boolean;
+  showVAT?: boolean;
+  vatRate?: number;
+  suffix?: string;
 }
 
-export const PriceFormatter = ({ price, showDecimals = true }: PriceFormatterProps) => {
+export const PriceFormatter = ({ 
+  price, 
+  showDecimals = true, 
+  showVAT = false, 
+  vatRate = 10,
+  suffix = ''
+}: PriceFormatterProps) => {
   if (price === undefined || price === null) {
     return <span>0{showDecimals ? '.0' : ''}€</span>;
   }
@@ -19,5 +28,14 @@ export const PriceFormatter = ({ price, showDecimals = true }: PriceFormatterPro
     return <span>0{showDecimals ? '.0' : ''}€</span>;
   }
   
-  return <span>{showDecimals ? numericPrice.toFixed(1) : Math.round(numericPrice)}€</span>;
+  // Handle suffix logic
+  let displaySuffix = suffix;
+  if (showVAT) {
+    displaySuffix = ` ${displaySuffix} (TVA ${vatRate}%)`;
+  }
+  
+  return <span>
+    {showDecimals ? numericPrice.toFixed(1) : Math.round(numericPrice)}€
+    {displaySuffix && ` ${displaySuffix}`}
+  </span>;
 };
