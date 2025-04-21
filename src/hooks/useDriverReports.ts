@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,6 +5,19 @@ import { useAuth } from '@/contexts/AuthContext';
 export const useDriverReports = (driverId: string, period: string) => {
   const { user } = useAuth();
   
+  const { data: drivers } = useQuery({
+    queryKey: ['drivers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, company_name');
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user
+  });
+
   return useQuery({
     queryKey: ['reports', driverId, period],
     queryFn: async () => {
@@ -43,7 +55,7 @@ export const useDriverReports = (driverId: string, period: string) => {
 
         // Filter by driver if not "all"
         if (driverId !== 'all') {
-          query = query.eq('driver_id', user?.id);
+          query = query.eq('driver_id', driverId);
         }
 
         const { data: quotes, error } = await query;
@@ -82,7 +94,15 @@ export const useDriverReports = (driverId: string, period: string) => {
           amount: quote.amount
         }));
 
+        // Add driver information
+        const driverInfo = drivers?.find(d => d.id === driverId) || null;
+        const driverName = driverInfo ? 
+          `${driverInfo.company_name || `${driverInfo.first_name} ${driverInfo.last_name}`}` : 
+          'Tous les chauffeurs';
+
         return {
+          driverName,
+          drivers,
           totalRevenue,
           totalDistance,
           avgPricePerKm,
