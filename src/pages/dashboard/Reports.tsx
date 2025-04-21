@@ -175,7 +175,7 @@ const Reports = () => {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value: number) => [formatCurrency(value), 'Chiffre d'affaires']}
+                      formatter={(value: number) => [formatCurrency(value), "Chiffre d'affaires"]}
                       labelFormatter={(label) => {
                         const date = new Date(label);
                         return date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -210,7 +210,7 @@ const Reports = () => {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value: number) => [value, 'Courses']}
+                      formatter={(value: number) => [value, "Courses"]}
                       labelFormatter={(label) => {
                         const date = new Date(label);
                         return date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -256,7 +256,7 @@ const Reports = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => [formatCurrency(value), 'Chiffre d'affaires']}
+                    formatter={(value: number) => [formatCurrency(value), "Chiffre d'affaires"]}
                   />
                   <Legend />
                 </PieChart>
