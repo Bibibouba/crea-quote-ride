@@ -33,7 +33,7 @@ export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> =
           <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
           <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
         </div>
-        <PriceFormatter price={waitingTimePrice} />
+        <PriceFormatter price={waitingTimePrice} showVAT={true} vatRate={20} />
       </div>
     );
   }
@@ -46,7 +46,7 @@ export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> =
           <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
           <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
         </div>
-        <PriceFormatter price={waitingTimePrice} />
+        <PriceFormatter price={waitingTimePrice} showVAT={true} vatRate={20} />
       </div>
       
       {dayTime > 0 && (
@@ -55,7 +55,7 @@ export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> =
             <Sun className="h-3 w-3 mr-1 flex-shrink-0" />
             <p>Jour ({formatWaitingTime(dayTime)})</p>
           </div>
-          <PriceFormatter price={dayPrice} />
+          <PriceFormatter price={dayPrice} suffix="HT" />
         </div>
       )}
       
@@ -65,7 +65,7 @@ export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> =
             <Moon className="h-3 w-3 mr-1 flex-shrink-0" />
             <p>Nuit ({formatWaitingTime(nightTime)})</p>
           </div>
-          <PriceFormatter price={nightPrice} />
+          <PriceFormatter price={nightPrice} suffix="HT" />
         </div>
       )}
     </div>

@@ -78,7 +78,7 @@ export const PriceSummary: React.FC<PriceSummaryProps> = ({
           </div>
           <div className="flex justify-between">
             <span>TVA (10%)</span>
-            <span>{formatCurrency(quoteDetails.totalVAT)} TTC</span>
+            <span>{formatCurrency(quoteDetails.totalVAT)}</span>
           </div>
           <div className="flex justify-between font-medium">
             <span>Total TTC</span>
@@ -95,4 +95,3 @@ export const PriceSummary: React.FC<PriceSummaryProps> = ({
     </div>
   );
 };
-

@@ -28,6 +28,10 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
   const oneWayVAT = quoteDetails.oneWayPrice - quoteDetails.oneWayPriceHT;
   const returnVAT = quoteDetails.returnPrice - quoteDetails.returnPriceHT;
   const waitingVAT = quoteDetails.waitingTimePrice - quoteDetails.waitingTimePriceHT;
+  
+  // Taux de TVA
+  const rideVatRate = 10; // Taux pour les trajets
+  const waitingVatRate = 20; // Taux pour le temps d'attente
 
   return (
     <div className="space-y-4">
@@ -44,13 +48,9 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
           nightRatePercentage={quoteDetails.nightRatePercentage}
           nightStartDisplay={quoteDetails.nightStartDisplay}
           nightEndDisplay={quoteDetails.nightEndDisplay}
-          vatRate={10}
+          vatRate={rideVatRate}
           vatAmount={oneWayVAT}
         />
-        <div className="flex justify-between font-medium text-sm pt-1 border-t border-slate-200 mt-2">
-          <span>Total Trajet (TTC)</span>
-          <span>{formatPrice(quoteDetails.oneWayPrice)}</span>
-        </div>
       </div>
       
       {/* Temps d'Attente */}
@@ -62,7 +62,7 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
               <div className="text-sm">
                 <div className="flex justify-between font-medium">
                   <span>Attente (Tarif jour)</span>
-                  <span>{formatPrice(quoteDetails.waitPriceDay)}</span>
+                  <span>{formatPrice(quoteDetails.waitPriceDay)} HT</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   <div className="flex justify-between">
@@ -76,7 +76,7 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
               <div className="text-sm mt-2">
                 <div className="flex justify-between font-medium">
                   <span>Attente (Tarif nuit)</span>
-                  <span>{formatPrice(quoteDetails.waitPriceNight)}</span>
+                  <span>{formatPrice(quoteDetails.waitPriceNight)} HT</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   <div className="flex justify-between">
@@ -88,17 +88,17 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
             
             <div className="flex justify-between text-sm pt-1">
               <span>Sous-total HT</span>
-              <span>{formatPrice(quoteDetails.waitingTimePriceHT)}</span>
+              <span>{formatPrice(quoteDetails.waitingTimePriceHT)} HT</span>
             </div>
             
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>TVA (20%)</span>
-              <span>{formatPrice(waitingVAT)}</span>
+              <span>TVA ({waitingVatRate}%)</span>
+              <span>{formatPrice(waitingVAT)} €</span>
             </div>
             
             <div className="flex justify-between font-medium text-sm pt-1 border-t border-slate-200 mt-2">
               <span>Total Attente (TTC)</span>
-              <span>{formatPrice(quoteDetails.waitingTimePrice)}</span>
+              <span>{formatPrice(quoteDetails.waitingTimePrice)} TTC</span>
             </div>
           </div>
         </div>
@@ -118,13 +118,9 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
             nightRatePercentage={quoteDetails.nightRatePercentage}
             nightStartDisplay={quoteDetails.nightStartDisplay}
             nightEndDisplay={quoteDetails.nightEndDisplay}
-            vatRate={10}
+            vatRate={rideVatRate}
             vatAmount={returnVAT}
           />
-          <div className="flex justify-between font-medium text-sm pt-1 border-t border-slate-200 mt-2">
-            <span>Total Trajet Retour (TTC)</span>
-            <span>{formatPrice(quoteDetails.returnPrice)}</span>
-          </div>
         </div>
       )}
       

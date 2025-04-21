@@ -6,8 +6,8 @@ export const calculateVatAndTotalPrices = (
   oneWayPriceHT: number,
   returnPriceHT: number,
   waitingTimePriceHT: number,
-  rideVatRate: number,
-  waitingVatRate: number
+  rideVatRate: number = 10,
+  waitingVatRate: number = 20
 ): {
   oneWayPrice: number;
   returnPrice: number;
