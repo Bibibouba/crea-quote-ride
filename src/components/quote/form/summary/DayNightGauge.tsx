@@ -8,6 +8,8 @@ interface DayNightGaugeProps {
   dayKm?: number;
   nightKm?: number;
   isWaitingTime?: boolean;
+  dayColor?: string;  // Couleur personnalisée pour jour
+  nightColor?: string; // Couleur personnalisée pour nuit
 }
 
 export const DayNightGauge: React.FC<DayNightGaugeProps> = ({ 
@@ -15,7 +17,9 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
   nightPercentage,
   dayKm,
   nightKm,
-  isWaitingTime = false
+  isWaitingTime = false,
+  dayColor = '#fcdc6d',    // Couleur par défaut soft yellow
+  nightColor = '#d3e4fd'   // Couleur par défaut soft blue
 }) => {
   // Assurons-nous que les pourcentages sont bien des nombres et arrondis
   const formattedDayPercentage = Math.round(dayPercentage || 0);
@@ -83,7 +87,7 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
     <div className="space-y-2 w-full">
       <div className="flex justify-between items-center mb-1">
         <div className="flex items-center">
-          <Sun className="h-4 w-4 text-amber-500 mr-1" />
+          <Sun className="h-4 w-4 mr-1 flex-shrink-0" />
           <span className="text-sm font-medium">
             {isWaitingTime ? (
               <>Jour ({adjustedDayPercentage}%)
@@ -108,24 +112,20 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
               </>
             )}
           </span>
-          <Moon className="h-4 w-4 text-blue-600 ml-1" />
+          <Moon className="h-4 w-4 ml-1 flex-shrink-0" />
         </div>
       </div>
       
       <div className="relative h-5 w-full overflow-hidden rounded-full bg-secondary">
         <div
-          className={`absolute inset-y-0 left-0 transition-all duration-300 flex items-center justify-center text-xs font-medium ${
-            isWaitingTime ? 'bg-orange-400 text-orange-900' : 'bg-amber-400 text-amber-900'
-          }`}
-          style={{ width: `${adjustedDayPercentage}%` }}
+          className="absolute inset-y-0 left-0 transition-all duration-300 flex items-center justify-center text-xs font-medium"
+          style={{ width: `${adjustedDayPercentage}%`, backgroundColor: dayColor, color: '#5c4d0a' }}
         >
           {adjustedDayPercentage > 15 && `${adjustedDayPercentage}%`}
         </div>
         <div
-          className={`absolute inset-y-0 right-0 transition-all duration-300 flex items-center justify-center text-xs font-medium ${
-            isWaitingTime ? 'bg-purple-500 text-white' : 'bg-blue-500 text-white'
-          }`}
-          style={{ width: `${adjustedNightPercentage}%` }}
+          className="absolute inset-y-0 right-0 transition-all duration-300 flex items-center justify-center text-xs font-medium"
+          style={{ width: `${adjustedNightPercentage}%`, backgroundColor: nightColor, color: '#1e3a8a' }}
         >
           {adjustedNightPercentage > 15 && `${adjustedNightPercentage}%`}
         </div>
@@ -133,3 +133,4 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
     </div>
   );
 };
+

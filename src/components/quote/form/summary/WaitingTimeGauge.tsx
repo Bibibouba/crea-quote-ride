@@ -107,6 +107,10 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   const displayStartTime = startTimeDisplay || (waitStartTime ? format(waitStartTime, 'HH:mm') : '');
   const displayEndTime = endTimeDisplay || (waitEndTime ? format(waitEndTime, 'HH:mm') : '');
 
+  // Couleurs personnalisées pour le temps d'attente selon le tarif demandé
+  const dayColor = '#f8e3ae';    // Jaune clair pour jour
+  const nightColor = '#a9c7f7';  // Bleu clair pour nuit
+
   return (
     <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200 mt-2 mb-2">
       <div className="flex items-center justify-between mb-2">
@@ -126,6 +130,8 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
         dayKm={adjustedDayTime}
         nightKm={adjustedNightTime}
         isWaitingTime={true}
+        dayColor={dayColor}
+        nightColor={nightColor}
       />
       {(waitPriceDay > 0 || waitPriceNight > 0) && (
         <div className="flex justify-between text-xs mt-1 text-muted-foreground">
