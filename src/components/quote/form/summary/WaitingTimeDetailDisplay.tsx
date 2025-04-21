@@ -1,98 +1,59 @@
 
 import React from 'react';
-import { Clock, Moon, Sun } from 'lucide-react';
-import { PriceFormatter } from './PriceFormatter';
-import { formatWaitingTime } from './WaitingTimeDisplay';
-import { QuoteDetailsType } from '@/types/quoteForm';
+import { Clock } from 'lucide-react';
 import { formatPrice } from '@/utils/pricing/priceFormatter';
+import { formatWaitingTime } from './WaitingTimeDisplay';
 
 interface WaitingTimeDetailDisplayProps {
   hasWaitingTime: boolean;
   waitingTimeMinutes: number;
-  waitingTimePrice: number;
-  quoteDetails?: QuoteDetailsType;
+  quoteDetails?: any;
 }
 
 export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> = ({
   hasWaitingTime,
   waitingTimeMinutes,
-  waitingTimePrice,
   quoteDetails
 }) => {
-  if (!hasWaitingTime) return null;
+  if (!hasWaitingTime || !quoteDetails?.waitingTimeDetails) return null;
   
-  const dayTime = quoteDetails?.waitTimeDay || 0;
-  const nightTime = quoteDetails?.waitTimeNight || 0;
-  const dayPrice = quoteDetails?.waitPriceDay || 0;
-  const nightPrice = quoteDetails?.waitPriceNight || 0;
-  const waitingTimePriceHT = quoteDetails?.waitingTimePriceHT || 0;
-  const waitingVATRate = 20; // TVA à 20% pour le temps d'attente
-  
-  // Calculate VAT for waiting time
-  const waitingVAT = waitingTimePriceHT * (waitingVATRate / 100);
-  const waitingTimeTTC = waitingTimePriceHT + waitingVAT;
-  
-  // Si nous n'avons pas de détails jour/nuit, on affiche simplement le temps d'attente global
-  if ((!dayTime && !nightTime) || (!dayPrice && !nightPrice)) {
-    return (
-      <div className="flex flex-col space-y-2">
-        <div className="flex justify-between">
-          <div className="flex items-center">
-            <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-            <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
-          </div>
-          <span>{formatPrice(waitingTimeTTC)} € TTC</span>
-        </div>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Sous-total HT</span>
-          <span>{formatPrice(waitingTimePriceHT)} € HT</span>
-        </div>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>TVA ({waitingVATRate}%)</span>
-          <span>{formatPrice(waitingVAT)} €</span>
-        </div>
-      </div>
-    );
-  }
-  
-  // Sinon, on affiche le détail jour/nuit
+  const {
+    waitPriceDay,
+    waitPriceNight,
+    totalWaitPriceHT,
+    waitingVatAmount,
+    totalWaitPriceTTC
+  } = quoteDetails.waitingTimeDetails;
+
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col space-y-2">
       <div className="flex justify-between">
         <div className="flex items-center">
           <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
           <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
         </div>
-        <span>{formatPrice(waitingTimeTTC)} € TTC</span>
+        <span>{formatPrice(totalWaitPriceTTC)} € TTC</span>
       </div>
-      
+
       <div className="flex justify-between text-sm text-muted-foreground">
-        <span>Sous-total HT</span>
-        <span>{formatPrice(waitingTimePriceHT)} € HT</span>
+        <span>Sous-total attente HT</span>
+        <span>{formatPrice(totalWaitPriceHT)} € HT</span>
       </div>
-      
+
       <div className="flex justify-between text-sm text-muted-foreground">
-        <span>TVA ({waitingVATRate}%)</span>
-        <span>{formatPrice(waitingVAT)} €</span>
+        <span>TVA (20%)</span>
+        <span>{formatPrice(waitingVatAmount)} €</span>
       </div>
-      
-      {dayTime > 0 && (
-        <div className="flex justify-between pl-6 text-sm">
-          <div className="flex items-center">
-            <Sun className="h-3 w-3 mr-1 flex-shrink-0" />
-            <p>Jour ({formatWaitingTime(dayTime)})</p>
-          </div>
-          <span>{formatPrice(dayPrice)} € HT</span>
-        </div>
-      )}
-      
-      {nightTime > 0 && (
-        <div className="flex justify-between pl-6 text-sm">
-          <div className="flex items-center">
-            <Moon className="h-3 w-3 mr-1 flex-shrink-0" />
-            <p>Nuit ({formatWaitingTime(nightTime)})</p>
-          </div>
-          <span>{formatPrice(nightPrice)} € HT</span>
+
+      {(waitPriceDay > 0 || waitPriceNight > 0) && (
+        <div className="text-xs text-muted-foreground space-y-1 mt-2">
+          <p>Détail du calcul :</p>
+          {waitPriceDay > 0 && (
+            <p className="ml-2">• Jour : {formatPrice(waitPriceDay)} € HT</p>
+          )}
+          {waitPriceNight > 0 && (
+            <p className="ml-2">• Nuit : {formatPrice(waitPriceNight)} € HT</p>
+          )}
         </div>
       )}
     </div>

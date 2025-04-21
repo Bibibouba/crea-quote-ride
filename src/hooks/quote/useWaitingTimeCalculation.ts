@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { calculateWaitingTimePrice } from '@/utils/pricing';
+import { calculateDetailedWaitingPrice } from '@/utils/pricing/waiting-time/calculateDetailedWaitingPrice';
+import { WaitingTimeCalculationResult } from '@/types/waitingTime';
 import { PricingSettings, Vehicle } from '@/types/quoteForm';
 
 interface UseWaitingTimeCalculationProps {
@@ -22,52 +23,38 @@ export const useWaitingTimeCalculation = ({
   time,
   date,
 }: UseWaitingTimeCalculationProps) => {
-  const [waitingTimePrice, setWaitingTimePrice] = useState(0);
+  const [waitingTimeDetails, setWaitingTimeDetails] = useState<WaitingTimeCalculationResult | null>(null);
   
   useEffect(() => {
     if (!hasWaitingTime) {
-      setWaitingTimePrice(0);
+      setWaitingTimeDetails(null);
       return;
     }
     
+    // Calculer l'heure de début d'attente (après le trajet estimé)
+    const [hours, minutes] = time.split(':').map(Number);
+    const tripDuration = 60; // Durée estimée du trajet en minutes
+    
+    const waitStartDate = new Date(date);
+    waitStartDate.setHours(hours, minutes + tripDuration, 0, 0);
+    
+    // Récupérer les paramètres du véhicule sélectionné
     const selectedVehicleInfo = vehicles.find(v => v.id === selectedVehicle);
-    const price = calculateWaitingTimePrice(
+    
+    // Calculer les détails du temps d'attente
+    const details = calculateDetailedWaitingPrice(
       hasWaitingTime,
       waitingTimeMinutes,
+      waitStartDate,
       pricingSettings,
-      time,
-      date,
-      selectedVehicleInfo,
-      selectedVehicleInfo?.wait_night_enabled || false
+      selectedVehicleInfo?.wait_night_enabled
     );
     
-    setWaitingTimePrice(price);
-  }, [hasWaitingTime, waitingTimeMinutes, pricingSettings, time, date, vehicles, selectedVehicle]);
-  
-  // Generate waiting time options for dropdown
-  const waitingTimeOptions = Array.from({ length: 24 }, (_, i) => {
-    const minutes = (i + 1) * 15;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    
-    let label = "";
-    if (hours > 0) {
-      label += `${hours} heure${hours > 1 ? 's' : ''}`;
-      if (remainingMinutes > 0) {
-        label += ` et ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
-      }
-    } else {
-      label = `${minutes} minutes`;
-    }
-    
-    return {
-      value: minutes,
-      label
-    };
-  });
-  
+    setWaitingTimeDetails(details);
+  }, [hasWaitingTime, waitingTimeMinutes, selectedVehicle, vehicles, pricingSettings, time, date]);
+
   return {
-    waitingTimePrice,
-    waitingTimeOptions
+    waitingTimePrice: waitingTimeDetails?.totalWaitPriceTTC || 0,
+    waitingTimeDetails
   };
 };
