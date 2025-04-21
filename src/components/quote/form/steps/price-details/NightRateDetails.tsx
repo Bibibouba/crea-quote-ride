@@ -25,6 +25,13 @@ export const NightRateDetails: React.FC<NightRateDetailsProps> = ({
     return null;
   }
 
+  // Vérifier si nous avons des km de jour ou de nuit
+  const hasDayKm = quoteDetails.dayKm > 0;
+  const hasNightKm = quoteDetails.nightKm > 0;
+  
+  // Ignorer si aucun tarif applicable
+  if (!hasDayKm && !hasNightKm) return null;
+  
   // Calculate the night price with the percentage directly applied
   const basePrice = quoteDetails.basePrice || 0;
   const nightRatePercentage = quoteDetails.nightRatePercentage || 0;
@@ -40,8 +47,12 @@ export const NightRateDetails: React.FC<NightRateDetailsProps> = ({
       <div className="space-y-1">
         <p>Détail du calcul :</p>
         <div className="ml-2">
-          <p>• Tarif de jour : {formatDistance(quoteDetails.dayKm)} km × {basePrice.toFixed(2)}€/km = {formatPrice(quoteDetails.dayPrice)}€ HT</p>
-          <p>• Tarif de nuit : {formatDistance(nightKm)} km × {basePrice.toFixed(2)}€/km = {formatPrice(nightBasePriceTotal)}€ + {nightRatePercentage}% = {formatPrice(nightPriceWithSurcharge)}€ HT</p>
+          {hasDayKm && (
+            <p>• Tarif de jour : {formatDistance(quoteDetails.dayKm)} km × {basePrice.toFixed(2)}€/km = {formatPrice(quoteDetails.dayPrice)}€ HT</p>
+          )}
+          {hasNightKm && (
+            <p>• Tarif de nuit : {formatDistance(nightKm)} km × {basePrice.toFixed(2)}€/km = {formatPrice(nightBasePriceTotal)}€ + {nightRatePercentage}% = {formatPrice(nightPriceWithSurcharge)}€ HT</p>
+          )}
         </div>
       </div>
     </div>

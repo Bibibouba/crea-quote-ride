@@ -67,68 +67,66 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
     }
   }
   
-  // Debug pour vérifier les valeurs
-  console.log('DayNightGauge values:', {
-    originalDayPercentage: dayPercentage,
-    originalNightPercentage: nightPercentage,
-    formattedDayPercentage,
-    formattedNightPercentage,
-    adjustedDayPercentage,
-    adjustedNightPercentage,
-    originalDayKm: dayKm,
-    originalNightKm: nightKm,
-    displayDayKm,
-    displayNightKm,
-    isWaitingTime,
-    totalPercentage
-  });
-
+  // Déterminer si on doit afficher le jour, la nuit, ou les deux
+  const showDay = adjustedDayPercentage > 0;
+  const showNight = adjustedNightPercentage > 0;
+  
   return (
     <div className="space-y-2 w-full">
       <div className="flex justify-between items-center mb-1">
-        <div className="flex items-center">
-          <Sun className="h-4 w-4 mr-1 flex-shrink-0" />
-          <span className="text-sm font-medium">
-            {isWaitingTime ? (
-              <>Jour ({adjustedDayPercentage}%)
-                {displayDayKm !== undefined && <span className="text-xs ml-1">({Math.round(displayDayKm)} min)</span>}
-              </>
-            ) : (
-              <>Jour ({adjustedDayPercentage}%)
-                {displayDayKm !== undefined && <span className="text-xs ml-1">({displayDayKm.toFixed(1)} km)</span>}
-              </>
-            )}
-          </span>
-        </div>
-        <div className="flex items-center">
-          <span className="text-sm font-medium">
-            {isWaitingTime ? (
-              <>Nuit ({adjustedNightPercentage}%)
-                {displayNightKm !== undefined && <span className="text-xs ml-1">({Math.round(displayNightKm)} min)</span>}
-              </>
-            ) : (
-              <>Nuit ({adjustedNightPercentage}%)
-                {displayNightKm !== undefined && <span className="text-xs ml-1">({displayNightKm.toFixed(1)} km)</span>}
-              </>
-            )}
-          </span>
-          <Moon className="h-4 w-4 ml-1 flex-shrink-0" />
-        </div>
+        {showDay && (
+          <div className="flex items-center">
+            <Sun className="h-4 w-4 mr-1 flex-shrink-0" />
+            <span className="text-sm font-medium">
+              {isWaitingTime ? (
+                <>Jour ({adjustedDayPercentage}%)
+                  {displayDayKm !== undefined && <span className="text-xs ml-1">({Math.round(displayDayKm)} min)</span>}
+                </>
+              ) : (
+                <>Jour ({adjustedDayPercentage}%)
+                  {displayDayKm !== undefined && <span className="text-xs ml-1">({displayDayKm.toFixed(1)} km)</span>}
+                </>
+              )}
+            </span>
+          </div>
+        )}
+        
+        {showNight && (
+          <div className="flex items-center">
+            <span className="text-sm font-medium">
+              {isWaitingTime ? (
+                <>Nuit ({adjustedNightPercentage}%)
+                  {displayNightKm !== undefined && <span className="text-xs ml-1">({Math.round(displayNightKm)} min)</span>}
+                </>
+              ) : (
+                <>Nuit ({adjustedNightPercentage}%)
+                  {displayNightKm !== undefined && <span className="text-xs ml-1">({displayNightKm.toFixed(1)} km)</span>}
+                </>
+              )}
+            </span>
+            <Moon className="h-4 w-4 ml-1 flex-shrink-0" />
+          </div>
+        )}
       </div>
       
       <div className="relative h-5 w-full overflow-hidden rounded-full bg-secondary">
-        <div
-          className="absolute inset-y-0 left-0 transition-all duration-300 flex items-center justify-center text-xs font-medium"
-          style={{ width: `${adjustedDayPercentage}%`, backgroundColor: dayColor, color: '#5c4d0a' }}
-        >
-          {adjustedDayPercentage > 15 && `${adjustedDayPercentage}%`}
-        </div>
-        <div
-          className="absolute inset-y-0 right-0 transition-all duration-300 flex items-center justify-center text-xs font-medium"
-          style={{ width: `${adjustedNightPercentage}%`, backgroundColor: nightColor, color: '#1e3a8a' }}
-        >
-          {adjustedNightPercentage > 15 && `${adjustedNightPercentage}%`}
-        </div>
+        {showDay && (
+          <div
+            className="absolute inset-y-0 left-0 transition-all duration-300 flex items-center justify-center text-xs font-medium"
+            style={{ width: `${adjustedDayPercentage}%`, backgroundColor: dayColor, color: '#5c4d0a' }}
+          >
+            {adjustedDayPercentage > 15 && `${adjustedDayPercentage}%`}
+          </div>
+        )}
+        
+        {showNight && (
+          <div
+            className="absolute inset-y-0 right-0 transition-all duration-300 flex items-center justify-center text-xs font-medium"
+            style={{ width: `${adjustedNightPercentage}%`, backgroundColor: nightColor, color: '#1e3a8a' }}
+          >
+            {adjustedNightPercentage > 15 && `${adjustedNightPercentage}%`}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -36,6 +36,10 @@ export const TripSegmentDetails: React.FC<TripSegmentDetailsProps> = ({
   const totalKm = (dayKm || 0) + (nightKm || 0);
   const totalPriceHT = (dayPrice || 0) + (nightPrice || 0);
   
+  // Détermine si on doit afficher le tarif jour ou nuit
+  const shouldShowDayRate = (dayKm !== undefined && dayPrice !== undefined && dayKm > 0);
+  const shouldShowNightRate = (nightKm !== undefined && nightPrice !== undefined && nightKm > 0);
+  
   return (
     <div className="space-y-1 text-sm">
       {basePrice && (
@@ -47,7 +51,7 @@ export const TripSegmentDetails: React.FC<TripSegmentDetailsProps> = ({
         </div>
       )}
 
-      {dayKm !== undefined && dayPrice !== undefined && (
+      {shouldShowDayRate && (
         <div className="flex justify-between">
           <div className="flex">
             <span>Tarif jour</span>
@@ -69,7 +73,7 @@ export const TripSegmentDetails: React.FC<TripSegmentDetailsProps> = ({
         </div>
       )}
       
-      {nightKm !== undefined && nightPrice !== undefined && nightKm > 0 && (
+      {shouldShowNightRate && (
         <div className="flex justify-between">
           <div className="flex">
             <span>Tarif nuit</span>
@@ -115,4 +119,3 @@ export const TripSegmentDetails: React.FC<TripSegmentDetailsProps> = ({
     </div>
   );
 };
-
