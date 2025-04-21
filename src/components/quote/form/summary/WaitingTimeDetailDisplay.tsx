@@ -7,12 +7,14 @@ import { formatWaitingTime } from './WaitingTimeDisplay';
 interface WaitingTimeDetailDisplayProps {
   hasWaitingTime: boolean;
   waitingTimeMinutes: number;
+  waitingTimePrice: number;
   quoteDetails?: any;
 }
 
 export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> = ({
   hasWaitingTime,
   waitingTimeMinutes,
+  waitingTimePrice,
   quoteDetails
 }) => {
   if (!hasWaitingTime || !quoteDetails?.waitingTimeDetails) return null;
