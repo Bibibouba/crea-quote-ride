@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Clock } from 'lucide-react';
 import { DayNightGauge } from './DayNightGauge';
@@ -108,8 +107,8 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   const displayEndTime = endTimeDisplay || (waitEndTime ? format(waitEndTime, 'HH:mm') : '');
 
   // Couleurs personnalisées pour le temps d'attente selon le tarif demandé
-  const dayColor = '#f8e3ae';    // Jaune clair pour jour
-  const nightColor = '#a9c7f7';  // Bleu clair pour nuit
+  const dayColor = '#fcdc6d';    // Jaune clair pour jour (simplified)
+  const nightColor = '#d3e4fd';  // Bleu clair pour nuit (simplified)
 
   return (
     <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200 mt-2 mb-2">

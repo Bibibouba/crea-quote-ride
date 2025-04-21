@@ -133,4 +133,3 @@ export const DayNightGauge: React.FC<DayNightGaugeProps> = ({
     </div>
   );
 };
-
