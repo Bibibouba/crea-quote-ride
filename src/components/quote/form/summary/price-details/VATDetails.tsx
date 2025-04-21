@@ -24,19 +24,19 @@ export const VATDetails: React.FC<VATDetailsProps> = ({
       <div className="space-y-1 text-sm">
         <div className="flex justify-between items-center">
           <span className="flex items-center">Trajets <span className="font-medium ml-1">({rideVatRate}%)</span></span>
-          <span>{formatPrice(oneWayVAT)} TVA</span>
+          <span>{formatPrice(oneWayVAT)} € TVA</span>
         </div>
         
         {hasWaitingTime && (
           <div className="flex justify-between items-center">
             <span className="flex items-center">Temps d'attente <span className="font-medium ml-1">({waitingVatRate}%)</span></span>
-            <span>{formatPrice(waitingTimeVAT)} TVA</span>
+            <span>{formatPrice(waitingTimeVAT)} € TVA</span>
           </div>
         )}
         
         <div className="flex justify-between font-medium pt-1 border-t border-slate-200 mt-1">
           <span>Total TVA</span>
-          <span>{formatPrice(quoteDetails.totalVAT)}</span>
+          <span>{formatPrice(quoteDetails.totalVAT)} €</span>
         </div>
       </div>
     </div>
