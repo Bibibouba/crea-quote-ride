@@ -16,7 +16,9 @@ export const VATDetails: React.FC<VATDetailsProps> = ({
 
   // Calculs de TVA
   const oneWayVAT = (quoteDetails.oneWayPrice + quoteDetails.returnPrice) - (quoteDetails.oneWayPriceHT + quoteDetails.returnPriceHT);
-  const waitingTimeVAT = quoteDetails.waitingTimePrice - quoteDetails.waitingTimePriceHT;
+  
+  // Calcul explicite de la TVA pour le temps d'attente
+  const waitingTimeVAT = hasWaitingTime ? quoteDetails.waitingTimePriceHT * (waitingVatRate / 100) : 0;
 
   return (
     <div className="bg-slate-50 border rounded-md p-3">
@@ -36,7 +38,7 @@ export const VATDetails: React.FC<VATDetailsProps> = ({
         
         <div className="flex justify-between font-medium pt-1 border-t border-slate-200 mt-1">
           <span>Total TVA</span>
-          <span>{formatPrice(quoteDetails.totalVAT)} €</span>
+          <span>{formatPrice(oneWayVAT + waitingTimeVAT)} €</span>
         </div>
       </div>
     </div>

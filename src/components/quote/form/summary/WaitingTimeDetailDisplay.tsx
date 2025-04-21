@@ -4,6 +4,7 @@ import { Clock, Moon, Sun } from 'lucide-react';
 import { PriceFormatter } from './PriceFormatter';
 import { formatWaitingTime } from './WaitingTimeDisplay';
 import { QuoteDetailsType } from '@/types/quoteForm';
+import { formatPrice } from '@/utils/pricing/priceFormatter';
 
 interface WaitingTimeDetailDisplayProps {
   hasWaitingTime: boolean;
@@ -24,24 +25,28 @@ export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> =
   const nightTime = quoteDetails?.waitTimeNight || 0;
   const dayPrice = quoteDetails?.waitPriceDay || 0;
   const nightPrice = quoteDetails?.waitPriceNight || 0;
+  const waitingTimePriceHT = quoteDetails?.waitingTimePriceHT || 0;
   const waitingVATRate = 20; // TVA à 20% pour le temps d'attente
   
   // Calculate VAT for waiting time
-  const waitingVAT = quoteDetails?.waitingTimePrice ? quoteDetails.waitingTimePrice - quoteDetails.waitingTimePriceHT : 0;
+  const waitingVAT = waitingTimePriceHT * (waitingVATRate / 100);
+  const waitingTimeTTC = waitingTimePriceHT + waitingVAT;
   
   // Si nous n'avons pas de détails jour/nuit, on affiche simplement le temps d'attente global
   if ((!dayTime && !nightTime) || (!dayPrice && !nightPrice)) {
     return (
-      <div className="flex justify-between">
-        <div className="flex items-center">
-          <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-          <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
+      <div className="flex flex-col space-y-2">
+        <div className="flex justify-between">
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
+            <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
+          </div>
+          <span>{formatPrice(waitingTimeTTC)} € TTC</span>
         </div>
-        <PriceFormatter 
-          price={waitingTimePrice} 
-          showVAT={true} 
-          vatRate={waitingVATRate} 
-        />
+        <div className="flex justify-between text-sm text-muted-foreground">
+          <span>TVA ({waitingVATRate}%)</span>
+          <span>{formatPrice(waitingVAT)} €</span>
+        </div>
       </div>
     );
   }
@@ -54,11 +59,17 @@ export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> =
           <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
           <p className="font-medium">Temps d'attente ({formatWaitingTime(waitingTimeMinutes)})</p>
         </div>
-        <PriceFormatter 
-          price={waitingTimePrice} 
-          showVAT={true} 
-          vatRate={waitingVATRate} 
-        />
+        <span>{formatPrice(waitingTimeTTC)} € TTC</span>
+      </div>
+      
+      <div className="flex justify-between text-sm text-muted-foreground">
+        <span>Sous-total HT</span>
+        <span>{formatPrice(waitingTimePriceHT)} € HT</span>
+      </div>
+      
+      <div className="flex justify-between text-sm text-muted-foreground">
+        <span>TVA ({waitingVATRate}%)</span>
+        <span>{formatPrice(waitingVAT)} €</span>
       </div>
       
       {dayTime > 0 && (
@@ -67,10 +78,7 @@ export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> =
             <Sun className="h-3 w-3 mr-1 flex-shrink-0" />
             <p>Jour ({formatWaitingTime(dayTime)})</p>
           </div>
-          <PriceFormatter 
-            price={dayPrice} 
-            suffix="HT" 
-          />
+          <span>{formatPrice(dayPrice)} € HT</span>
         </div>
       )}
       
@@ -80,10 +88,7 @@ export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> =
             <Moon className="h-3 w-3 mr-1 flex-shrink-0" />
             <p>Nuit ({formatWaitingTime(nightTime)})</p>
           </div>
-          <PriceFormatter 
-            price={nightPrice} 
-            suffix="HT" 
-          />
+          <span>{formatPrice(nightPrice)} € HT</span>
         </div>
       )}
     </div>

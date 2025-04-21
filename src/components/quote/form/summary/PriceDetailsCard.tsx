@@ -62,7 +62,7 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
               <div className="text-sm">
                 <div className="flex justify-between font-medium">
                   <span>Attente (Tarif jour)</span>
-                  <span>{formatPrice(quoteDetails.waitPriceDay)} HT</span>
+                  <span>{formatPrice(quoteDetails.waitPriceDay)} € HT</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   <div className="flex justify-between">
@@ -76,7 +76,7 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
               <div className="text-sm mt-2">
                 <div className="flex justify-between font-medium">
                   <span>Attente (Tarif nuit)</span>
-                  <span>{formatPrice(quoteDetails.waitPriceNight)} HT</span>
+                  <span>{formatPrice(quoteDetails.waitPriceNight)} € HT</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   <div className="flex justify-between">
@@ -88,7 +88,7 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
             
             <div className="flex justify-between text-sm pt-1">
               <span>Sous-total HT</span>
-              <span>{formatPrice(quoteDetails.waitingTimePriceHT)} HT</span>
+              <span>{formatPrice(quoteDetails.waitingTimePriceHT)} € HT</span>
             </div>
             
             <div className="flex justify-between text-xs text-muted-foreground">
@@ -98,7 +98,7 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
             
             <div className="flex justify-between font-medium text-sm pt-1 border-t border-slate-200 mt-2">
               <span>Total Attente (TTC)</span>
-              <span>{formatPrice(quoteDetails.waitingTimePrice)} TTC</span>
+              <span>{formatPrice(quoteDetails.waitingTimePrice)} € TTC</span>
             </div>
           </div>
         </div>
@@ -130,20 +130,20 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
         <div className="space-y-1 text-sm">
           <div className="flex justify-between">
             <span>Trajet Aller</span>
-            <span>{formatPrice(quoteDetails.oneWayPriceHT)} HT / {formatPrice(quoteDetails.oneWayPrice)} TTC</span>
+            <span>{formatPrice(quoteDetails.oneWayPriceHT)} € HT / {formatPrice(quoteDetails.oneWayPrice)} € TTC</span>
           </div>
           
           {hasWaitingTime && (
             <div className="flex justify-between">
               <span>Temps d'Attente</span>
-              <span>{formatPrice(quoteDetails.waitingTimePriceHT)} HT / {formatPrice(quoteDetails.waitingTimePrice)} TTC</span>
+              <span>{formatPrice(quoteDetails.waitingTimePriceHT)} € HT / {formatPrice(quoteDetails.waitingTimePrice)} € TTC</span>
             </div>
           )}
           
           {hasReturnTrip && (
             <div className="flex justify-between">
               <span>Trajet Retour</span>
-              <span>{formatPrice(quoteDetails.returnPriceHT)} HT / {formatPrice(quoteDetails.returnPrice)} TTC</span>
+              <span>{formatPrice(quoteDetails.returnPriceHT)} € HT / {formatPrice(quoteDetails.returnPrice)} € TTC</span>
             </div>
           )}
           
@@ -155,7 +155,7 @@ export const PriceDetailsCard: React.FC<PriceDetailsCardProps> = ({
           
           <div className="flex justify-between font-medium pt-1 border-t border-slate-200 mt-1">
             <span>Total</span>
-            <span>{formatPrice(quoteDetails.totalPriceHT)} HT</span>
+            <span>{formatPrice(quoteDetails.totalPriceHT)} € HT</span>
           </div>
         </div>
       </div>
