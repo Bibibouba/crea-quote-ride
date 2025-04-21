@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,7 +16,6 @@ import Quotes from "./pages/dashboard/Quotes";
 import Clients from "./pages/dashboard/Clients";
 import Subscription from "./pages/dashboard/Subscription";
 import ClientSimulator from "./pages/client/ClientSimulator";
-import Reports from "./pages/dashboard/Reports"; // Add this import
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -40,7 +38,6 @@ const App = () => (
             <Route path="/inscription" element={<Inscription />} />
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/dashboard/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/dashboard/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
             <Route path="/dashboard/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
             <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
