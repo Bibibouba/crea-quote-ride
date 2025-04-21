@@ -42,7 +42,7 @@ export const TripSegmentDetails: React.FC<TripSegmentDetailsProps> = ({
         <div className="text-xs text-muted-foreground">
           <div className="flex justify-between">
             <span>Prix de base</span>
-            <span>{basePrice.toFixed(2)}€/km</span>
+            <span>{basePrice.toFixed(2)}€/km HT</span>
           </div>
         </div>
       )}
@@ -63,7 +63,7 @@ export const TripSegmentDetails: React.FC<TripSegmentDetailsProps> = ({
             </TooltipProvider>
           </div>
           <div className="flex flex-col items-end">
-            <span>{formatPrice(dayPrice)}</span>
+            <span>{formatPrice(dayPrice)}€ HT</span>
             <span className="text-xs text-muted-foreground">{dayKm.toFixed(1)} km</span>
           </div>
         </div>
@@ -86,7 +86,7 @@ export const TripSegmentDetails: React.FC<TripSegmentDetailsProps> = ({
             </TooltipProvider>
           </div>
           <div className="flex flex-col items-end">
-            <span>{formatPrice(nightPrice)}</span>
+            <span>{formatPrice(nightPrice)}€ HT</span>
             <span className="text-xs text-muted-foreground">{nightKm.toFixed(1)} km</span>
           </div>
         </div>
@@ -95,16 +95,24 @@ export const TripSegmentDetails: React.FC<TripSegmentDetailsProps> = ({
       {showVAT && (
         <div className="flex justify-between text-sm pt-1">
           <span>Sous-total HT</span>
-          <span>{formatPrice(totalPriceHT)}</span>
+          <span>{formatPrice(totalPriceHT)}€ HT</span>
         </div>
       )}
       
       {showVAT && (
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>TVA ({vatRate}%)</span>
-          <span>{formatPrice(vatAmount || (totalPriceHT * vatRate / 100))}</span>
+          <span>{formatPrice(vatAmount || (totalPriceHT * vatRate / 100))}€</span>
+        </div>
+      )}
+
+      {showVAT && (
+        <div className="flex justify-between pt-1 font-medium">
+          <span>Total TTC</span>
+          <span>{formatPrice(totalPriceHT + (vatAmount || (totalPriceHT * vatRate / 100)))}€ TTC</span>
         </div>
       )}
     </div>
   );
 };
+
