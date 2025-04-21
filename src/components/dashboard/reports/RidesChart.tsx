@@ -12,7 +12,7 @@ const RidesChart = ({ timeReports }: RidesChartProps) => {
     <Card className="md:col-span-1">
       <CardHeader>
         <CardTitle>Nombre de courses</CardTitle>
-        <CardDescription>Évolution du nombre de courses sur les 7 derniers jours</CardDescription>
+        <CardDescription>Évolution des devis par statut sur les 7 derniers jours</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-80">
@@ -22,14 +22,47 @@ const RidesChart = ({ timeReports }: RidesChartProps) => {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip 
-                formatter={(value: number) => [value, "Courses"]}
+                formatter={(value: number, name: string) => {
+                  switch(name) {
+                    case 'accepted':
+                      return [value, 'Acceptés'];
+                    case 'pending':
+                      return [value, 'En attente'];
+                    case 'declined':
+                      return [value, 'Refusés'];
+                    default:
+                      return [value, name];
+                  }
+                }}
                 labelFormatter={(label) => {
                   const date = new Date(label);
-                  return date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                  return date.toLocaleDateString('fr-FR', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  });
                 }}
               />
               <Legend />
-              <Bar dataKey="rides" name="Courses" fill="#dff1db" radius={[4, 4, 0, 0]} />
+              <Bar 
+                dataKey="accepted" 
+                name="Acceptés" 
+                fill="#4ade80" 
+                radius={[4, 4, 0, 0]} 
+              />
+              <Bar 
+                dataKey="pending" 
+                name="En attente" 
+                fill="#fde047" 
+                radius={[4, 4, 0, 0]} 
+              />
+              <Bar 
+                dataKey="declined" 
+                name="Refusés" 
+                fill="#f87171" 
+                radius={[4, 4, 0, 0]} 
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>

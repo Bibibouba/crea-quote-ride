@@ -1,4 +1,3 @@
-
 export interface Profile {
   id: string;
   first_name: string;
@@ -54,6 +53,9 @@ export interface TimeReport {
   revenue: number;
   rides: number;
   distance: number;
+  accepted: number;
+  pending: number;
+  declined: number;
 }
 
 export interface RevenueByVehicle {
@@ -75,4 +77,8 @@ export interface ReportData {
   dayKm: number;
   weekKm: number;
   monthKm: number;
+  acceptedQuotes: number;
+  pendingQuotes: number;
+  declinedQuotes: number;
+  totalQuotes: number;
 }

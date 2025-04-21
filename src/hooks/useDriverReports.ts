@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -84,7 +83,7 @@ export const useDriverReports = () => {
     };
   }) : [];
 
-  // Calculate time reports (last 7 days)
+  // Calculate time reports with status breakdown
   const timeReports: TimeReport[] = [];
   if (quotesData) {
     const now = new Date();
@@ -98,12 +97,19 @@ export const useDriverReports = () => {
                quoteDate.getMonth() === date.getMonth() && 
                quoteDate.getFullYear() === date.getFullYear();
       });
+
+      const accepted = dayQuotes.filter(q => q.status === 'accepted').length;
+      const pending = dayQuotes.filter(q => q.status === 'pending').length;
+      const declined = dayQuotes.filter(q => q.status === 'declined').length;
       
       timeReports.push({
         date: date.toISOString().split('T')[0],
         revenue: dayQuotes.reduce((sum, quote) => sum + (quote.amount || 0), 0),
         rides: dayQuotes.length,
-        distance: dayQuotes.reduce((sum, quote) => sum + (quote.distance_km || 0), 0)
+        distance: dayQuotes.reduce((sum, quote) => sum + (quote.distance_km || 0), 0),
+        accepted,
+        pending,
+        declined
       });
     }
   }
@@ -152,6 +158,12 @@ export const useDriverReports = () => {
     return quoteDate >= monthStart ? sum + (quote.distance_km || 0) : sum;
   }, 0) : 0;
 
+  // Calculate quotes status metrics
+  const acceptedQuotes = quotesData?.filter(q => q.status === 'accepted').length || 0;
+  const pendingQuotes = quotesData?.filter(q => q.status === 'pending').length || 0;
+  const declinedQuotes = quotesData?.filter(q => q.status === 'declined').length || 0;
+  const totalQuotes = (quotesData?.length || 0);
+
   const reportsData: ReportData = {
     vehicles: vehiclesData || [],
     quotes: quotesData || [],
@@ -164,7 +176,11 @@ export const useDriverReports = () => {
     totalHours,
     dayKm,
     weekKm,
-    monthKm
+    monthKm,
+    acceptedQuotes,
+    pendingQuotes,
+    declinedQuotes,
+    totalQuotes
   };
 
   return {

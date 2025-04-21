@@ -60,6 +60,10 @@ const Reports = () => {
           totalRides={reportsData.totalRides}
           totalDistance={reportsData.totalDistance}
           totalHours={reportsData.totalHours}
+          acceptedQuotes={reportsData.acceptedQuotes}
+          pendingQuotes={reportsData.pendingQuotes}
+          declinedQuotes={reportsData.declinedQuotes}
+          totalQuotes={reportsData.totalQuotes}
         />
 
         <DistanceMetrics 
