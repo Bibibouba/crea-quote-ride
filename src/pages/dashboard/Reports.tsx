@@ -10,11 +10,14 @@ import { KPIMetrics } from '@/components/reports/KPIMetrics';
 import { TimeDistributionChart } from '@/components/reports/TimeDistributionChart';
 import { RevenueChart } from '@/components/reports/RevenueChart';
 import { DistanceChart } from '@/components/reports/DistanceChart';
+import { DriverRankings } from '@/components/reports/DriverRankings';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
 const Reports = () => {
+  const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [selectedDriver, setSelectedDriver] = useState('all');
+  const [selectedDriver, setSelectedDriver] = useState(user?.id || 'all');
   const { data, isLoading } = useDriverReports(selectedDriver, selectedPeriod);
 
   return (
@@ -35,33 +38,35 @@ const Reports = () => {
               <SelectItem value="year">Cette année</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={selectedDriver} onValueChange={setSelectedDriver}>
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Sélectionner un chauffeur" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les chauffeurs</SelectItem>
-              {data?.drivers?.map((driver) => (
-                <SelectItem key={driver.id} value={driver.id}>
-                  {driver.company_name || `${driver.first_name} ${driver.last_name}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {user?.id === selectedDriver ? null : (
+            <Select value={selectedDriver} onValueChange={setSelectedDriver}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Sélectionner un chauffeur" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les chauffeurs</SelectItem>
+                {data?.drivers?.map((driver) => (
+                  <SelectItem key={driver.id} value={driver.id}>
+                    {driver.company_name || `${driver.first_name} ${driver.last_name}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4 mt-4">
         <TabsList>
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="details">Statistiques détaillées</TabsTrigger>
+          <TabsTrigger value="details">Comparatif détaillé</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <KPIMetrics data={data} isLoading={isLoading} />
           
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className={cn("col-span-2 bg-[#E3F2FD]", "dark:bg-blue-950/20")}>
+            <Card className={cn("col-span-2 bg-[#E3F2FD]/15", "dark:bg-blue-950/20")}>
               <CardHeader>
                 <CardTitle>Chiffre d'affaires</CardTitle>
               </CardHeader>
@@ -70,7 +75,7 @@ const Reports = () => {
               </CardContent>
             </Card>
             
-            <Card className={cn("bg-[#E8F5E9]", "dark:bg-green-950/20")}>
+            <Card className={cn("bg-[#E8F5E9]/15", "dark:bg-green-950/20")}>
               <CardHeader>
                 <CardTitle>Répartition Jour/Nuit</CardTitle>
               </CardHeader>
@@ -80,7 +85,7 @@ const Reports = () => {
             </Card>
           </div>
 
-          <Card className={cn("bg-[#F3E5F5]", "dark:bg-purple-950/20")}>
+          <Card className={cn("bg-[#F3E5F5]/15", "dark:bg-purple-950/20")}>
             <CardHeader>
               <CardTitle>Distances parcourues</CardTitle>
             </CardHeader>
@@ -91,34 +96,7 @@ const Reports = () => {
         </TabsContent>
 
         <TabsContent value="details" className="space-y-4">
-          <Card className={cn("bg-[#E3F2FD]", "dark:bg-blue-950/20")}>
-            <CardHeader>
-              <CardTitle>Statistiques détaillées</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Analyse des courses</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <h4 className="font-medium mb-2">Taux de courses de nuit</h4>
-                    {data?.timeDistribution && (
-                      <p className="text-2xl font-bold">
-                        {((data.timeDistribution[1].value / 
-                          (data.timeDistribution[0].value + data.timeDistribution[1].value)) * 100).toFixed(1)}%
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Prix moyen par course</h4>
-                    <p className="text-2xl font-bold">
-                      {data?.totalRevenue && data.numberOfRides ? 
-                        `${(data.totalRevenue / data.numberOfRides).toFixed(2)}€` : '0€'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <DriverRankings data={data} period={selectedPeriod} />
         </TabsContent>
       </Tabs>
     </DashboardLayout>

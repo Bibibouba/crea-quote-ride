@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -5,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export const useDriverReports = (driverId: string, period: string) => {
   const { user } = useAuth();
   
+  // Only fetch drivers list if the current user is viewing all drivers
   const { data: drivers } = useQuery({
     queryKey: ['drivers'],
     queryFn: async () => {
@@ -22,11 +24,9 @@ export const useDriverReports = (driverId: string, period: string) => {
     queryKey: ['reports', driverId, period],
     queryFn: async () => {
       try {
-        // Get the current date
         const now = new Date();
         let startDate = new Date();
 
-        // Calculate the start date based on the selected period
         switch (period) {
           case 'week':
             startDate.setDate(now.getDate() - 7);
@@ -39,77 +39,74 @@ export const useDriverReports = (driverId: string, period: string) => {
             break;
         }
 
-        // Build the query
-        let query = supabase
-          .from('quotes')
-          .select(`
-            *,
-            clients (
-              first_name,
-              last_name
-            )
-          `)
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', now.toISOString())
-          .eq('status', 'accepted');
+        // If viewing all drivers, fetch stats for each driver
+        const driversToFetch = driverId === 'all' ? drivers : [drivers?.find(d => d.id === driverId)];
+        
+        const driversStats = await Promise.all(
+          driversToFetch?.map(async (driver) => {
+            const { data: quotes, error } = await supabase
+              .from('quotes')
+              .select(`
+                *,
+                clients (
+                  first_name,
+                  last_name
+                )
+              `)
+              .gte('created_at', startDate.toISOString())
+              .lte('created_at', now.toISOString())
+              .eq('status', 'accepted')
+              .eq('driver_id', driver?.id);
 
-        // Filter by driver if not "all"
-        if (driverId !== 'all') {
-          query = query.eq('driver_id', driverId);
-        }
+            if (error) throw error;
 
-        const { data: quotes, error } = await query;
+            const totalRevenue = quotes.reduce((sum, q) => sum + (q.amount || 0), 0);
+            const totalDistance = quotes.reduce((sum, q) => sum + (q.distance_km || 0), 0);
+            const dayKm = quotes.reduce((sum, q) => sum + (q.day_km || 0), 0);
+            const nightKm = quotes.reduce((sum, q) => sum + (q.night_km || 0), 0);
 
-        if (error) throw error;
+            return {
+              ...driver,
+              totalRevenue,
+              totalDistance,
+              numberOfRides: quotes.length,
+              dayKm,
+              nightKm,
+              avgPricePerKm: totalDistance ? totalRevenue / totalDistance : 0
+            };
+          }) || []
+        );
 
-        // Calculate metrics
-        const totalRevenue = quotes.reduce((sum, q) => sum + (q.amount || 0), 0);
-        const totalDistance = quotes.reduce((sum, q) => sum + (q.distance_km || 0), 0);
-        const dayKm = quotes.reduce((sum, q) => sum + (q.day_km || 0), 0);
-        const nightKm = quotes.reduce((sum, q) => sum + (q.night_km || 0), 0);
-        const avgPricePerKm = totalDistance ? totalRevenue / totalDistance : 0;
+        // Prepare aggregated data for selected driver or all drivers
+        const selectedDriverData = driverId === 'all' 
+          ? driversStats.reduce((acc, curr) => ({
+              totalRevenue: (acc.totalRevenue || 0) + curr.totalRevenue,
+              totalDistance: (acc.totalDistance || 0) + curr.totalDistance,
+              numberOfRides: (acc.numberOfRides || 0) + curr.numberOfRides,
+              dayKm: (acc.dayKm || 0) + curr.dayKm,
+              nightKm: (acc.nightKm || 0) + curr.nightKm
+            }), {})
+          : driversStats[0];
 
-        // Prepare time distribution data
         const timeDistribution = [
-          { name: 'Jour', value: dayKm },
-          { name: 'Nuit', value: nightKm }
+          { name: 'Jour', value: selectedDriverData.dayKm || 0 },
+          { name: 'Nuit', value: selectedDriverData.nightKm || 0 }
         ];
-
-        // Prepare revenue data grouped by date
-        const revenueData = quotes.reduce((acc: any[], quote) => {
-          const date = new Date(quote.created_at).toLocaleDateString();
-          const existing = acc.find(item => item.date === date);
-          if (existing) {
-            existing.amount += quote.amount;
-          } else {
-            acc.push({ date, amount: quote.amount });
-          }
-          return acc;
-        }, []);
-
-        // Prepare distance data
-        const distanceData = quotes.map(quote => ({
-          date: new Date(quote.created_at).toLocaleDateString(),
-          distance: quote.distance_km,
-          amount: quote.amount
-        }));
 
         // Add driver information
         const driverInfo = drivers?.find(d => d.id === driverId) || null;
-        const driverName = driverInfo ? 
-          `${driverInfo.company_name || `${driverInfo.first_name} ${driverInfo.last_name}`}` : 
-          'Tous les chauffeurs';
+        const driverName = driverInfo 
+          ? `${driverInfo.company_name || `${driverInfo.first_name} ${driverInfo.last_name}`}` 
+          : 'Tous les chauffeurs';
 
         return {
           driverName,
-          drivers,
-          totalRevenue,
-          totalDistance,
-          avgPricePerKm,
-          numberOfRides: quotes.length,
+          drivers: driversStats,
+          ...selectedDriverData,
           timeDistribution,
-          revenueData,
-          distanceData
+          avgPricePerKm: selectedDriverData.totalDistance 
+            ? selectedDriverData.totalRevenue / selectedDriverData.totalDistance 
+            : 0
         };
       } catch (error) {
         console.error('Error fetching reports:', error);
