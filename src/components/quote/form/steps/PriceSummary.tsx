@@ -74,15 +74,15 @@ export const PriceSummary: React.FC<PriceSummaryProps> = ({
         <div className="text-sm space-y-1">
           <div className="flex justify-between">
             <span>Total HT</span>
-            <span>{formatCurrency(quoteDetails.totalPriceHT)}</span>
+            <span>{formatCurrency(quoteDetails.totalPriceHT)} HT</span>
           </div>
           <div className="flex justify-between">
-            <span>TVA</span>
-            <span>{formatCurrency(quoteDetails.totalVAT)}</span>
+            <span>TVA (10%)</span>
+            <span>{formatCurrency(quoteDetails.totalVAT)} TTC</span>
           </div>
           <div className="flex justify-between font-medium">
             <span>Total TTC</span>
-            <span>{formatCurrency(quoteDetails.totalPrice)}</span>
+            <span>{formatCurrency(quoteDetails.totalPrice)} TTC</span>
           </div>
         </div>
       </div>
@@ -95,3 +95,4 @@ export const PriceSummary: React.FC<PriceSummaryProps> = ({
     </div>
   );
 };
+
