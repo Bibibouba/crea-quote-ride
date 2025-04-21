@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,8 @@ import {
   X,
   Eye,
   FileText,
-  Users
+  Users,
+  FileBarChart
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,6 +63,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navItems = [
     { href: '/dashboard', label: 'Tableau de bord', icon: Home },
     { href: '/dashboard/vehicles', label: 'Véhicules', icon: Car },
+    { href: '/dashboard/reports', label: 'Rapports', icon: FileBarChart },
     { href: '/dashboard/pricing', label: 'Tarifs', icon: CreditCard },
     { href: '/dashboard/quotes', label: 'Historique devis', icon: FileText },
     { href: '/dashboard/clients', label: 'Mes clients', icon: Users },
