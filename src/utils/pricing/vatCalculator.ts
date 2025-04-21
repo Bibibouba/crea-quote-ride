@@ -17,17 +17,19 @@ export const calculateVatAndTotalPrices = (
   totalPrice: number;
 } => {
   // Calculate prices with VAT for each component
-  const oneWayPrice = oneWayPriceHT * (1 + (rideVatRate / 100));
-  const returnPrice = returnPriceHT * (1 + (rideVatRate / 100));
-  const waitingTimePrice = waitingTimePriceHT * (1 + (waitingVatRate / 100));
+  const oneWayVAT = oneWayPriceHT * (rideVatRate / 100);
+  const returnVAT = returnPriceHT * (rideVatRate / 100);
+  const waitingTimeVAT = waitingTimePriceHT * (waitingVatRate / 100);
+  
+  const oneWayPrice = oneWayPriceHT + oneWayVAT;
+  const returnPrice = returnPriceHT + returnVAT;
+  const waitingTimePrice = waitingTimePriceHT + waitingTimeVAT;
   
   // Sum up all pre-tax prices
   const totalPriceHT = oneWayPriceHT + returnPriceHT + waitingTimePriceHT;
   
-  // Calculate VAT amounts
-  const rideVAT = (oneWayPriceHT + returnPriceHT) * (rideVatRate / 100);
-  const waitingVAT = waitingTimePriceHT * (waitingVatRate / 100);
-  const totalVAT = rideVAT + waitingVAT;
+  // Sum up all VAT amounts
+  const totalVAT = oneWayVAT + returnVAT + waitingTimeVAT;
   
   // Calculate final price with all taxes
   const totalPrice = totalPriceHT + totalVAT;

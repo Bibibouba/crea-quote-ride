@@ -44,6 +44,10 @@ export const WaitingTimeDetailDisplay: React.FC<WaitingTimeDetailDisplayProps> =
           <span>{formatPrice(waitingTimeTTC)} € TTC</span>
         </div>
         <div className="flex justify-between text-sm text-muted-foreground">
+          <span>Sous-total HT</span>
+          <span>{formatPrice(waitingTimePriceHT)} € HT</span>
+        </div>
+        <div className="flex justify-between text-sm text-muted-foreground">
           <span>TVA ({waitingVATRate}%)</span>
           <span>{formatPrice(waitingVAT)} €</span>
         </div>
