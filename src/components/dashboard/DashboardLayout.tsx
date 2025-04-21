@@ -13,7 +13,8 @@ import {
   X,
   Eye,
   FileText,
-  Users
+  Users,
+  BarChart
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,6 +67,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { href: '/dashboard/pricing', label: 'Tarifs', icon: CreditCard },
     { href: '/dashboard/quotes', label: 'Historique devis', icon: FileText },
     { href: '/dashboard/clients', label: 'Mes clients', icon: Users },
+    { href: '/dashboard/reports', label: 'Rapports', icon: BarChart },
     { href: '/dashboard/settings', label: 'Paramètres', icon: SettingsIcon },
   ];
   
