@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -27,12 +29,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState<string | null>("VTCZen");
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     const fetchCompanySettings = async () => {
       if (!user) return;
       
       try {
+        setIsLoading(true);
+        
         const { data: profileData } = await supabase
           .from('profiles')
           .select('company_name')
@@ -54,11 +59,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         }
       } catch (error) {
         console.error('Erreur lors du chargement des paramètres de l\'entreprise:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
     fetchCompanySettings();
-  }, [user]);
+  }, [user]); // Ne dépend que de l'utilisateur, pas de la location
   
   const navItems = [
     { href: '/dashboard', label: 'Tableau de bord', icon: Home },
@@ -88,15 +95,23 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       })}
     </>
   );
+
+  const LogoDisplay = () => (
+    <>
+      {isLoading ? (
+        <Skeleton className="h-8 w-8 rounded" />
+      ) : companyLogo ? (
+        <img src={companyLogo} alt="Logo" className="h-8 w-auto object-contain" />
+      ) : null}
+    </>
+  );
   
   return (
     <div className="flex min-h-screen flex-col">
       {/* Mobile menu */}
       <div className="flex items-center justify-between border-b px-4 py-2 lg:hidden">
         <Link to="/" className="flex items-center gap-2">
-          {companyLogo ? (
-            <img src={companyLogo} alt="Logo" className="h-8 w-auto" />
-          ) : null}
+          <LogoDisplay />
           <span className="text-xl font-bold">{companyName}</span>
         </Link>
         <Sheet>
@@ -109,9 +124,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <SheetContent side="left" className="flex flex-col">
             <div className="flex items-center justify-between border-b pb-2">
               <div className="flex items-center gap-2">
-                {companyLogo ? (
-                  <img src={companyLogo} alt="Logo" className="h-6 w-auto" />
-                ) : null}
+                <LogoDisplay />
                 <h2 className="text-lg font-semibold">{companyName}</h2>
               </div>
               <SheetTrigger asChild>
@@ -146,9 +159,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Desktop sidebar */}
         <div className="hidden w-64 flex-col border-r bg-muted/40 lg:flex">
           <div className="p-6 flex items-center gap-2">
-            {companyLogo ? (
-              <img src={companyLogo} alt="Logo" className="h-8 w-auto" />
-            ) : null}
+            <LogoDisplay />
             <Link to="/" className="text-xl font-bold">{companyName}</Link>
           </div>
           <div className="flex flex-1 flex-col gap-2 p-4">
