@@ -26,7 +26,7 @@ const QuoteStatusSelector: React.FC<QuoteStatusSelectorProps> = ({
       onValueChange={(value) => onChange(value as Quote['status'])}
       disabled={disabled}
     >
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-full">
         <SelectValue placeholder="Modifier le statut" />
       </SelectTrigger>
       <SelectContent>

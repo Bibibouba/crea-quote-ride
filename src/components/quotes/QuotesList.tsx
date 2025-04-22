@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuotes } from '@/hooks/useQuotes';
 import QuoteStatusBadge from './QuoteStatusBadge';
 import QuoteStatusSelector from './QuoteStatusSelector';
 import { Button } from '@/components/ui/button';
-import { Eye, FileText, RefreshCw, Download } from 'lucide-react';
+import { Eye, FileText, RefreshCw, Download, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -26,6 +27,15 @@ import { Quote } from '@/types/quote';
 import QuoteViewDialog from './QuoteViewDialog';
 import { useToast } from '@/hooks/use-toast';
 import { generateQuotePDF } from '@/utils/quotePDF';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTrigger, 
+  SheetHeader, 
+  SheetTitle,
+  SheetClose
+} from "@/components/ui/sheet";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuotesListProps {
   clientId?: string;
@@ -38,7 +48,9 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [viewQuote, setViewQuote] = useState<Quote | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Force initial data fetching
   useEffect(() => {
@@ -93,6 +105,11 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
     }
   };
 
+  const handleStatusChange = (quoteId: string, status: Quote['status']) => {
+    updateQuoteStatus.mutate({ id: quoteId, status });
+    setSelectedQuote(null); // Close sheet after status change on mobile
+  };
+
   if (isLoading) {
     return <div className="py-10 text-center">Chargement des devis...</div>;
   }
@@ -121,14 +138,14 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
     );
   }
 
-  const handleStatusChange = (quoteId: string, status: Quote['status']) => {
-    updateQuoteStatus.mutate({ id: quoteId, status });
-  };
-
   const handleOpenPdf = (pdfUrl: string | null) => {
     if (pdfUrl) {
       window.open(pdfUrl, '_blank');
     }
+  };
+
+  const openQuoteActions = (quote: Quote) => {
+    setSelectedQuote(quote);
   };
 
   const filteredQuotes = quotes.filter(quote => {
@@ -246,13 +263,45 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
                       <Download className="h-4 w-4 mr-1" />
                       <span className="hidden sm:inline">PDF</span>
                     </Button>
-                    <div className="hidden sm:block">
-                      <QuoteStatusSelector
-                        status={quote.status}
-                        onChange={(status) => handleStatusChange(quote.id, status)}
-                        disabled={updateQuoteStatus.isPending}
-                      />
-                    </div>
+                    
+                    {isMobile ? (
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openQuoteActions(quote)}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent side="bottom">
+                          <SheetHeader>
+                            <SheetTitle>Changer le statut du devis</SheetTitle>
+                          </SheetHeader>
+                          <div className="py-6">
+                            <QuoteStatusSelector
+                              status={quote.status}
+                              onChange={(status) => handleStatusChange(quote.id, status)}
+                              disabled={updateQuoteStatus.isPending}
+                            />
+                          </div>
+                          <div className="flex justify-end">
+                            <SheetClose asChild>
+                              <Button variant="outline">Fermer</Button>
+                            </SheetClose>
+                          </div>
+                        </SheetContent>
+                      </Sheet>
+                    ) : (
+                      <div className="hidden sm:block">
+                        <QuoteStatusSelector
+                          status={quote.status}
+                          onChange={(status) => handleStatusChange(quote.id, status)}
+                          disabled={updateQuoteStatus.isPending}
+                        />
+                      </div>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
