@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -108,7 +107,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   );
   
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen overflow-hidden">
       {/* Mobile menu */}
       <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between border-b bg-background px-4 py-2 lg:hidden">
         <Link to="/" className="flex items-center gap-2">
@@ -188,8 +187,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </div>
         
-        {/* Main content with padding for fixed sidebar */}
-        <div className="flex-1 lg:ml-64">
+        {/* Main content with padding for fixed sidebar and proper overflow handling */}
+        <div className="flex-1 lg:ml-64 overflow-x-hidden">
           <main className="container py-6 lg:py-6 mt-12 lg:mt-0">
             {children}
           </main>
