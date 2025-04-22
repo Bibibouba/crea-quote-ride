@@ -19,6 +19,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -107,9 +108,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   );
   
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen">
       {/* Mobile menu */}
-      <div className="flex items-center justify-between border-b px-4 py-2 lg:hidden">
+      <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between border-b bg-background px-4 py-2 lg:hidden">
         <Link to="/" className="flex items-center gap-2">
           <LogoDisplay />
           <span className="text-xl font-bold">{companyName}</span>
@@ -134,37 +135,41 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 </Button>
               </SheetTrigger>
             </div>
-            <div className="mt-4 flex flex-col gap-2">
-              <NavLinks />
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 mt-4"
-                asChild
-              >
-                <Link to="/client-simulator">
-                  <Eye className="mr-2 h-5 w-5" />
-                  Voir l'interface client
-                </Link>
-              </Button>
-              <Button variant="ghost" className="w-full justify-start" onClick={() => signOut()}>
-                <LogOut className="mr-2 h-5 w-5" />
-                Déconnexion
-              </Button>
-            </div>
+            <ScrollArea className="flex-1">
+              <div className="mt-4 flex flex-col gap-2 p-2">
+                <NavLinks />
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 mt-4"
+                  asChild
+                >
+                  <Link to="/client-simulator">
+                    <Eye className="mr-2 h-5 w-5" />
+                    Voir l'interface client
+                  </Link>
+                </Button>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => signOut()}>
+                  <LogOut className="mr-2 h-5 w-5" />
+                  Déconnexion
+                </Button>
+              </div>
+            </ScrollArea>
           </SheetContent>
         </Sheet>
       </div>
       
       <div className="flex flex-1">
-        {/* Desktop sidebar */}
-        <div className="hidden w-64 flex-col border-r bg-muted/40 lg:flex">
+        {/* Desktop sidebar - fixed */}
+        <div className="hidden lg:flex lg:fixed left-0 top-0 bottom-0 w-64 flex-col border-r bg-muted/40">
           <div className="p-6 flex items-center gap-2">
             <LogoDisplay />
             <Link to="/" className="text-xl font-bold">{companyName}</Link>
           </div>
-          <div className="flex flex-1 flex-col gap-2 p-4">
-            <NavLinks />
-          </div>
+          <ScrollArea className="flex-1">
+            <div className="flex flex-col gap-2 p-4">
+              <NavLinks />
+            </div>
+          </ScrollArea>
           <div className="border-t p-4 flex flex-col gap-2">
             <Button 
               variant="ghost" 
@@ -183,9 +188,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </div>
         
-        {/* Main content */}
-        <div className="flex-1">
-          <main className="container py-6">
+        {/* Main content with padding for fixed sidebar */}
+        <div className="flex-1 lg:ml-64">
+          <main className="container py-6 lg:py-6 mt-12 lg:mt-0">
             {children}
           </main>
         </div>
