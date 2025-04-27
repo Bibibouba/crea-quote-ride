@@ -23,6 +23,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import TermsOfService from "./pages/legal/TermsOfService";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import LegalNotice from "./pages/legal/LegalNotice";
+import WidgetPage from "./pages/widget/WidgetPage";
+import "./styles/widget.css";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +50,9 @@ const App = () => (
             <Route path="/dashboard/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
             <Route path="/dashboard/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/client-simulator" element={<ProtectedRoute><ClientSimulator /></ProtectedRoute>} />
+            
+            {/* Widget route - accessible sans authentification */}
+            <Route path="/widget/:driverId" element={<WidgetPage />} />
             
             <Route path="/cgu" element={<TermsOfService />} />
             <Route path="/confidentialite" element={<PrivacyPolicy />} />

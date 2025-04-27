@@ -7,7 +7,17 @@ import SimulatorAlert from './SimulatorAlert';
 import SuccessState from './SuccessState';
 import { useSimulator } from '@/hooks/useSimulator';
 
-const SimulatorContainer = () => {
+interface SimulatorContainerProps {
+  isWidget?: boolean;
+  companyName?: string;
+  logoUrl?: string;
+}
+
+const SimulatorContainer: React.FC<SimulatorContainerProps> = ({
+  isWidget = false,
+  companyName,
+  logoUrl
+}) => {
   const {
     simulatorReady,
     isSubmitting,
@@ -24,7 +34,11 @@ const SimulatorContainer = () => {
 
   return (
     <div className="container max-w-5xl mx-auto py-4 sm:py-8 px-2 sm:px-4">
-      <SimulatorHeader />
+      <SimulatorHeader 
+        isWidget={isWidget} 
+        companyName={companyName}
+        logoUrl={logoUrl}
+      />
       
       <div className="mb-4 sm:mb-6">
         <SimulatorAlert />
@@ -36,6 +50,7 @@ const SimulatorContainer = () => {
         <SuccessState 
           onReset={resetForm}
           onNavigateDashboard={navigateToDashboard}
+          isWidget={isWidget}
         />
       ) : (
         <div className="w-full">
@@ -47,6 +62,7 @@ const SimulatorContainer = () => {
             handleSubmit={handleSubmit}
             handleNextStep={handleNextStep}
             handlePreviousStep={handlePreviousStep}
+            isWidget={isWidget}
           />
         </div>
       )}
