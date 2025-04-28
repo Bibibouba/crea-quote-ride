@@ -39,10 +39,17 @@ export const WidgetContainer = () => {
           return;
         }
 
-        // Récupérer les paramètres de l'entreprise
+        // 🛠 Correction ici : colonnes en français
         const { data, error } = await supabase
           .from('company_settings')
-          .select('primary_color, secondary_color, font_family, logo_url, banner_url, company_name')
+          .select(`
+            couleur_primaire,
+            couleur_secondaire,
+            famille_de_polices,
+            logo_url,
+            bannière_url,
+            "Nom de l'entreprise"
+          `)
           .eq('driver_id', driverId)
           .single();
 
@@ -52,16 +59,16 @@ export const WidgetContainer = () => {
 
         if (data) {
           setSettings({
-            primaryColor: data.primary_color || '#3B82F6',
-            secondaryColor: data.secondary_color || '#10B981',
-            fontFamily: data.font_family || 'Inter',
+            primaryColor: data.couleur_primaire || '#3B82F6',
+            secondaryColor: data.couleur_secondaire || '#10B981',
+            fontFamily: data.famille_de_polices || 'Inter',
             logoUrl: data.logo_url || null,
-            bannerUrl: data.banner_url || null,
-            companyName: data.company_name || 'VTC Services'
+            bannerUrl: data.bannière_url || null,
+            companyName: data["Nom de l'entreprise"] || 'VTC Services'
           });
         }
 
-        // 🚨 Désactivation temporaire de la vérification chauffeur
+        // 🚨 Validation chauffeur désactivée temporairement
         console.log('Validation chauffeur désactivée pour les tests du widget.');
 
       } catch (err: any) {
@@ -81,20 +88,20 @@ export const WidgetContainer = () => {
   useEffect(() => {
     if (settings) {
       const root = document.documentElement;
-      
+
       if (settings.primaryColor) {
         root.style.setProperty('--widget-primary-color', settings.primaryColor);
       }
-      
+
       if (settings.secondaryColor) {
         root.style.setProperty('--widget-secondary-color', settings.secondaryColor);
       }
-      
+
       if (settings.fontFamily) {
         root.style.setProperty('--widget-font-family', settings.fontFamily);
       }
     }
-    
+
     return () => {
       const root = document.documentElement;
       root.style.removeProperty('--widget-primary-color');
