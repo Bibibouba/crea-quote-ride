@@ -90,14 +90,14 @@ export const useSimulator = ({ isWidget = false, prefill }: SimulatorProps = {})
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<Quote | null> => {
     if (!formState.quoteDetails) {
       if (isWidget) {
         postToParent('QUOTE_ERROR', { 
           message: "Quote details not available" 
         });
       }
-      return Promise.reject(new Error("Quote details not available"));
+      return null;
     }
 
     try {
@@ -153,7 +153,7 @@ export const useSimulator = ({ isWidget = false, prefill }: SimulatorProps = {})
       // Exécuter submitQuote et s'assurer qu'il retourne bien une Quote
       const result = await submitQuote(quoteData, clientData);
       
-      if (result && isWidget && result.id) {
+      if (result && isWidget) {
         postToParent('QUOTE_READY', {
           quoteId: result.id,
           amount: result.amount || 0,

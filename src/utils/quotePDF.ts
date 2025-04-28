@@ -10,19 +10,27 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
   // Create a new PDF document
   const doc = new jsPDF();
   
-  // Get driver info
-  const { data: driverData } = await supabase
+  // Get driver info avec déstructuration correcte
+  const { data: driverData, error: driverError } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', quote.driver_id)
     .single();
   
-  // Get company settings if available
-  const { data: companySettings } = await supabase
+  if (driverError || !driverData) {
+    console.error('Erreur lors de la récupération des données du chauffeur:', driverError);
+  }
+  
+  // Get company settings if available avec déstructuration correcte
+  const { data: companySettings, error: companyError } = await supabase
     .from('company_settings')
     .select('*')
     .eq('driver_id', quote.driver_id)
     .maybeSingle();
+  
+  if (companyError) {
+    console.error('Erreur lors de la récupération des paramètres de l\'entreprise:', companyError);
+  }
   
   // Set up the document
   doc.setFont('helvetica');

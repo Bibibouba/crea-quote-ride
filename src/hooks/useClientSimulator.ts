@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useQuoteForm } from '@/hooks/useQuoteForm';
+import { Quote } from '@/types/quote';
 
 export const useClientSimulator = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +21,7 @@ export const useClientSimulator = () => {
     };
   }, []);
 
-  const submitQuote = async (quoteData: any, clientData: any) => {
+  const submitQuote = async (quoteData: any, clientData: any): Promise<Quote | null> => {
     setIsSubmitting(true);
     try {
       // Get current authenticated driver
@@ -87,15 +88,35 @@ export const useClientSimulator = () => {
         return_duration_minutes: quoteData.return_duration_minutes || 0,
         night_surcharge: quoteData.night_surcharge || 0,
         holiday_surcharge: quoteData.sunday_holiday_surcharge || 0,
-        sunday_surcharge: quoteData.sunday_holiday_surcharge || 0
+        sunday_surcharge: quoteData.sunday_holiday_surcharge || 0,
+        client_id: clientId
       };
       
-      // Créer le devis
-      const { error: quoteError } = await supabase
+      // Créer le devis et retourner la valeur insérée
+      const { data: quoteData2, error: quoteError } = await supabase
         .from('quotes')
-        .insert(quotePayload);
+        .insert(quotePayload)
+        .select('*')
+        .single();
         
       if (quoteError) throw quoteError;
+      
+      // Construire l'objet Quote à retourner
+      const createdQuote: Quote = {
+        id: quoteData2.id,
+        driver_id: quoteData2.driver_id,
+        client_id: clientId,
+        vehicle_id: quoteData2.vehicle_type_id,
+        ride_date: quoteData2.departure_datetime,
+        amount: quoteData2.total_fare,
+        departure_location: quoteData.departure_location || '',
+        arrival_location: quoteData.arrival_location || '',
+        status: 'pending',
+        quote_pdf: null,
+        created_at: quoteData2.created_at,
+        updated_at: quoteData2.updated_at,
+        total_ttc: quoteData2.total_fare
+      };
       
       // Vérifier si le composant est toujours monté avant de mettre à jour l'état
       if (isMounted.current) {
@@ -106,6 +127,8 @@ export const useClientSimulator = () => {
         
         setIsQuoteSent(true);
       }
+      
+      return createdQuote;
     } catch (error: any) {
       console.error('Error submitting quote:', error);
       
@@ -117,6 +140,8 @@ export const useClientSimulator = () => {
           variant: 'destructive',
         });
       }
+      
+      return null;
     } finally {
       // Vérifier si le composant est toujours monté avant de mettre à jour l'état
       if (isMounted.current) {

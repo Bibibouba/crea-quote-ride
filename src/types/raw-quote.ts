@@ -18,7 +18,7 @@ export type RawQuote = {
   updated_at?: string;
   status?: 'pending' | 'accepted' | 'declined';
   
-  // Relations
+  // Relations avec type explicite pour éviter les problèmes d'inférence
   clients?: {
     first_name: string;
     last_name: string;

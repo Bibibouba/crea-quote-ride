@@ -30,6 +30,7 @@ export const useQuotes = (clientId?: string) => {
           throw new Error('User not authenticated');
         }
         
+        // Définir les colonnes à sélectionner
         const selection = `
           id,
           driver_id,
@@ -47,6 +48,7 @@ export const useQuotes = (clientId?: string) => {
           vehicle_type_id,
           created_at,
           updated_at,
+          status,
           clients (
             first_name,
             last_name,
@@ -73,8 +75,9 @@ export const useQuotes = (clientId?: string) => {
 
         if (error) throw error;
         
-        // Transformation explicite des données
-        const transformedData: Quote[] = (data || []).map((quote: any) => ({
+        // Transformation explicite des données avec type casting
+        const rawData = data as unknown as RawQuote[];
+        const transformedData: Quote[] = (rawData || []).map((quote) => ({
           id: quote.id,
           driver_id: quote.driver_id,
           client_id: clientId || '',
@@ -83,7 +86,7 @@ export const useQuotes = (clientId?: string) => {
           amount: quote.total_fare,
           departure_location: '',
           arrival_location: '',
-          status: 'pending' as QuoteStatus,
+          status: (quote.status as QuoteStatus) || 'pending',
           quote_pdf: null,
           created_at: quote.created_at,
           updated_at: quote.updated_at || quote.created_at,
