@@ -1,4 +1,3 @@
-
 export type RawQuote = {
   id: string;
   driver_id: string;
@@ -15,7 +14,9 @@ export type RawQuote = {
   waiting_time_minutes?: number;
   sunday_surcharge?: number;
   vehicle_type_id?: string;
+  quote_pdf?: string;
   created_at: string;
   updated_at?: string;
   status?: 'pending' | 'accepted' | 'rejected' | 'expired';
-};
+}
+
