@@ -35,38 +35,41 @@ export const quoteService = {
     const { data, error } = await supabase
       .from('quotes')
       .insert(quotePrepared)
-      .select()
-      .single();
+      .select();
       
     if (error) {
       console.error('Error creating quote:', error);
       throw error;
     }
     
+    if (!data || data.length === 0) {
+      throw new Error("No data returned from quote creation");
+    }
+    
     // Transformer les données brutes en type Quote
     const quote: Quote = {
-      id: data.id,
-      driver_id: data.driver_id,
+      id: data[0].id,
+      driver_id: data[0].driver_id,
       client_id: clientId,
-      vehicle_id: data.vehicle_type_id,
-      ride_date: data.departure_datetime,
-      amount: data.total_fare,
+      vehicle_id: data[0].vehicle_type_id,
+      ride_date: data[0].departure_datetime,
+      amount: data[0].total_fare,
       departure_location: quoteData.departure_location,
       arrival_location: quoteData.arrival_location,
       status: validateQuoteStatus(quoteData.status || 'pending'),
       quote_pdf: null,
-      created_at: data.created_at,
-      updated_at: data.created_at,
-      distance_km: data.total_distance,
-      duration_minutes: data.outbound_duration_minutes,
-      has_return_trip: data.include_return,
-      has_waiting_time: !!data.waiting_time_minutes,
-      waiting_time_minutes: data.waiting_time_minutes,
-      waiting_time_price: data.waiting_fare,
-      night_surcharge: data.night_surcharge,
-      sunday_holiday_surcharge: data.sunday_surcharge,
-      amount_ht: data.amount_ht,
-      total_ttc: data.total_ttc
+      created_at: data[0].created_at,
+      updated_at: data[0].created_at,
+      distance_km: data[0].total_distance,
+      duration_minutes: data[0].outbound_duration_minutes,
+      has_return_trip: data[0].include_return,
+      has_waiting_time: !!data[0].waiting_time_minutes,
+      waiting_time_minutes: data[0].waiting_time_minutes,
+      waiting_time_price: data[0].waiting_fare,
+      night_surcharge: data[0].night_surcharge,
+      sunday_holiday_surcharge: data[0].sunday_surcharge,
+      amount_ht: data[0].amount_ht,
+      total_ttc: data[0].total_ttc
     };
     
     console.log("Quote created successfully:", quote);

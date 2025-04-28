@@ -11,12 +11,21 @@ interface SimulatorContainerProps {
   isWidget?: boolean;
   companyName?: string;
   logoUrl?: string;
+  prefill?: {
+    departure?: string;
+    destination?: string;
+    date?: string;
+    time?: string;
+    passengers?: string;
+    vehicleType?: string;
+  };
 }
 
 const SimulatorContainer: React.FC<SimulatorContainerProps> = ({
   isWidget = false,
   companyName,
-  logoUrl
+  logoUrl,
+  prefill
 }) => {
   const {
     simulatorReady,
@@ -30,7 +39,7 @@ const SimulatorContainer: React.FC<SimulatorContainerProps> = ({
     handleSubmit,
     resetForm,
     navigateToDashboard
-  } = useSimulator();
+  } = useSimulator({ isWidget, prefill });
 
   return (
     <div className="container max-w-5xl mx-auto py-4 sm:py-8 px-2 sm:px-4">

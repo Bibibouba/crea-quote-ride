@@ -138,8 +138,7 @@ export const useSimulator = ({ isWidget = false, prefill }: SimulatorProps = {})
         wait_time_night: formState.quoteDetails.waitTimeNight || 0,
         wait_price_day: formState.quoteDetails.waitPriceDay || 0,
         wait_price_night: formState.quoteDetails.waitPriceNight || 0,
-        total_ht: formState.quoteDetails.totalPriceHT || 0,
-        vat: formState.quoteDetails.totalVAT || 0,
+        amount_ht: formState.quoteDetails.totalPriceHT || 0,
         total_ttc: formState.quoteDetails.totalPrice || 0
       };
 

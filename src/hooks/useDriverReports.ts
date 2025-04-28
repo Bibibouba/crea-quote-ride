@@ -66,14 +66,16 @@ export const useDriverReports = () => {
           waiting_fare,
           waiting_time_minutes,
           sunday_surcharge,
-          created_at
+          created_at,
+          amount_ht,
+          total_ttc
         `)
         .eq('driver_id', user?.id);
       
       if (error) throw error;
       
       // Transform raw data to match expected structure
-      const transformedQuotes: Quote[] = (data || []).map(quote => ({
+      const transformedQuotes = (data || []).map(quote => ({
         id: quote.id,
         driver_id: quote.driver_id,
         client_id: '', // Not available in raw data
@@ -82,7 +84,7 @@ export const useDriverReports = () => {
         amount: quote.total_fare || 0,
         departure_location: '', // Not available in raw data
         arrival_location: '', // Not available in raw data
-        status: 'pending', // Default status
+        status: 'pending' as const, // Default status
         quote_pdf: null,
         created_at: quote.created_at,
         updated_at: quote.created_at, // Using created_at as fallback
@@ -95,6 +97,8 @@ export const useDriverReports = () => {
         sunday_holiday_surcharge: quote.sunday_surcharge || 0,
         day_km: 0, // Not directly available in raw data
         night_km: 0, // Not directly available in raw data
+        amount_ht: quote.amount_ht || 0,
+        total_ttc: quote.total_ttc || 0
       }));
       
       return transformedQuotes;
@@ -209,7 +213,7 @@ export const useDriverReports = () => {
 
   const reportsData: ReportData = {
     vehicles: vehiclesData || [],
-    quotes: quotesData as Quote[] || [],
+    quotes: quotesData || [],
     vehicleReports,
     timeReports,
     revenueByVehicle,

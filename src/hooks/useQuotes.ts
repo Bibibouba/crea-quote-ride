@@ -5,6 +5,24 @@ import { Quote } from '@/types/quote';
 import { RawQuote } from '@/types/raw-quote';
 import { useToast } from '@/hooks/use-toast';
 
+// Type pour éviter la récursion excessive
+type QuoteBasicType = {
+  id: string;
+  driver_id: string;
+  client_id: string;
+  vehicle_id: string | null;
+  ride_date: string;
+  amount: number;
+  departure_location: string;
+  arrival_location: string;
+  status: 'pending' | 'accepted' | 'declined';
+  quote_pdf: string | null;
+  created_at: string;
+  updated_at: string;
+  amount_ht?: number;
+  total_ttc?: number;
+};
+
 export const useQuotes = (clientId?: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -46,6 +64,8 @@ export const useQuotes = (clientId?: string) => {
             sunday_surcharge,
             vehicle_type_id,
             created_at,
+            amount_ht,
+            total_ttc,
             clients (
               first_name,
               last_name,
@@ -94,15 +114,13 @@ export const useQuotes = (clientId?: string) => {
             waiting_time_price: quote.waiting_fare,
             night_surcharge: quote.night_surcharge,
             sunday_holiday_surcharge: quote.sunday_surcharge,
-            // Ces champs pourraient ne pas être présents dans la réponse,
-            // mais nous les incluons dans le type transformé pour la compatibilité
-            amount_ht: 0,
-            total_ttc: 0,
+            amount_ht: quote.amount_ht,
+            total_ttc: quote.total_ttc,
             clients: quote.clients,
-            vehicles: quote.vehicles && {
+            vehicles: quote.vehicles ? {
               ...quote.vehicles,
               basePrice: 0
-            }
+            } : null
           };
         });
         
@@ -127,10 +145,22 @@ export const useQuotes = (clientId?: string) => {
         throw error;
       }
 
-      return { 
-        ...(data?.[0] || {}),
-        status
-      } as unknown as Quote;
+      const updatedQuote: QuoteBasicType = {
+        id: id,
+        driver_id: data?.[0]?.driver_id || '',
+        client_id: clientId || '',
+        vehicle_id: data?.[0]?.vehicle_type_id || null,
+        ride_date: data?.[0]?.departure_datetime || '',
+        amount: data?.[0]?.total_fare || 0,
+        departure_location: '',
+        arrival_location: '',
+        status: status,
+        quote_pdf: null,
+        created_at: data?.[0]?.created_at || '',
+        updated_at: data?.[0]?.updated_at || ''
+      };
+
+      return updatedQuote;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
@@ -177,7 +207,9 @@ export const useQuotes = (clientId?: string) => {
           include_return: newQuote.has_return_trip || false,
           night_surcharge: newQuote.night_surcharge || 0,
           holiday_surcharge: newQuote.sunday_holiday_surcharge || 0,
-          sunday_surcharge: newQuote.sunday_holiday_surcharge || 0
+          sunday_surcharge: newQuote.sunday_holiday_surcharge || 0,
+          amount_ht: newQuote.amount_ht || 0,
+          total_ttc: newQuote.total_ttc || 0
         };
 
         const { data, error } = await supabase
