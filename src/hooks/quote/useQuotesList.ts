@@ -42,7 +42,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
     }
     
     if (filters.status) {
-      query = query.eq('quote_status', filters.status);
+      query = query.eq('status', filters.status);
     }
     
     if (filters.start_date) {
@@ -59,14 +59,46 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    return data as Quote[];
+    // Transformer explicitement les données avant de les retourner
+    const quotes: Quote[] = (data || []).map(quote => ({
+      id: quote.id,
+      driver_id: quote.driver_id,
+      client_id: quote.client_id || '',
+      vehicle_id: quote.vehicle_type_id || null,
+      departure_location: '',
+      arrival_location: '',
+      ride_date: quote.departure_datetime,
+      amount: quote.total_fare,
+      status: quote.status || 'pending',
+      quote_pdf: null,
+      created_at: quote.created_at,
+      updated_at: quote.updated_at || quote.created_at,
+      // Autres propriétés nécessaires
+      clients: quote.clients,
+      distance_km: quote.total_distance,
+      duration_minutes: quote.outbound_duration_minutes,
+      has_return_trip: quote.include_return || false,
+      has_waiting_time: !!quote.waiting_time_minutes,
+      waiting_time_minutes: quote.waiting_time_minutes,
+      waiting_time_price: quote.waiting_fare,
+      night_surcharge: quote.night_surcharge,
+      sunday_holiday_surcharge: quote.sunday_surcharge,
+      amount_ht: quote.base_fare,
+      total_ttc: quote.total_fare,
+      vehicles: quote.vehicles ? {
+        ...quote.vehicles,
+        basePrice: quote.vehicles.basePrice || 0
+      } : null
+    }));
+
+    return quotes;
   };
 
   // Mutation pour mettre à jour le statut d'un devis
   const updateQuoteStatus = async ({ id, status }: { id: string; status: 'pending' | 'accepted' | 'rejected' | 'expired' }) => {
     const { data, error } = await supabase
       .from('quotes')
-      .update({ quote_status: status })
+      .update({ status })
       .eq('id', id);
 
     if (error) {

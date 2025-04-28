@@ -39,7 +39,7 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
   
   // Prepare company info
   const companyInfo: CompanyInfo = {
-    companyName: companySettings?.company_name || driverProfile.company_name || 'Service de VTC',
+    companyName: companySettings?.company_name || 'Service de VTC',
     contactFirstName: companySettings?.contact_first_name || driverProfile.first_name || '',
     contactLastName: companySettings?.contact_last_name || driverProfile.last_name || '',
     contactEmail: companySettings?.contact_email || driverProfile.email || '',
