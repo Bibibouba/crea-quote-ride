@@ -27,9 +27,7 @@ export const quoteService = {
       night_surcharge: quoteData.night_surcharge || 0,
       sunday_surcharge: quoteData.sunday_holiday_surcharge || 0,
       holiday_surcharge: 0,
-      vehicle_type_id: quoteData.vehicle_id,
-      amount_ht: quoteData.amount_ht || 0,
-      total_ttc: quoteData.total_ttc || 0
+      vehicle_type_id: quoteData.vehicle_id
     };
       
     const { data, error } = await supabase
@@ -68,8 +66,8 @@ export const quoteService = {
       waiting_time_price: data[0].waiting_fare,
       night_surcharge: data[0].night_surcharge,
       sunday_holiday_surcharge: data[0].sunday_surcharge,
-      amount_ht: data[0].amount_ht,
-      total_ttc: data[0].total_ttc
+      amount_ht: quoteData.amount_ht,
+      total_ttc: quoteData.total_ttc
     };
     
     console.log("Quote created successfully:", quote);

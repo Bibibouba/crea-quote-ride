@@ -149,13 +149,15 @@ export const useSimulator = ({ isWidget = false, prefill }: SimulatorProps = {})
         phone: formState.phone
       };
 
+      // Modification ici pour s'assurer que submitQuote renvoie bien une valeur
       const result = await submitQuote(quoteData, clientData);
 
-      if (isWidget && result) {
+      // Vérifiez le résultat avant de l'utiliser
+      if (result && isWidget) {
         postToParent('QUOTE_READY', {
           quoteId: result.id,
           amount: result.amount,
-          totalTTC: result.total_ttc
+          totalTTC: result.total_ttc || result.amount
         });
       }
 

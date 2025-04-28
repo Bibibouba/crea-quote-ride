@@ -16,8 +16,6 @@ export type RawQuote = {
   vehicle_type_id?: string;
   created_at: string;
   updated_at?: string;
-  amount_ht?: number;
-  total_ttc?: number;
   
   // Relations
   clients?: {

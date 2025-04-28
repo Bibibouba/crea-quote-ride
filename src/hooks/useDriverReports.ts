@@ -10,7 +10,7 @@ import {
   RevenueByVehicle,
   ReportData
 } from '@/types/reports';
-import { RawQuote, DriverReport } from '@/types/driver-report';
+import { RawQuote } from '@/types/raw-quote';
 
 export const useDriverReports = () => {
   const { user } = useAuth();
@@ -66,16 +66,14 @@ export const useDriverReports = () => {
           waiting_fare,
           waiting_time_minutes,
           sunday_surcharge,
-          created_at,
-          amount_ht,
-          total_ttc
+          created_at
         `)
         .eq('driver_id', user?.id);
       
       if (error) throw error;
       
       // Transform raw data to match expected structure
-      const transformedQuotes = (data || []).map(quote => ({
+      const transformedQuotes = (data || []).map((quote: RawQuote) => ({
         id: quote.id,
         driver_id: quote.driver_id,
         client_id: '', // Not available in raw data
@@ -96,9 +94,7 @@ export const useDriverReports = () => {
         night_surcharge: quote.night_surcharge || 0,
         sunday_holiday_surcharge: quote.sunday_surcharge || 0,
         day_km: 0, // Not directly available in raw data
-        night_km: 0, // Not directly available in raw data
-        amount_ht: quote.amount_ht || 0,
-        total_ttc: quote.total_ttc || 0
+        night_km: 0 // Not directly available in raw data
       }));
       
       return transformedQuotes;
@@ -145,9 +141,10 @@ export const useDriverReports = () => {
                quoteDate.getFullYear() === date.getFullYear();
       });
 
-      const accepted = dayQuotes.filter(q => q.status === 'accepted').length;
-      const pending = dayQuotes.filter(q => q.status === 'pending').length;
-      const declined = dayQuotes.filter(q => q.status === 'declined').length;
+      // À modifier : utilisez des nombres au lieu de comparer des chaînes
+      const accepted = dayQuotes.filter(q => q.status === 'accepted').length || 0;
+      const pending = dayQuotes.filter(q => q.status === 'pending').length || 0;
+      const declined = dayQuotes.filter(q => q.status === 'declined').length || 0;
       
       timeReports.push({
         date: date.toISOString().split('T')[0],
@@ -206,6 +203,7 @@ export const useDriverReports = () => {
   }, 0) : 0;
 
   // Calculate quotes status metrics
+  // À modifier : utilisez des nombres au lieu de comparer des chaînes
   const acceptedQuotes = quotesData?.filter(q => q.status === 'accepted').length || 0;
   const pendingQuotes = quotesData?.filter(q => q.status === 'pending').length || 0;
   const declinedQuotes = quotesData?.filter(q => q.status === 'declined').length || 0;

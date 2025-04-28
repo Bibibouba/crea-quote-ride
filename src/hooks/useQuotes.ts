@@ -19,8 +19,6 @@ type QuoteBasicType = {
   quote_pdf: string | null;
   created_at: string;
   updated_at: string;
-  amount_ht?: number;
-  total_ttc?: number;
 };
 
 export const useQuotes = (clientId?: string) => {
@@ -64,8 +62,6 @@ export const useQuotes = (clientId?: string) => {
             sunday_surcharge,
             vehicle_type_id,
             created_at,
-            amount_ht,
-            total_ttc,
             clients (
               first_name,
               last_name,
@@ -91,7 +87,7 @@ export const useQuotes = (clientId?: string) => {
           throw error;
         }
         
-        const transformedData: Quote[] = (data || []).map(quote => {
+        const transformedData: Quote[] = (data || []).map((quote: RawQuote) => {
           // S'assurer que toutes les propriétés sont présentes pour éviter les erreurs TypeScript
           return {
             id: quote.id,
@@ -105,7 +101,7 @@ export const useQuotes = (clientId?: string) => {
             status: 'pending',
             quote_pdf: null,
             created_at: quote.created_at,
-            updated_at: quote.created_at,
+            updated_at: quote.updated_at || quote.created_at,
             distance_km: quote.total_distance,
             duration_minutes: quote.outbound_duration_minutes,
             has_return_trip: quote.include_return,
@@ -114,8 +110,6 @@ export const useQuotes = (clientId?: string) => {
             waiting_time_price: quote.waiting_fare,
             night_surcharge: quote.night_surcharge,
             sunday_holiday_surcharge: quote.sunday_surcharge,
-            amount_ht: quote.amount_ht,
-            total_ttc: quote.total_ttc,
             clients: quote.clients,
             vehicles: quote.vehicles ? {
               ...quote.vehicles,
@@ -145,19 +139,23 @@ export const useQuotes = (clientId?: string) => {
         throw error;
       }
 
+      if (!data || data.length === 0) {
+        throw new Error('Failed to update quote status, no data returned');
+      }
+
       const updatedQuote: QuoteBasicType = {
         id: id,
-        driver_id: data?.[0]?.driver_id || '',
+        driver_id: data[0].driver_id || '',
         client_id: clientId || '',
-        vehicle_id: data?.[0]?.vehicle_type_id || null,
-        ride_date: data?.[0]?.departure_datetime || '',
-        amount: data?.[0]?.total_fare || 0,
+        vehicle_id: data[0].vehicle_type_id || null,
+        ride_date: data[0].departure_datetime || '',
+        amount: data[0].total_fare || 0,
         departure_location: '',
         arrival_location: '',
         status: status,
         quote_pdf: null,
-        created_at: data?.[0]?.created_at || '',
-        updated_at: data?.[0]?.updated_at || ''
+        created_at: data[0].created_at || '',
+        updated_at: data[0].created_at || ''
       };
 
       return updatedQuote;
@@ -207,9 +205,7 @@ export const useQuotes = (clientId?: string) => {
           include_return: newQuote.has_return_trip || false,
           night_surcharge: newQuote.night_surcharge || 0,
           holiday_surcharge: newQuote.sunday_holiday_surcharge || 0,
-          sunday_surcharge: newQuote.sunday_holiday_surcharge || 0,
-          amount_ht: newQuote.amount_ht || 0,
-          total_ttc: newQuote.total_ttc || 0
+          sunday_surcharge: newQuote.sunday_holiday_surcharge || 0
         };
 
         const { data, error } = await supabase
@@ -222,13 +218,17 @@ export const useQuotes = (clientId?: string) => {
           throw error;
         }
 
+        if (!data || data.length === 0) {
+          throw new Error('Failed to create quote, no data returned');
+        }
+
         console.log('Quote created successfully:', data);
         
         const createdQuote: Quote = {
           ...newQuote,
-          id: data?.[0]?.id || '',
-          created_at: data?.[0]?.created_at || new Date().toISOString(),
-          updated_at: data?.[0]?.updated_at || new Date().toISOString(),
+          id: data[0].id || '',
+          created_at: data[0].created_at || new Date().toISOString(),
+          updated_at: data[0].created_at || new Date().toISOString(),
           quote_pdf: null
         };
         
