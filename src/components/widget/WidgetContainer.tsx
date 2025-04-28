@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWidgetParams } from '@/hooks/useWidgetParams';
 
+// Interface pour les paramètres du widget
 interface WidgetSettings {
   primaryColor?: string;
   secondaryColor?: string;
@@ -15,6 +16,7 @@ interface WidgetSettings {
   companyName?: string;
 }
 
+// Fonction utilitaire pour envoyer des messages au parent (iframe)
 const postToParent = (event: string, data: any) => {
   if (window.parent !== window) {
     window.parent.postMessage({ event, data }, '*');
@@ -37,7 +39,7 @@ export const WidgetContainer = () => {
           return;
         }
 
-        // 🛠 Correction ici : bonne table et bonnes colonnes
+        // Correction : bonne table et bonnes colonnes
         const { data, error } = await supabase
           .from("paramètres_de_l'entreprise")
           .select(`
@@ -51,22 +53,20 @@ export const WidgetContainer = () => {
           .eq('driver_id', driverId)
           .single();
 
-        if (error) {
-          throw error;
+        if (error || !data) {
+          throw new Error("Chauffeur introuvable ou données incomplètes");
         }
 
-        if (data) {
-          setSettings({
-            primaryColor: data.couleur_primaire || '#3B82F6',
-            secondaryColor: data.couleur_secondaire || '#10B981',
-            fontFamily: data.famille_de_polices || 'Inter',
-            logoUrl: data.logo_url || null,
-            bannerUrl: data.bannière_url || null,
-            companyName: data["Nom de l'entreprise"] || 'VTC Services'
-          });
-        }
+        setSettings({
+          primaryColor: data.couleur_primaire || '#3B82F6',
+          secondaryColor: data.couleur_secondaire || '#10B981',
+          fontFamily: data.famille_de_polices || 'Inter',
+          logoUrl: data.logo_url || undefined,
+          bannerUrl: data.bannière_url || undefined,
+          companyName: data["Nom de l'entreprise"] || 'VTC Services',
+        });
 
-        console.log('Validation chauffeur désactivée pour les tests du widget.');
+        console.log('Paramètres du chauffeur chargés avec succès.');
 
       } catch (err: any) {
         console.error('Erreur lors du chargement des paramètres du widget:', err);
@@ -128,20 +128,23 @@ export const WidgetContainer = () => {
   }
 
   return (
-    <div className="bg-background widget-container" style={{ fontFamily: 'var(--widget-font-family, sans-serif)' }}>
+    <div
+      className="bg-background widget-container"
+      style={{ fontFamily: 'var(--widget-font-family, sans-serif)' }}
+    >
       {settings?.logoUrl && (
         <div className="flex justify-center py-4">
-          <img 
-            src={settings.logoUrl} 
-            alt={settings.companyName || "Logo"} 
-            className="h-12 w-auto object-contain" 
+          <img
+            src={settings.logoUrl}
+            alt={settings.companyName || "Logo"}
+            className="h-12 w-auto object-contain"
           />
         </div>
       )}
-      <SimulatorContainer 
+      <SimulatorContainer
         isWidget={true}
         prefill={prefill}
-        companyName={settings?.companyName} 
+        companyName={settings?.companyName}
         logoUrl={settings?.logoUrl}
       />
     </div>
