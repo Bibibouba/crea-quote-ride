@@ -16,10 +16,12 @@ const WidgetSettings = () => {
   const [copied, setCopied] = useState(false);
   const [widgetUrl, setWidgetUrl] = useState('');
   const [embedCode, setEmbedCode] = useState('');
-
+  
   useEffect(() => {
     if (user?.id) {
-      const baseUrl = window.location.origin;
+      // Utiliser l'URL absolue du site déployé au lieu de window.location.origin
+      // En production, l'URL sera celle du domaine déployé
+      const baseUrl = window.location.href.split('/dashboard')[0];
       const widgetPath = `/widget/${user.id}`;
       setWidgetUrl(`${baseUrl}${widgetPath}`);
       
@@ -48,7 +50,8 @@ const WidgetSettings = () => {
 
   const handleOpenWidgetDemo = () => {
     if (widgetUrl) {
-      window.open(widgetUrl, '_blank');
+      // Ouvrir l'URL complète du widget dans un nouvel onglet
+      window.open(widgetUrl, '_blank', 'noopener,noreferrer');
     }
   };
 

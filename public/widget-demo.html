@@ -118,10 +118,13 @@
     // ID du chauffeur à remplacer par votre vrai ID
     const driverId = 'VOTRE_ID_DRIVER';
     
+    // Récupérer l'URL de base (URL déployée)
+    const baseUrl = window.location.href.split('/widget-demo.html')[0];
+    
     // Charger le widget avec des paramètres
     loadButton.addEventListener('click', function() {
       // Construire l'URL avec des paramètres de pré-remplissage
-      const widgetUrl = new URL(`${window.location.origin}/widget/${driverId}`);
+      const widgetUrl = new URL(`${baseUrl}/widget/${driverId}`);
       
       // Ajouter des paramètres de pré-remplissage
       widgetUrl.searchParams.append('departure', 'Paris, France');
