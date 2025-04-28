@@ -75,7 +75,7 @@ export const useQuotes = (clientId?: string) => {
           amount: quote.total_fare,
           departure_location: '',
           arrival_location: '',
-          status: validateQuoteStatus(quote.status || 'pending'),
+          status: validateQuoteStatus(quote.status),
           quote_pdf: null,
           created_at: quote.created_at,
           updated_at: quote.updated_at || quote.created_at,

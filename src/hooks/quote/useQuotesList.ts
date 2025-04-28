@@ -28,6 +28,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
     let query = supabase.from('quotes').select(`
       id, 
       driver_id,
+      client_id,
       departure_datetime,
       base_fare,
       total_fare,
@@ -86,7 +87,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       arrival_location: '',
       ride_date: quote.departure_datetime,
       amount: quote.total_fare,
-      status: validateQuoteStatus(quote.status || 'pending'),
+      status: validateQuoteStatus(quote.status),
       quote_pdf: null,
       created_at: quote.created_at,
       updated_at: quote.updated_at || quote.created_at,
