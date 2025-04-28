@@ -76,8 +76,22 @@ export const WidgetContainer = () => {
           });
         }
 
-// ⚠️ Désactivation temporaire de la vérification d'approbation du chauffeur
-console.log('Validation chauffeur désactivée temporairement pour tests.');
+const { data: profileData, error: profileError } = await supabase
+  .from('profiles')
+  .select('is_approved')
+  .eq('id', driverId)
+  .single();
+
+if (profileError) {
+  throw profileError;
+}
+
+if (!profileData?.is_approved) {
+  const msg = "Ce chauffeur n'est pas approuvé pour utiliser le widget";
+  setError(msg);
+  postToParent('QUOTE_ERROR', { message: msg });
+}
+
 
 
       } catch (err: any) {
