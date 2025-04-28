@@ -72,14 +72,14 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    // Conversion explicite vers le type RawQuote sans jointures
-    const rawQuotes = data as unknown as Array<RawQuote>;
+    // Récupération des données brutes sans jointures
+    const rawQuotes = data as RawQuote[];
     
-    // Transformation manuelle des données sans récursion
+    // Transformation manuelle des données vers le type Quote
     const quotes: Quote[] = (rawQuotes || []).map(quote => ({
       id: quote.id,
       driver_id: quote.driver_id,
-      client_id: '', // On définit une valeur par défaut
+      client_id: '', // Valeur par défaut
       vehicle_id: quote.vehicle_type_id || null,
       departure_location: '',
       arrival_location: '',
@@ -100,8 +100,8 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       sunday_holiday_surcharge: quote.sunday_surcharge,
       amount_ht: quote.base_fare,
       total_ttc: quote.total_fare,
-      clients: undefined, // On évite la récursion de type
-      vehicles: null // On évite la récursion de type
+      clients: undefined,
+      vehicles: null
     }));
 
     return quotes;
@@ -162,7 +162,6 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
     updateStatus: updateStatusMutation.mutate,
     deleteQuote: deleteMutation.mutate,
     setFilters: (newFilters: QuotesFilter) => {
-      // Pour utiliser ce hook avec un état local de filtres
       return { ...filters, ...newFilters };
     }
   };

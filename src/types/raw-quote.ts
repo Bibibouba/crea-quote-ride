@@ -17,12 +17,4 @@ export type RawQuote = {
   created_at: string;
   updated_at?: string;
   status?: 'pending' | 'accepted' | 'rejected' | 'expired';
-  
-  // Relations explicites pour éviter les problèmes d'inférence
-  clients?: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-  };
 };

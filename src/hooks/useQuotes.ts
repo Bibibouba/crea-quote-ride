@@ -64,7 +64,7 @@ export const useQuotes = (clientId?: string) => {
         if (error) throw error;
         
         // Transformation explicite des données sans récursion
-        const rawData = data as unknown as RawQuote[];
+        const rawData = data as RawQuote[];
         const transformedData: Quote[] = (rawData || []).map((quote) => ({
           id: quote.id,
           driver_id: quote.driver_id,
@@ -88,8 +88,8 @@ export const useQuotes = (clientId?: string) => {
           sunday_holiday_surcharge: quote.sunday_surcharge,
           amount_ht: quote.base_fare,
           total_ttc: quote.total_fare,
-          clients: undefined, // Éviter la récursion de type
-          vehicles: null // Éviter la récursion de type
+          clients: undefined,
+          vehicles: null
         }));
         
         return transformedData;
