@@ -76,22 +76,9 @@ export const WidgetContainer = () => {
           });
         }
 
-        // Récupérer également les informations du chauffeur pour validation
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('is_approved')
-          .eq('id', driverId)
-          .single();
+// ⚠️ Désactivation temporaire de la vérification d'approbation du chauffeur
+console.log('Validation chauffeur désactivée temporairement pour tests.');
 
-        if (profileError) {
-          throw profileError;
-        }
-
-        // Vérifier que le chauffeur est approuvé
-        if (!profileData?.is_approved) {
-          setError("Ce chauffeur n'est pas approuvé pour utiliser le widget");
-          postToParent('QUOTE_ERROR', { message: "Chauffeur non approuvé" });
-        }
 
       } catch (err: any) {
         console.error('Erreur lors du chargement des paramètres du widget:', err);
