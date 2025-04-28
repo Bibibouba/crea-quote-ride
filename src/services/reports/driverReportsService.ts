@@ -56,9 +56,9 @@ export const driverReportsService = {
 
     // Calculate time reports
     const timeReports: TimeReport[] = [];
-    const now = new Date();
+    const currentDate = new Date(); // Renommé maintenant pour éviter la redéclaration
     for (let i = 6; i >= 0; i--) {
-      const date = new Date(now);
+      const date = new Date(currentDate);
       date.setDate(date.getDate() - i);
       
       const dayQuotes = rawQuotes.filter(quote => {
@@ -96,11 +96,11 @@ export const driverReportsService = {
     }
 
     // Calculate distance metrics
-    const now = new Date();
-    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - 7);
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    // Utiliser la variable renommée pour éviter la redéclaration
+    const dayStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+    const weekStart = new Date(currentDate);
+    weekStart.setDate(currentDate.getDate() - 7);
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 
     const dayKm = rawQuotes.reduce((sum, quote) => {
       const quoteDate = new Date(quote.created_at);
