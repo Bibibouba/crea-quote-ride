@@ -1,7 +1,7 @@
 
 import { PdfContext } from './types';
 import { preparePricingData } from './pricing/table-data';
-import { generatePricingTable } from './pricing/table-generator';
+import { generatePricingTable as renderPricingTable } from './pricing/table-generator';
 
 export const generatePricingTable = (context: PdfContext, startY: number): void => {
   const { doc } = context;
@@ -15,5 +15,5 @@ export const generatePricingTable = (context: PdfContext, startY: number): void 
   const pricingData = preparePricingData(context);
   
   // Generate the table
-  generatePricingTable(doc, pricingData, startY);
+  renderPricingTable(doc, pricingData, startY + 10);
 };

@@ -23,7 +23,7 @@ export const generatePricingTable = (doc: jsPDF, data: PricingTableData, startY:
   ]);
   
   autoTable(doc, {
-    startY: startY + 5,
+    startY: startY,
     head: [['Prestation', 'Montant HT', 'TVA', 'Montant TTC']],
     body: tableRows,
     theme: 'grid',
