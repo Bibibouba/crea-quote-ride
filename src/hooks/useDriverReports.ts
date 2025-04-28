@@ -1,8 +1,8 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  Profile, 
   Quote, 
   Vehicle, 
   VehicleReport, 
@@ -10,6 +10,7 @@ import {
   RevenueByVehicle,
   ReportData
 } from '@/types/reports';
+import { RawQuote, DriverReport } from '@/types/driver-report';
 
 export const useDriverReports = () => {
   const { user } = useAuth();
@@ -20,7 +21,7 @@ export const useDriverReports = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, first_name, last_name, email, phone, role, is_approved, created_at, updated_at')
         .eq('id', user?.id);
       
       if (error) throw error;
@@ -50,17 +51,59 @@ export const useDriverReports = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quotes')
-        .select('*')
+        .select(`
+          id,
+          driver_id,
+          vehicle_type_id,
+          departure_datetime,
+          base_fare,
+          total_fare,
+          holiday_surcharge,
+          night_surcharge,
+          include_return,
+          outbound_duration_minutes,
+          total_distance,
+          waiting_fare,
+          waiting_time_minutes,
+          sunday_surcharge,
+          created_at
+        `)
         .eq('driver_id', user?.id);
       
       if (error) throw error;
-      return data || [];
+      
+      // Transform raw data to match expected structure
+      const transformedQuotes: Quote[] = (data || []).map(quote => ({
+        id: quote.id,
+        driver_id: quote.driver_id,
+        client_id: '', // Not available in raw data
+        vehicle_id: quote.vehicle_type_id || null,
+        ride_date: quote.departure_datetime,
+        amount: quote.total_fare || 0,
+        departure_location: '', // Not available in raw data
+        arrival_location: '', // Not available in raw data
+        status: 'pending', // Default status
+        quote_pdf: null,
+        created_at: quote.created_at,
+        updated_at: quote.created_at, // Using created_at as fallback
+        distance_km: quote.total_distance || 0,
+        duration_minutes: quote.outbound_duration_minutes || 0,
+        has_return_trip: quote.include_return || false,
+        waiting_time_minutes: quote.waiting_time_minutes || 0,
+        waiting_time_price: quote.waiting_fare || 0,
+        night_surcharge: quote.night_surcharge || 0,
+        sunday_holiday_surcharge: quote.sunday_surcharge || 0,
+        day_km: 0, // Not directly available in raw data
+        night_km: 0, // Not directly available in raw data
+      }));
+      
+      return transformedQuotes;
     },
     enabled: !!user,
   });
 
   // Get user profile
-  const profile = profileData && profileData.length > 0 ? profileData[0] as unknown as Profile : null;
+  const profile = profileData && profileData.length > 0 ? profileData[0] : null;
 
   // Calculate vehicle reports
   const vehicleReports: VehicleReport[] = vehiclesData ? vehiclesData.map(vehicle => {
@@ -166,7 +209,7 @@ export const useDriverReports = () => {
 
   const reportsData: ReportData = {
     vehicles: vehiclesData || [],
-    quotes: quotesData || [],
+    quotes: quotesData as Quote[] || [],
     vehicleReports,
     timeReports,
     revenueByVehicle,
