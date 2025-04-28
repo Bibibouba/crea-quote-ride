@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWidgetParams } from '@/hooks/useWidgetParams';
 
+// Interface pour les paramètres du widget
 interface WidgetSettings {
   primaryColor?: string;
   secondaryColor?: string;
@@ -16,6 +16,7 @@ interface WidgetSettings {
   companyName?: string;
 }
 
+// Interface pour les props du SimulatorContainer
 interface SimulatorContainerProps {
   isWidget?: boolean;
   companyName?: string;
@@ -29,6 +30,13 @@ interface SimulatorContainerProps {
     vehicleType?: string;
   };
 }
+
+// Fonction utilitaire pour envoyer des messages au parent (iframe)
+const postToParent = (event: string, data: any) => {
+  if (window.parent !== window) {
+    window.parent.postMessage({ event, data }, '*');
+  }
+};
 
 export const WidgetContainer = () => {
   const { driverId } = useParams<{ driverId: string }>();
@@ -82,12 +90,14 @@ export const WidgetContainer = () => {
         // Vérifier que le chauffeur est approuvé
         if (!profileData?.is_approved) {
           setError("Ce chauffeur n'est pas approuvé pour utiliser le widget");
+          postToParent('QUOTE_ERROR', { message: "Chauffeur non approuvé" });
         }
 
       } catch (err: any) {
         console.error('Erreur lors du chargement des paramètres du widget:', err);
         setError("Impossible de charger les paramètres du widget");
         toast.error("Erreur de chargement");
+        postToParent('QUOTE_ERROR', { message: err.message });
       } finally {
         setLoading(false);
       }
@@ -117,13 +127,17 @@ export const WidgetContainer = () => {
     }
     
     return () => {
-      // Nettoyage des variables CSS lors du démontage
       const root = document.documentElement;
       root.style.removeProperty('--widget-primary-color');
       root.style.removeProperty('--widget-secondary-color');
       root.style.removeProperty('--widget-font-family');
     };
   }, [settings]);
+
+  // Informer le parent du changement d'étape (initialisation)
+  useEffect(() => {
+    postToParent('STEP_CHANGED', { step: 0, name: 'Initialisation' });
+  }, []);
 
   if (loading) {
     return (
