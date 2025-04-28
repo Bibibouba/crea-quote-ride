@@ -1,13 +1,41 @@
-
 import { useState, useEffect } from 'react';
 import { useQuoteForm } from '@/hooks/useQuoteForm';
 import { useClientSimulator } from '@/hooks/useClientSimulator';
+import { postToParent } from '@/utils/postMessage';
 
-export const useSimulator = () => {
-  const { isSubmitting, isQuoteSent, submitQuote, resetForm, navigateToDashboard } = useClientSimulator();
+interface SimulatorProps {
+  isWidget?: boolean;
+  prefill?: {
+    departure?: string;
+    destination?: string;
+    date?: string;
+    time?: string;
+    passengers?: string;
+    vehicleType?: string;
+  };
+}
+
+export const useSimulator = ({ isWidget = false, prefill }: SimulatorProps = {}) => {
+  const {
+    isSubmitting,
+    isQuoteSent,
+    submitQuote,
+    resetForm,
+    navigateToDashboard
+  } = useClientSimulator();
+
   const [simulatorReady, setSimulatorReady] = useState(true);
   const [activeTab, setActiveTab] = useState<'step1' | 'step2' | 'step3'>('step1');
   const formState = useQuoteForm();
+
+  useEffect(() => {
+    if (isWidget && prefill) {
+      if (prefill.departure) formState.setDepartureAddress(prefill.departure);
+      if (prefill.destination) formState.setDestinationAddress(prefill.destination);
+      if (prefill.vehicleType) formState.setSelectedVehicle(prefill.vehicleType);
+      if (prefill.passengers) formState.setPassengers(prefill.passengers);
+    }
+  }, [isWidget, prefill]);
 
   useEffect(() => {
     setSimulatorReady(false);
@@ -39,20 +67,38 @@ export const useSimulator = () => {
   }, [formState.quoteDetails, formState.time, formState.estimatedDuration]);
 
   const handleNextStep = () => {
-    if (activeTab === 'step1') setActiveTab('step2');
-    else if (activeTab === 'step2') setActiveTab('step3');
+    const newTab = activeTab === 'step1' ? 'step2' : 'step3';
+    setActiveTab(newTab);
+    if (isWidget) {
+      postToParent('STEP_CHANGED', { 
+        step: newTab === 'step2' ? 2 : 3, 
+        name: newTab 
+      });
+    }
   };
 
   const handlePreviousStep = () => {
-    if (activeTab === 'step3') setActiveTab('step2');
-    else if (activeTab === 'step2') setActiveTab('step1');
+    const newTab = activeTab === 'step3' ? 'step2' : 'step1';
+    setActiveTab(newTab);
+    if (isWidget) {
+      postToParent('STEP_CHANGED', { 
+        step: newTab === 'step1' ? 1 : 2, 
+        name: newTab 
+      });
+    }
   };
 
   const handleSubmit = async () => {
-    if (!formState.quoteDetails) return Promise.reject(new Error("Quote details not available"));
+    if (!formState.quoteDetails) {
+      if (isWidget) {
+        postToParent('QUOTE_ERROR', { 
+          message: "Quote details not available" 
+        });
+      }
+      return Promise.reject(new Error("Quote details not available"));
+    }
 
     try {
-      // Make sure we have a valid date
       const rideDate = formState.date instanceof Date && !isNaN(formState.date.getTime())
         ? formState.date.toISOString()
         : new Date().toISOString();
@@ -103,10 +149,24 @@ export const useSimulator = () => {
         phone: formState.phone
       };
 
-      return submitQuote(quoteData, clientData);
-    } catch (error) {
-      console.error("Erreur lors de la soumission du devis:", error);
-      return Promise.reject(error);
+      const result = await submitQuote(quoteData, clientData);
+
+      if (isWidget && result) {
+        postToParent('QUOTE_READY', {
+          quoteId: result.id,
+          amount: result.amount,
+          totalTTC: result.total_ttc
+        });
+      }
+
+      return result;
+    } catch (error: any) {
+      if (isWidget) {
+        postToParent('QUOTE_ERROR', { 
+          message: error.message 
+        });
+      }
+      throw error;
     }
   };
 

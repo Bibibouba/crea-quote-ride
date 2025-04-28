@@ -1,10 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import SimulatorContainer from '@/components/simulator/SimulatorContainer';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useWidgetParams } from '@/hooks/useWidgetParams';
 
 interface WidgetSettings {
   primaryColor?: string;
@@ -17,6 +17,7 @@ interface WidgetSettings {
 
 export const WidgetContainer = () => {
   const { driverId } = useParams<{ driverId: string }>();
+  const { prefill } = useWidgetParams();
   const [settings, setSettings] = useState<WidgetSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -138,7 +139,8 @@ export const WidgetContainer = () => {
         </div>
       )}
       <SimulatorContainer 
-        isWidget={true} 
+        isWidget={true}
+        prefill={prefill}
         companyName={settings?.companyName} 
         logoUrl={settings?.logoUrl}
       />
