@@ -25,18 +25,20 @@ export interface Vehicle {
 export interface Quote {
   id: string;
   driver_id: string;
-  client_id: string;
-  vehicle_id: string | null;
-  ride_date: string;
-  amount: number;
-  departure_location: string;
-  arrival_location: string;
-  status: string;
+  departure_datetime: string;
+  base_fare: number;
+  total_fare: number;
+  holiday_surcharge?: number;
+  night_surcharge?: number;
+  include_return?: boolean;
+  outbound_duration_minutes: number;
+  total_distance: number;
+  waiting_fare?: number;
+  waiting_time_minutes?: number;
+  sunday_surcharge?: number;
   created_at: string;
-  distance_km: number;
-  duration_minutes: number;
-  amount_ht: number;
-  total_ttc: number;
+  vehicle_type_id?: string;
+  // Removed amount_ht and total_ttc as they don't exist in the database
 }
 
 export interface VehicleReport {
