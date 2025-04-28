@@ -11,13 +11,13 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
   const doc = new jsPDF();
   
   // Get driver info avec déstructuration correcte
-  const { data: driverData, error: driverError } = await supabase
+  const { data: driverProfile, error: driverError } = await supabase
     .from('profiles')
-    .select('*')
+    .select('first_name, last_name, email, company_name')
     .eq('id', quote.driver_id)
     .single();
   
-  if (driverError || !driverData) {
+  if (driverError || !driverProfile) {
     console.error('Erreur lors de la récupération des données du chauffeur:', driverError);
   }
   
@@ -67,14 +67,13 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
   doc.setFontSize(10);
   
   // Use company_name from company settings if available
-  const companyName = companySettings?.company_name || driverData?.company_name || 'Service de VTC';
+  const companyName = companySettings?.company_name || driverProfile?.company_name || 'Service de VTC';
   doc.text(companyName, 15, 70);
   
-  if (driverData) {
-    // If contact information is available in company settings, use that
-    const contactFirstName = companySettings?.contact_first_name || driverData.first_name || '';
-    const contactLastName = companySettings?.contact_last_name || driverData.last_name || '';
-    const contactEmail = companySettings?.contact_email || driverData.email || '';
+  if (driverProfile) {
+    const contactFirstName = companySettings?.contact_first_name || driverProfile.first_name || '';
+    const contactLastName = companySettings?.contact_last_name || driverProfile.last_name || '';
+    const contactEmail = companySettings?.contact_email || driverProfile.email || '';
 
     doc.text(`${contactFirstName} ${contactLastName}`, 15, 75);
   }
@@ -88,8 +87,8 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
     });
   }
   
-  if (driverData?.email) {
-    doc.text(`Email: ${driverData.email}`, 15, 95);
+  if (driverProfile?.email) {
+    doc.text(`Email: ${driverProfile.email}`, 15, 95);
   }
   
   if (companySettings?.siret) {
