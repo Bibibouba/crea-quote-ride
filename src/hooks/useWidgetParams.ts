@@ -1,4 +1,5 @@
 
+
 import { useSearchParams } from 'react-router-dom';
 
 interface WidgetParams {
@@ -24,5 +25,10 @@ export function useWidgetParams(): WidgetParams {
     vehicleType: searchParams.get('vehicleType') || undefined,
   };
 
-  return { prefill };
+  // Vérifier si au moins un paramètre est défini
+  const hasPrefill = Object.values(prefill).some(value => value !== undefined);
+
+  return { 
+    prefill: hasPrefill ? prefill : undefined 
+  };
 }

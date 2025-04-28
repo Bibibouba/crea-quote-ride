@@ -49,13 +49,13 @@ export const prepareQuoteData = ({
   customReturnCoordinates,
   returnDistance,
   returnDuration
-}: PrepareQuoteDataParams): Omit<Quote, "id" | "created_at" | "updated_at" | "quote_pdf"> => {
+}: PrepareQuoteDataParams): Partial<Quote> => {
   
   if (!quoteDetails) {
     throw new Error("Quote details are required");
   }
   
-  const quoteData: Omit<Quote, "id" | "created_at" | "updated_at" | "quote_pdf"> = {
+  const quoteData: Partial<Quote> = {
     driver_id: driverId,
     client_id: clientId,
     vehicle_id: selectedVehicle,
@@ -92,7 +92,9 @@ export const prepareQuoteData = ({
     wait_time_day: quoteDetails.waitTimeDay,
     wait_time_night: quoteDetails.waitTimeNight,
     wait_price_day: quoteDetails.waitPriceDay,
-    wait_price_night: quoteDetails.waitPriceNight
+    wait_price_night: quoteDetails.waitPriceNight,
+    amount_ht: quoteDetails.totalPriceHT,
+    total_ttc: quoteDetails.totalPrice
   };
   
   return quoteData;

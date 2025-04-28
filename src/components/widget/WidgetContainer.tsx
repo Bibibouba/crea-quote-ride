@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,20 @@ interface WidgetSettings {
   logoUrl?: string;
   bannerUrl?: string;
   companyName?: string;
+}
+
+interface SimulatorContainerProps {
+  isWidget?: boolean;
+  companyName?: string;
+  logoUrl?: string;
+  prefill?: {
+    departure?: string;
+    destination?: string;
+    date?: string;
+    time?: string;
+    passengers?: string;
+    vehicleType?: string;
+  };
 }
 
 export const WidgetContainer = () => {

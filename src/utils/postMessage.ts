@@ -1,4 +1,5 @@
 
+
 export type WidgetEvent = 
   | 'QUOTE_READY' 
   | 'QUOTE_ERROR' 
