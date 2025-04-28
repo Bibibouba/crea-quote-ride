@@ -30,7 +30,7 @@ export const useQuotes = (clientId?: string) => {
           throw new Error('User not authenticated');
         }
         
-        // Définir les colonnes à sélectionner
+        // Définir les colonnes à sélectionner - sans jointures imbriquées
         const selection = `
           id,
           driver_id,
@@ -48,17 +48,7 @@ export const useQuotes = (clientId?: string) => {
           vehicle_type_id,
           created_at,
           updated_at,
-          status,
-          clients (
-            first_name,
-            last_name,
-            email,
-            phone
-          ),
-          vehicles (
-            name,
-            model
-          )
+          status
         `;
 
         let query = supabase
@@ -100,11 +90,8 @@ export const useQuotes = (clientId?: string) => {
           sunday_holiday_surcharge: quote.sunday_surcharge,
           amount_ht: quote.base_fare,
           total_ttc: quote.total_fare,
-          clients: quote.clients,
-          vehicles: quote.vehicles ? {
-            ...quote.vehicles,
-            basePrice: 0
-          } : null
+          clients: undefined, // Éviter la récursion de type
+          vehicles: null // Éviter la récursion de type
         }));
         
         return transformedData;

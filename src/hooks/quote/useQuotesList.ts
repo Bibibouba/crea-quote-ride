@@ -23,6 +23,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
 
   // Récupérer tous les devis
   const fetchQuotes = async () => {
+    // Construction de la requête
     let query = supabase.from('quotes').select(`
       id, 
       driver_id,
@@ -40,16 +41,10 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       vehicle_type_id,
       created_at,
       updated_at,
-      status,
-      clients (
-        id,
-        first_name,
-        last_name,
-        email,
-        phone
-      )
+      status
     `);
 
+    // Application des filtres
     if (filters.client_id) {
       query = query.eq('client_id', filters.client_id);
     }
@@ -70,15 +65,17 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       query = query.lte('created_at', filters.end_date);
     }
 
+    // Exécution de la requête
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       throw new Error(error.message);
     }
 
-    // Transformer manuellement les données pour éviter les problèmes d'inférence de types
+    // Conversion explicite vers le type RawQuote
     const rawQuotes = data as unknown as Array<RawQuote>;
     
+    // Transformation manuelle et typée vers Quote[]
     const quotes: Quote[] = (rawQuotes || []).map(quote => ({
       id: quote.id,
       driver_id: quote.driver_id,
@@ -88,17 +85,11 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       arrival_location: '',
       ride_date: quote.departure_datetime,
       amount: quote.total_fare,
-      status: (quote.status as Quote['status']) || 'pending',
+      status: (quote.status as 'pending' | 'accepted' | 'rejected' | 'expired') || 'pending',
       quote_pdf: null,
       created_at: quote.created_at,
       updated_at: quote.updated_at || quote.created_at,
-      // Autres propriétés nécessaires
-      clients: quote.clients ? {
-        first_name: quote.clients.first_name || '',
-        last_name: quote.clients.last_name || '',
-        email: quote.clients.email || '',
-        phone: quote.clients.phone || ''
-      } : undefined,
+      // Autres propriétés
       distance_km: quote.total_distance,
       duration_minutes: quote.outbound_duration_minutes,
       has_return_trip: quote.include_return || false,
@@ -109,6 +100,12 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       sunday_holiday_surcharge: quote.sunday_surcharge,
       amount_ht: quote.base_fare,
       total_ttc: quote.total_fare,
+      clients: quote.clients ? {
+        first_name: quote.clients.first_name || '',
+        last_name: quote.clients.last_name || '',
+        email: quote.clients.email || '',
+        phone: quote.clients.phone || ''
+      } : undefined,
       vehicles: null // On ne récupère pas les véhicules pour éviter la récursion
     }));
 

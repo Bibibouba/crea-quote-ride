@@ -16,18 +16,13 @@ export type RawQuote = {
   vehicle_type_id?: string;
   created_at: string;
   updated_at?: string;
-  status?: 'pending' | 'accepted' | 'declined';
+  status?: 'pending' | 'accepted' | 'rejected' | 'expired';
   
-  // Relations avec type explicite pour éviter les problèmes d'inférence
+  // Relations explicites pour éviter les problèmes d'inférence
   clients?: {
     first_name: string;
     last_name: string;
     email: string;
     phone: string;
-  };
-  vehicles?: {
-    name: string;
-    model: string;
-    basePrice?: number;
   };
 };
