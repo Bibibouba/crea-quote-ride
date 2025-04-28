@@ -1,4 +1,3 @@
-
 import React from 'react';
 import SimulatorLoading from './SimulatorLoading';
 import SimulatorHeader from './steps/SimulatorHeader';
@@ -7,6 +6,8 @@ import SimulatorAlert from './SimulatorAlert';
 import SuccessState from './SuccessState';
 import { useSimulator } from '@/hooks/useSimulator';
 import { Quote } from '@/types/quote';
+import { useVehiclesWidget } from '@/hooks/useVehiclesWidget'; // 🔵 Ajout pour charger les véhicules
+import { useParams } from 'react-router-dom'; // 🔵 Ajout pour récupérer le driverId
 
 interface SimulatorContainerProps {
   isWidget?: boolean;
@@ -28,6 +29,9 @@ const SimulatorContainer: React.FC<SimulatorContainerProps> = ({
   logoUrl,
   prefill
 }) => {
+  const { driverId } = useParams<{ driverId: string }>(); // 🔵 Récupérer driverId depuis l'URL
+  const { vehicles, loading: loadingVehicles, error: errorVehicles } = useVehiclesWidget(driverId); // 🔵 Charger les véhicules
+
   const {
     simulatorReady,
     isSubmitting,
@@ -73,6 +77,21 @@ const SimulatorContainer: React.FC<SimulatorContainerProps> = ({
         />
       ) : (
         <div className="w-full">
+          {/* 🔵 Affichage du select de véhicules ici */}
+          {loadingVehicles ? (
+            <p>Chargement des véhicules...</p>
+          ) : errorVehicles ? (
+            <p>Erreur de chargement des véhicules</p>
+          ) : (
+            <select name="vehicle" required className="mb-4 p-2 border rounded w-full">
+              {vehicles.map(vehicle => (
+                <option key={vehicle.id} value={vehicle.id}>
+                  {vehicle.name} {vehicle.model ? `- ${vehicle.model}` : ""}
+                </option>
+              ))}
+            </select>
+          )}
+
           <SimulatorTabs
             activeTab={activeTab}
             setActiveTab={setActiveTab}
