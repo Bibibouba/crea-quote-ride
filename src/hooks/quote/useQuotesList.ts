@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
+import { RawQuote } from '@/types/raw-quote';
 
 // Type pour les filtres de recherche de devis
 interface QuotesFilter {
@@ -75,17 +76,19 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    // Transformer explicitement les données avant de les retourner
-    const quotes: Quote[] = (data || []).map(quote => ({
+    // Transformer manuellement les données pour éviter les problèmes d'inférence de types
+    const rawQuotes = data as unknown as Array<RawQuote>;
+    
+    const quotes: Quote[] = (rawQuotes || []).map(quote => ({
       id: quote.id,
       driver_id: quote.driver_id,
-      client_id: quote.client_id || '',
+      client_id: '', // On définit une valeur par défaut
       vehicle_id: quote.vehicle_type_id || null,
       departure_location: '',
       arrival_location: '',
       ride_date: quote.departure_datetime,
       amount: quote.total_fare,
-      status: quote.status || 'pending',
+      status: (quote.status as Quote['status']) || 'pending',
       quote_pdf: null,
       created_at: quote.created_at,
       updated_at: quote.updated_at || quote.created_at,
