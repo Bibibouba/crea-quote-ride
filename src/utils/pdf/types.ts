@@ -1,5 +1,5 @@
-
 import { Quote } from '@/types/quote';
+import { jsPDF } from 'jspdf';
 
 export interface CompanyInfo {
   companyName: string;

@@ -1,5 +1,7 @@
 
 import { jsPDF } from 'jspdf';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { PdfContext } from './types';
 
 export const generateHeader = async (context: PdfContext) => {

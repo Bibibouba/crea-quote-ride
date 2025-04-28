@@ -1,7 +1,5 @@
 
 import jsPDF from 'jspdf';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { Quote } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { generateHeader } from './pdf/header';
@@ -19,7 +17,7 @@ export const generateQuotePDF = async (quote: Quote): Promise<Blob> => {
   // Get driver info
   const { data: driverProfile, error: driverError } = await supabase
     .from('profiles')
-    .select('first_name, last_name, email, company_name')
+    .select('*')
     .eq('id', quote.driver_id)
     .single();
   
