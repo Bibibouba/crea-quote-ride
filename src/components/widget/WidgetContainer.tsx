@@ -6,7 +6,6 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWidgetParams } from '@/hooks/useWidgetParams';
 
-// Interface pour les paramètres du widget
 interface WidgetSettings {
   primaryColor?: string;
   secondaryColor?: string;
@@ -16,7 +15,6 @@ interface WidgetSettings {
   companyName?: string;
 }
 
-// Fonction utilitaire pour envoyer des messages au parent (iframe)
 const postToParent = (event: string, data: any) => {
   if (window.parent !== window) {
     window.parent.postMessage({ event, data }, '*');
@@ -39,9 +37,9 @@ export const WidgetContainer = () => {
           return;
         }
 
-        // 🛠 Correction ici : colonnes en français
+        // 🛠 Correction ici : bonne table et bonnes colonnes
         const { data, error } = await supabase
-          .from('company_settings')
+          .from("paramètres_de_l'entreprise")
           .select(`
             couleur_primaire,
             couleur_secondaire,
@@ -68,7 +66,6 @@ export const WidgetContainer = () => {
           });
         }
 
-        // 🚨 Validation chauffeur désactivée temporairement
         console.log('Validation chauffeur désactivée pour les tests du widget.');
 
       } catch (err: any) {
@@ -84,7 +81,6 @@ export const WidgetContainer = () => {
     fetchDriverSettings();
   }, [driverId]);
 
-  // Appliquer les styles personnalisés
   useEffect(() => {
     if (settings) {
       const root = document.documentElement;
