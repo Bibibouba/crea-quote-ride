@@ -38,8 +38,15 @@ const SimulatorContainer: React.FC<SimulatorContainerProps> = ({
     handlePreviousStep,
     handleSubmit,
     resetForm,
-    navigateToDashboard
+    navigateDashboard
   } = useSimulator({ isWidget, prefill });
+
+  // Handler pour gérer la soumission sans s'occuper du retour
+  const handleFormSubmit = () => {
+    handleSubmit().catch(error => {
+      console.error("Erreur lors de la soumission du devis:", error);
+    });
+  };
 
   return (
     <div className="container max-w-5xl mx-auto py-4 sm:py-8 px-2 sm:px-4">
@@ -58,7 +65,7 @@ const SimulatorContainer: React.FC<SimulatorContainerProps> = ({
       ) : isQuoteSent ? (
         <SuccessState 
           onReset={resetForm}
-          onNavigateDashboard={navigateToDashboard}
+          onNavigateDashboard={navigateDashboard}
           isWidget={isWidget}
         />
       ) : (
@@ -68,7 +75,7 @@ const SimulatorContainer: React.FC<SimulatorContainerProps> = ({
             setActiveTab={setActiveTab}
             formState={formState}
             isSubmitting={isSubmitting}
-            handleSubmit={handleSubmit}
+            handleSubmit={handleFormSubmit}
             handleNextStep={handleNextStep}
             handlePreviousStep={handlePreviousStep}
             isWidget={isWidget}

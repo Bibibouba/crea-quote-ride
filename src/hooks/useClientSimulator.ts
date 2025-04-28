@@ -114,7 +114,7 @@ export const useClientSimulator = () => {
         status: 'pending',
         quote_pdf: null,
         created_at: quoteData2.created_at,
-        updated_at: quoteData2.updated_at || quoteData2.created_at,
+        updated_at: quoteData2.created_at, // Utiliser created_at si updated_at n'existe pas
         total_ttc: quoteData2.total_fare
       };
       

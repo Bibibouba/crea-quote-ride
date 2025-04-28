@@ -90,7 +90,7 @@ export const useSimulator = ({ isWidget = false, prefill }: SimulatorProps = {})
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<Quote | null> => {
     if (!formState.quoteDetails) {
       if (isWidget) {
         postToParent('QUOTE_ERROR', { 
@@ -183,6 +183,6 @@ export const useSimulator = ({ isWidget = false, prefill }: SimulatorProps = {})
     handlePreviousStep,
     handleSubmit,
     resetForm,
-    navigateToDashboard
+    navigateDashboard
   };
 };
