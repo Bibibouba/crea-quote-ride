@@ -62,3 +62,4 @@ export type Quote = {
   return_distance_km?: number;
   return_duration_minutes?: number;
 };
+
