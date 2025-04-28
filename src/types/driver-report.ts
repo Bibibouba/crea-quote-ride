@@ -15,6 +15,8 @@ export type RawQuote = {
   total_fare: number;
   sunday_surcharge?: number;
   created_at: string;
+  amount_ht?: number;
+  total_ttc?: number;
   // Champs absents de la table quotes mais utilisés dans le code
   vehicle_id?: string;
   distance_km?: number;
@@ -38,4 +40,6 @@ export interface DriverReport {
   distanceKm: number;
   status: string;
   createdAt: string;
+  amount_ht?: number;
+  total_ttc?: number;
 }
