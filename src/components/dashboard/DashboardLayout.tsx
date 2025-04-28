@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -38,22 +37,16 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       try {
         setIsLoading(true);
         
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('company_name')
-          .eq('id', user.id)
-          .single();
-          
-        if (profileData?.company_name) {
-          setCompanyName(profileData.company_name);
-        }
-        
         const { data } = await supabase
           .from('company_settings')
-          .select('logo_url')
+          .select('company_name, logo_url')
           .eq('driver_id', user.id)
           .single();
           
+        if (data?.company_name) {
+          setCompanyName(data.company_name);
+        }
+        
         if (data?.logo_url) {
           setCompanyLogo(data.logo_url);
         }
@@ -65,7 +58,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     };
     
     fetchCompanySettings();
-  }, [user]); // Ne dépend que de l'utilisateur, pas de la location
+  }, [user]);
   
   const navItems = [
     { href: '/dashboard', label: 'Tableau de bord', icon: Home },

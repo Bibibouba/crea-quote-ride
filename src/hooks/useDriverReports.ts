@@ -15,7 +15,7 @@ export const useDriverReports = () => {
   const { user } = useAuth();
 
   // Fetch user profile data
-  const { data: profileData } = useQuery<Profile[]>({
+  const { data: profileData } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -30,7 +30,7 @@ export const useDriverReports = () => {
   });
 
   // Fetch vehicle data
-  const { data: vehiclesData } = useQuery<Vehicle[]>({
+  const { data: vehiclesData } = useQuery({
     queryKey: ['vehicles'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -45,7 +45,7 @@ export const useDriverReports = () => {
   });
 
   // Fetch quotes data
-  const { data: quotesData, isLoading } = useQuery<Quote[]>({
+  const { data: quotesData, isLoading } = useQuery({
     queryKey: ['quotes'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -60,7 +60,7 @@ export const useDriverReports = () => {
   });
 
   // Get user profile
-  const profile = profileData && profileData.length > 0 ? profileData[0] : null;
+  const profile = profileData && profileData.length > 0 ? profileData[0] as unknown as Profile : null;
 
   // Calculate vehicle reports
   const vehicleReports: VehicleReport[] = vehiclesData ? vehiclesData.map(vehicle => {

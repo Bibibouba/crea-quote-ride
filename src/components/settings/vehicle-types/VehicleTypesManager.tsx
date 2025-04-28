@@ -45,7 +45,6 @@ const VehicleTypesManager = () => {
       console.log('Tarif par défaut créé pour le nouveau type de véhicule');
     } catch (error: any) {
       console.error('Erreur lors de la création du tarif par défaut:', error);
-      // Ne pas afficher de toast ici pour ne pas perturber l'UX
     }
   };
 
@@ -82,6 +81,7 @@ const VehicleTypesManager = () => {
             icon: values.icon || null,
             is_default: vehicleTypes.length === 0, // Le premier type ajouté devient le type par défaut
             driver_id: user.id,
+            default_rate_per_km: 1.75, // Valeur par défaut pour le tarif au km
           })
           .select();
 

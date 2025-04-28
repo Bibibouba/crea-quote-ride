@@ -2,10 +2,12 @@ export interface Profile {
   id: string;
   first_name: string;
   last_name: string;
-  company_name: string;
   email: string;
+  phone: string | null;
+  role: "admin" | "driver" | "client";
+  is_approved: boolean;
   created_at: string;
-  updated_at: string;
+  updated_at: string | null;
 }
 
 export interface Vehicle {
