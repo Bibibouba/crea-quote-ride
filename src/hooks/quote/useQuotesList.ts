@@ -23,7 +23,23 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
   // Récupérer tous les devis
   const fetchQuotes = async () => {
     let query = supabase.from('quotes').select(`
-      *,
+      id, 
+      driver_id,
+      departure_datetime,
+      base_fare,
+      total_fare,
+      holiday_surcharge,
+      night_surcharge,
+      include_return,
+      outbound_duration_minutes,
+      total_distance,
+      waiting_fare,
+      waiting_time_minutes,
+      sunday_surcharge,
+      vehicle_type_id,
+      created_at,
+      updated_at,
+      status,
       clients (
         id,
         first_name,
@@ -74,7 +90,12 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       created_at: quote.created_at,
       updated_at: quote.updated_at || quote.created_at,
       // Autres propriétés nécessaires
-      clients: quote.clients,
+      clients: quote.clients ? {
+        first_name: quote.clients.first_name || '',
+        last_name: quote.clients.last_name || '',
+        email: quote.clients.email || '',
+        phone: quote.clients.phone || ''
+      } : undefined,
       distance_km: quote.total_distance,
       duration_minutes: quote.outbound_duration_minutes,
       has_return_trip: quote.include_return || false,
@@ -85,10 +106,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       sunday_holiday_surcharge: quote.sunday_surcharge,
       amount_ht: quote.base_fare,
       total_ttc: quote.total_fare,
-      vehicles: quote.vehicles ? {
-        ...quote.vehicles,
-        basePrice: quote.vehicles.basePrice || 0
-      } : null
+      vehicles: null // On ne récupère pas les véhicules pour éviter la récursion
     }));
 
     return quotes;
