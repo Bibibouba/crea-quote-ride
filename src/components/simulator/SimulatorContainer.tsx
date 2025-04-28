@@ -6,6 +6,7 @@ import SimulatorTabs from './SimulatorTabs';
 import SimulatorAlert from './SimulatorAlert';
 import SuccessState from './SuccessState';
 import { useSimulator } from '@/hooks/useSimulator';
+import { Quote } from '@/types/quote';
 
 interface SimulatorContainerProps {
   isWidget?: boolean;
@@ -38,14 +39,16 @@ const SimulatorContainer: React.FC<SimulatorContainerProps> = ({
     handlePreviousStep,
     handleSubmit,
     resetForm,
-    navigateDashboard
+    navigateToDashboard
   } = useSimulator({ isWidget, prefill });
 
-  // Handler pour gérer la soumission sans s'occuper du retour
-  const handleFormSubmit = () => {
-    handleSubmit().catch(error => {
+  // Handler pour gérer la soumission de manière asynchrone
+  const handleFormSubmit = async (): Promise<void> => {
+    try {
+      await handleSubmit();
+    } catch (error) {
       console.error("Erreur lors de la soumission du devis:", error);
-    });
+    }
   };
 
   return (
@@ -65,7 +68,7 @@ const SimulatorContainer: React.FC<SimulatorContainerProps> = ({
       ) : isQuoteSent ? (
         <SuccessState 
           onReset={resetForm}
-          onNavigateDashboard={navigateDashboard}
+          onNavigateDashboard={navigateToDashboard}
           isWidget={isWidget}
         />
       ) : (
