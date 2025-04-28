@@ -39,16 +39,16 @@ export const WidgetContainer = () => {
           return;
         }
 
-        // Correction : bonne table et bonnes colonnes
+        // Correction importante : on utilise "company_settings" et les champs en anglais
         const { data, error } = await supabase
-          .from("paramètres_de_l'entreprise")
+          .from('company_settings')
           .select(`
-            couleur_primaire,
-            couleur_secondaire,
-            famille_de_polices,
+            primary_color,
+            secondary_color,
+            font_family,
             logo_url,
-            bannière_url,
-            "Nom de l'entreprise"
+            banner_url,
+            company_name
           `)
           .eq('driver_id', driverId)
           .single();
@@ -58,12 +58,12 @@ export const WidgetContainer = () => {
         }
 
         setSettings({
-          primaryColor: data.couleur_primaire || '#3B82F6',
-          secondaryColor: data.couleur_secondaire || '#10B981',
-          fontFamily: data.famille_de_polices || 'Inter',
+          primaryColor: data.primary_color || '#3B82F6',
+          secondaryColor: data.secondary_color || '#10B981',
+          fontFamily: data.font_family || 'Inter',
           logoUrl: data.logo_url || undefined,
-          bannerUrl: data.bannière_url || undefined,
-          companyName: data["Nom de l'entreprise"] || 'VTC Services',
+          bannerUrl: data.banner_url || undefined,
+          companyName: data.company_name || 'VTC Services',
         });
 
         console.log('Paramètres du chauffeur chargés avec succès.');
