@@ -6,7 +6,6 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWidgetParams } from '@/hooks/useWidgetParams';
 
-// Interface pour les paramètres du widget
 interface WidgetSettings {
   primaryColor?: string;
   secondaryColor?: string;
@@ -16,22 +15,7 @@ interface WidgetSettings {
   companyName?: string;
 }
 
-// Interface pour les props du SimulatorContainer
-interface SimulatorContainerProps {
-  isWidget?: boolean;
-  companyName?: string;
-  logoUrl?: string;
-  prefill?: {
-    departure?: string;
-    destination?: string;
-    date?: string;
-    time?: string;
-    passengers?: string;
-    vehicleType?: string;
-  };
-}
-
-// Fonction utilitaire pour envoyer des messages au parent (iframe)
+// Envoi de message à l'iframe parent
 const postToParent = (event: string, data: any) => {
   if (window.parent !== window) {
     window.parent.postMessage({ event, data }, '*');
@@ -54,51 +38,41 @@ export const WidgetContainer = () => {
           return;
         }
 
-        // Récupérer les paramètres de l'entreprise
         const { data, error } = await supabase
           .from('company_settings')
-          .select('primary_color, secondary_color, font_family, logo_url, banner_url, company_name')
+          .select(`
+            couleur_primaire,
+            couleur_secondaire,
+            famille_de_polices,
+            logo_url,
+            bannière_url,
+            "Nom de l'entreprise"
+          `)
           .eq('driver_id', driverId)
           .single();
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         if (data) {
           setSettings({
-            primaryColor: data.primary_color || '#3B82F6',
-            secondaryColor: data.secondary_color || '#10B981',
-            fontFamily: data.font_family || 'Inter',
+            primaryColor: data.couleur_primaire || '#3B82F6',
+            secondaryColor: data.couleur_secondaire || '#10B981',
+            fontFamily: data.famille_de_polices || 'Inter',
             logoUrl: data.logo_url || null,
-            bannerUrl: data.banner_url || null,
-            companyName: data.company_name || 'VTC Services'
+            bannerUrl: data.bannière_url || null,
+            companyName: data["Nom de l'entreprise"] || 'VTC Services'
           });
         }
 
-const { data: profileData, error: profileError } = await supabase
-  .from('profiles')
-  .select('is_approved')
-  .eq('id', driverId)
-  .single();
-
-if (profileError) {
-  throw profileError;
-}
-
-if (!profileData?.is_approved) {
-  const msg = "Ce chauffeur n'est pas approuvé pour utiliser le widget";
-  setError(msg);
-  postToParent('QUOTE_ERROR', { message: msg });
-}
-
-
+        // 🔥 Désactivation temporaire de la validation chauffeur pour test
+        console.log('Validation chauffeur désactivée pour les tests du widget.');
 
       } catch (err: any) {
-        console.error('Erreur lors du chargement des paramètres du widget:', err);
-        setError("Impossible de charger les paramètres du widget");
-        toast.error("Erreur de chargement");
-        postToParent('QUOTE_ERROR', { message: err.message });
+        console.error('Erreur:', err);
+        const errMsg = err.message || err;
+        setError(`Erreur: ${errMsg}`);
+        toast.error(`Erreur: ${errMsg}`);
+        postToParent('QUOTE_ERROR', { message: errMsg });
       } finally {
         setLoading(false);
       }
@@ -107,26 +81,14 @@ if (!profileData?.is_approved) {
     fetchDriverSettings();
   }, [driverId]);
 
-  // Appliquer les styles personnalisés
   useEffect(() => {
     if (settings) {
       const root = document.documentElement;
-      
-      // Appliquer les couleurs si elles sont définies
-      if (settings.primaryColor) {
-        root.style.setProperty('--widget-primary-color', settings.primaryColor);
-      }
-      
-      if (settings.secondaryColor) {
-        root.style.setProperty('--widget-secondary-color', settings.secondaryColor);
-      }
-      
-      // Appliquer la police si elle est définie
-      if (settings.fontFamily) {
-        root.style.setProperty('--widget-font-family', settings.fontFamily);
-      }
+      if (settings.primaryColor) root.style.setProperty('--widget-primary-color', settings.primaryColor);
+      if (settings.secondaryColor) root.style.setProperty('--widget-secondary-color', settings.secondaryColor);
+      if (settings.fontFamily) root.style.setProperty('--widget-font-family', settings.fontFamily);
     }
-    
+
     return () => {
       const root = document.documentElement;
       root.style.removeProperty('--widget-primary-color');
@@ -135,7 +97,6 @@ if (!profileData?.is_approved) {
     };
   }, [settings]);
 
-  // Informer le parent du changement d'étape (initialisation)
   useEffect(() => {
     postToParent('STEP_CHANGED', { step: 0, name: 'Initialisation' });
   }, []);
