@@ -183,6 +183,6 @@ export const useSimulator = ({ isWidget = false, prefill }: SimulatorProps = {})
     handlePreviousStep,
     handleSubmit,
     resetForm,
-    navigateDashboard
+    navigateToDashboard
   };
 };
