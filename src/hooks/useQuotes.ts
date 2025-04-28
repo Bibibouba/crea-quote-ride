@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
 import { RawQuote } from '@/types/raw-quote';
 import { useToast } from '@/hooks/use-toast';
+import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
 
 export const useQuotes = (clientId?: string) => {
   const queryClient = useQueryClient();
@@ -63,9 +64,9 @@ export const useQuotes = (clientId?: string) => {
 
         if (error) throw error;
         
-        // Transformation explicite des données sans récursion
-        const rawData = data as RawQuote[];
-        const transformedData: Quote[] = (rawData || []).map((quote) => ({
+        // Cast explicite vers RawQuote[] pour éviter les problèmes de typage récursif
+        const rawData = (data || []) as unknown as RawQuote[];
+        const transformedData: Quote[] = rawData.map((quote) => ({
           id: quote.id,
           driver_id: quote.driver_id,
           client_id: clientId || '',
@@ -74,7 +75,7 @@ export const useQuotes = (clientId?: string) => {
           amount: quote.total_fare,
           departure_location: '',
           arrival_location: '',
-          status: quote.status || 'pending',
+          status: validateQuoteStatus(quote.status || 'pending'),
           quote_pdf: null,
           created_at: quote.created_at,
           updated_at: quote.updated_at || quote.created_at,

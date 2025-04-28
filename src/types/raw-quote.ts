@@ -2,6 +2,7 @@
 export type RawQuote = {
   id: string;
   driver_id: string;
+  client_id?: string;
   departure_datetime: string;
   base_fare: number;
   total_fare: number;
