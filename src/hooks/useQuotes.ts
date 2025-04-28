@@ -5,8 +5,6 @@ import { Quote } from '@/types/quote';
 import { RawQuote } from '@/types/raw-quote';
 import { useToast } from '@/hooks/use-toast';
 
-type QuoteStatus = 'pending' | 'accepted' | 'declined';
-
 export const useQuotes = (clientId?: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -65,7 +63,7 @@ export const useQuotes = (clientId?: string) => {
 
         if (error) throw error;
         
-        // Transformation explicite des données avec type casting
+        // Transformation explicite des données sans récursion
         const rawData = data as unknown as RawQuote[];
         const transformedData: Quote[] = (rawData || []).map((quote) => ({
           id: quote.id,
@@ -76,7 +74,7 @@ export const useQuotes = (clientId?: string) => {
           amount: quote.total_fare,
           departure_location: '',
           arrival_location: '',
-          status: (quote.status as QuoteStatus) || 'pending',
+          status: quote.status || 'pending',
           quote_pdf: null,
           created_at: quote.created_at,
           updated_at: quote.updated_at || quote.created_at,
@@ -103,7 +101,7 @@ export const useQuotes = (clientId?: string) => {
   });
 
   const updateQuoteStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: QuoteStatus }) => {
+    mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
       const { data, error } = await supabase
         .from('quotes')
         .update({ status })

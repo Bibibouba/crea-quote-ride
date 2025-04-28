@@ -8,7 +8,7 @@ export type Quote = {
   arrival_location: string;
   ride_date: string;
   amount: number;
-  status: 'pending' | 'accepted' | 'declined';
+  status: 'pending' | 'accepted' | 'declined' | 'rejected' | 'expired';
   quote_pdf: string | null;
   created_at: string;
   updated_at: string;
@@ -62,4 +62,3 @@ export type Quote = {
   return_distance_km?: number;
   return_duration_minutes?: number;
 };
-

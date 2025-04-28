@@ -23,7 +23,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
 
   // Récupérer tous les devis
   const fetchQuotes = async () => {
-    // Construction de la requête
+    // Construction de la requête avec des colonnes plates uniquement
     let query = supabase.from('quotes').select(`
       id, 
       driver_id,
@@ -72,10 +72,10 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    // Conversion explicite vers le type RawQuote
+    // Conversion explicite vers le type RawQuote sans jointures
     const rawQuotes = data as unknown as Array<RawQuote>;
     
-    // Transformation manuelle et typée vers Quote[]
+    // Transformation manuelle des données sans récursion
     const quotes: Quote[] = (rawQuotes || []).map(quote => ({
       id: quote.id,
       driver_id: quote.driver_id,
@@ -85,11 +85,11 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       arrival_location: '',
       ride_date: quote.departure_datetime,
       amount: quote.total_fare,
-      status: (quote.status as 'pending' | 'accepted' | 'rejected' | 'expired') || 'pending',
+      status: quote.status || 'pending',
       quote_pdf: null,
       created_at: quote.created_at,
       updated_at: quote.updated_at || quote.created_at,
-      // Autres propriétés
+      // Autres propriétés avec valeurs par défaut
       distance_km: quote.total_distance,
       duration_minutes: quote.outbound_duration_minutes,
       has_return_trip: quote.include_return || false,
@@ -100,20 +100,15 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       sunday_holiday_surcharge: quote.sunday_surcharge,
       amount_ht: quote.base_fare,
       total_ttc: quote.total_fare,
-      clients: quote.clients ? {
-        first_name: quote.clients.first_name || '',
-        last_name: quote.clients.last_name || '',
-        email: quote.clients.email || '',
-        phone: quote.clients.phone || ''
-      } : undefined,
-      vehicles: null // On ne récupère pas les véhicules pour éviter la récursion
+      clients: undefined, // On évite la récursion de type
+      vehicles: null // On évite la récursion de type
     }));
 
     return quotes;
   };
 
   // Mutation pour mettre à jour le statut d'un devis
-  const updateQuoteStatus = async ({ id, status }: { id: string; status: 'pending' | 'accepted' | 'rejected' | 'expired' }) => {
+  const updateQuoteStatus = async ({ id, status }: { id: string; status: Quote['status'] }) => {
     const { data, error } = await supabase
       .from('quotes')
       .update({ status })
