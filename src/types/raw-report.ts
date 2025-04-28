@@ -16,6 +16,7 @@ export type RawDriverReport = {
   vehicle_type_id?: string;
   created_at: string;
   updated_at?: string;
+  status?: 'pending' | 'accepted' | 'declined';
   
   // Relations
   clients?: {

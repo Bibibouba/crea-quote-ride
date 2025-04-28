@@ -16,6 +16,7 @@ export type RawQuote = {
   vehicle_type_id?: string;
   created_at: string;
   updated_at?: string;
+  status?: 'pending' | 'accepted' | 'declined';
   
   // Relations
   clients?: {
@@ -27,6 +28,6 @@ export type RawQuote = {
   vehicles?: {
     name: string;
     model: string;
+    basePrice?: number;
   };
 };
-

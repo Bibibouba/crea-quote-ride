@@ -30,35 +30,38 @@ export const useQuotes = (clientId?: string) => {
           throw new Error('User not authenticated');
         }
         
+        const selection = `
+          id,
+          driver_id,
+          departure_datetime,
+          base_fare,
+          total_fare,
+          holiday_surcharge,
+          night_surcharge,
+          include_return,
+          outbound_duration_minutes,
+          total_distance,
+          waiting_fare,
+          waiting_time_minutes,
+          sunday_surcharge,
+          vehicle_type_id,
+          created_at,
+          updated_at,
+          clients (
+            first_name,
+            last_name,
+            email,
+            phone
+          ),
+          vehicles (
+            name,
+            model
+          )
+        `;
+
         let query = supabase
           .from('quotes')
-          .select(`
-            id,
-            driver_id,
-            departure_datetime,
-            base_fare,
-            total_fare,
-            holiday_surcharge,
-            night_surcharge,
-            include_return,
-            outbound_duration_minutes,
-            total_distance,
-            waiting_fare,
-            waiting_time_minutes,
-            sunday_surcharge,
-            vehicle_type_id,
-            created_at,
-            clients (
-              first_name,
-              last_name,
-              email,
-              phone
-            ),
-            vehicles (
-              name,
-              model
-            )
-          `)
+          .select(selection)
           .eq('driver_id', userId)
           .order('created_at', { ascending: false });
 
@@ -70,7 +73,8 @@ export const useQuotes = (clientId?: string) => {
 
         if (error) throw error;
         
-        const transformedData: Quote[] = (data as RawQuote[] || []).map((quote) => ({
+        // Transformation explicite des données
+        const transformedData: Quote[] = (data || []).map((quote: any) => ({
           id: quote.id,
           driver_id: quote.driver_id,
           client_id: clientId || '',
@@ -150,4 +154,3 @@ export const useQuotes = (clientId?: string) => {
     refetch,
   };
 };
-

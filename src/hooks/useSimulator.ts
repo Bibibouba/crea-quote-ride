@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuoteForm } from '@/hooks/useQuoteForm';
 import { useClientSimulator } from '@/hooks/useClientSimulator';
 import { postToParent } from '@/utils/postMessage';
+import { Quote } from '@/types/quote';
 
 interface SimulatorProps {
   isWidget?: boolean;
@@ -149,15 +150,14 @@ export const useSimulator = ({ isWidget = false, prefill }: SimulatorProps = {})
         phone: formState.phone
       };
 
-      // Modification ici pour s'assurer que submitQuote renvoie bien une valeur
+      // Exécuter submitQuote et s'assurer qu'il retourne bien une Quote
       const result = await submitQuote(quoteData, clientData);
-
-      // Vérifiez le résultat avant de l'utiliser
-      if (result && isWidget) {
+      
+      if (result && isWidget && result.id) {
         postToParent('QUOTE_READY', {
           quoteId: result.id,
-          amount: result.amount,
-          totalTTC: result.total_ttc || result.amount
+          amount: result.amount || 0,
+          totalTTC: result.total_ttc || result.amount || 0
         });
       }
 
