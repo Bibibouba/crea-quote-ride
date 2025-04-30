@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -5,7 +6,7 @@ import { RawQuote } from '@/types/raw-quote';
 import { useToast } from '@/hooks/use-toast';
 import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
 
-export const useQuotes = () => {
+export const useQuotes = (clientId?: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -15,7 +16,7 @@ export const useQuotes = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['quotes'],
+    queryKey: ['quotes', { clientId }],
     queryFn: async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -26,7 +27,7 @@ export const useQuotes = () => {
           throw new Error('User not authenticated');
         }
 
-        const { data, error } = await supabase
+        let query = supabase
           .from('quotes')
           .select(`
             id,
@@ -45,8 +46,16 @@ export const useQuotes = () => {
             vehicle_type_id,
             created_at
           `)
-          .eq('driver_id', userId)
-          .order('created_at', { ascending: false });
+          .eq('driver_id', userId);
+
+        // Note: le filtrage par client_id ne pourra pas fonctionner tant que ce champ n'existe pas
+        /*
+        if (clientId) {
+          query = query.eq('client_id', clientId);
+        }
+        */
+          
+        const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) {
           console.error('Supabase query error:', error);
@@ -100,8 +109,11 @@ export const useQuotes = () => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
-      // ⚠️ 'status' n'existe pas en base — on ne mettra rien à jour
-      console.warn('Tentative de mise à jour d’un champ inexistant : statut');
+      console.log(`Tentative de mise à jour du statut du devis ${id} à ${status}`);
+      console.log('Attention: Le champ "status" n\'existe pas dans la table quotes, cette opération ne fera rien.');
+      
+      // Cette fonction ne peut pas fonctionner tant que la table n'est pas mise à jour
+      // Nous retournons un objet vide pour éviter une erreur
       return null;
     },
     onSuccess: () => {
