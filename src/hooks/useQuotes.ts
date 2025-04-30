@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -64,7 +65,8 @@ export const useQuotes = (clientId?: string) => {
 
         console.log('Quotes data received:', data);
 
-        const transformedData: Quote[] = (data || []).map((quote): Quote => ({
+        // Utiliser un type explicite pour éviter l'erreur TS2589
+        const transformedData: Quote[] = (data || []).map((quote: any): Quote => ({
           id: quote.id,
           driver_id: quote.driver_id,
           client_id: quote.client_id || '',

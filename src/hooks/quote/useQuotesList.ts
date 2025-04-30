@@ -73,8 +73,8 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    // Cast explicite vers Quote[] pour éviter l'erreur de type trop profond
-    const quotes: Quote[] = (data || []).map((quote: any) => ({
+    // Utilisation d'un cast explicite pour éviter l'erreur TS2589
+    const quotes: Quote[] = (data || []).map((quote: any): Quote => ({
       id: quote.id,
       driver_id: quote.driver_id,
       client_id: quote.client_id || '',
