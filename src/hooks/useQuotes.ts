@@ -1,7 +1,7 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
-import { RawQuote } from '@/types/raw-quote';
 import { useToast } from '@/hooks/use-toast';
 import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
 
@@ -65,43 +65,44 @@ export const useQuotes = (clientId?: string) => {
         }
 
         if (!data || data.length === 0) {
-          return [] as unknown as Quote[]; // TS2589 safe
+          return [];
         }
 
         const result: Quote[] = [];
 
-        for (const item of data) {
-          const quote = item as unknown as RawQuote;
-
+        // Utilisation d'une boucle for au lieu d'un map pour éviter les erreurs de typage
+        for (let i = 0; i < data.length; i++) {
+          const item = data[i] as any;
+          
           result.push({
-            id: quote.id,
-            driver_id: quote.driver_id,
-            client_id: quote.client_id || '',
-            vehicle_id: quote.vehicle_type_id || null,
-            ride_date: quote.departure_datetime,
-            amount: quote.total_fare,
+            id: item.id,
+            driver_id: item.driver_id,
+            client_id: item.client_id || '',
+            vehicle_id: item.vehicle_type_id || null,
+            ride_date: item.departure_datetime,
+            amount: item.total_fare,
             departure_location: '',
             arrival_location: '',
-            status: validateQuoteStatus(quote.status || 'pending'),
+            status: validateQuoteStatus(item.status || 'pending'),
             quote_pdf: null,
-            created_at: quote.created_at,
-            updated_at: quote.updated_at || quote.created_at,
-            distance_km: quote.total_distance,
-            duration_minutes: quote.outbound_duration_minutes,
-            has_return_trip: quote.include_return || false,
-            has_waiting_time: !!quote.waiting_time_minutes,
-            waiting_time_minutes: quote.waiting_time_minutes || 0,
-            waiting_time_price: quote.waiting_fare || 0,
-            night_surcharge: quote.night_surcharge || 0,
-            sunday_holiday_surcharge: quote.sunday_surcharge || 0,
-            amount_ht: quote.base_fare,
-            total_ttc: quote.total_fare,
+            created_at: item.created_at,
+            updated_at: item.updated_at || item.created_at,
+            distance_km: item.total_distance,
+            duration_minutes: item.outbound_duration_minutes,
+            has_return_trip: item.include_return || false,
+            has_waiting_time: !!item.waiting_time_minutes,
+            waiting_time_minutes: item.waiting_time_minutes || 0,
+            waiting_time_price: item.waiting_fare || 0,
+            night_surcharge: item.night_surcharge || 0,
+            sunday_holiday_surcharge: item.sunday_surcharge || 0,
+            amount_ht: item.base_fare,
+            total_ttc: item.total_fare,
             clients: undefined,
             vehicles: null
           });
         }
 
-        return result as unknown as Quote[];
+        return result;
       } catch (error) {
         console.error('Error in useQuotes query:', error);
         throw error;
