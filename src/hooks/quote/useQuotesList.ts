@@ -2,7 +2,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
-import { RawQuote } from '@/types/raw-quote';
 import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
 
 // Type pour les filtres de recherche de devis
@@ -29,7 +28,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       id, 
       driver_id,
       client_id,
-      departure_datetime,
+      ride_date,
       base_fare,
       total_fare,
       holiday_surcharge,
@@ -74,18 +73,15 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    // Cast explicite vers RawQuote[] pour éviter les problèmes de typage récursif
-    const rawQuotes = (data || []) as unknown as RawQuote[];
-    
-    // Transformation manuelle des données vers le type Quote
-    const quotes: Quote[] = rawQuotes.map(quote => ({
+    // Cast explicite vers Quote[] et transformation des données
+    const quotes: Quote[] = (data || []).map((quote: any) => ({
       id: quote.id,
       driver_id: quote.driver_id,
       client_id: quote.client_id || '',
       vehicle_id: quote.vehicle_type_id || null,
       departure_location: '',
       arrival_location: '',
-      ride_date: quote.departure_datetime,
+      ride_date: quote.ride_date,
       amount: quote.total_fare,
       status: validateQuoteStatus(quote.status),
       quote_pdf: null,
@@ -114,7 +110,8 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
     const { data, error } = await supabase
       .from('quotes')
       .update({ status })
-      .eq('id', id);
+      .eq('id', id)
+      .select();
 
     if (error) {
       throw new Error(error.message);

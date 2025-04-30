@@ -2,7 +2,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
-import { RawQuote } from '@/types/raw-quote';
 import { useToast } from '@/hooks/use-toast';
 import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
 
@@ -33,7 +32,8 @@ export const useQuotes = (clientId?: string) => {
         const selection = `
           id,
           driver_id,
-          departure_datetime,
+          client_id,
+          ride_date,
           base_fare,
           total_fare,
           holiday_surcharge,
@@ -64,14 +64,13 @@ export const useQuotes = (clientId?: string) => {
 
         if (error) throw error;
         
-        // Cast explicite vers RawQuote[] pour éviter les problèmes de typage récursif
-        const rawData = (data || []) as unknown as RawQuote[];
-        const transformedData: Quote[] = rawData.map((quote) => ({
+        // Cast les données vers Quote[]
+        const transformedData: Quote[] = (data || []).map((quote: any) => ({
           id: quote.id,
           driver_id: quote.driver_id,
-          client_id: clientId || '',
+          client_id: quote.client_id || '',
           vehicle_id: quote.vehicle_type_id || null,
-          ride_date: quote.departure_datetime,
+          ride_date: quote.ride_date,
           amount: quote.total_fare,
           departure_location: '',
           arrival_location: '',
