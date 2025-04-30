@@ -48,7 +48,7 @@ export const useQuotes = (clientId?: string) => {
         `;
 
         let query = supabase
-          .from('citations')
+          .from('quotes') // ✅ ici
           .select(selection)
           .eq('driver_id', userId)
           .order('cree_a', { ascending: false });
@@ -103,7 +103,7 @@ export const useQuotes = (clientId?: string) => {
       const updateData = { statut: status };
 
       const { data, error } = await supabase
-        .from('citations')
+        .from('quotes') // ✅ ici aussi
         .update(updateData)
         .eq('identifiant', id)
         .select('*');
