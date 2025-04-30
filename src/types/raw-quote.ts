@@ -19,4 +19,6 @@ export type RawQuote = {
   created_at: string;
   updated_at?: string;
   status?: 'pending' | 'accepted' | 'rejected' | 'expired';
+  departure_location?: string;
+  arrival_location?: string;
 }
