@@ -65,6 +65,7 @@ export const useQuotes = (clientId?: string) => {
 
         console.log('Quotes data received:', data);
 
+        // Utilisez quote: any pour éviter l'inférence excessive de type
         return (data || []).map((quote: any) => ({
           id: quote.id,
           driver_id: quote.driver_id,
@@ -100,6 +101,7 @@ export const useQuotes = (clientId?: string) => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
+      // Ne pas typer l'objet update pour éviter les conflits avec le schéma de la base de données
       const { data, error } = await supabase
         .from('quotes')
         .update({ status })

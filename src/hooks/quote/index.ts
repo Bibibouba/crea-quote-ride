@@ -9,6 +9,5 @@ export * from './useAddressForm';
 export * from './useClientData';
 export * from './useTripOptions';
 export * from './useFormState';
-export * from './useQuotesList'; // Ajouté pour utiliser useQuotesList
-
-// Créer src/hooks/quote/useQuotes.ts pour éviter l'erreur d'import
+export * from './useQuotesList';
+export * from './useQuotes';

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -72,7 +73,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    // Transformation des données brutes en type Quote
+    // Utilisez quote: any pour éviter l'inférence excessive de type
     return (data || []).map((quote: any) => ({
       id: quote.id,
       driver_id: quote.driver_id,
@@ -104,11 +105,10 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
 
   // Mutation pour mettre à jour le statut d'un devis
   const updateQuoteStatus = async ({ id, status }: { id: string; status: Quote['status'] }) => {
-    const updateData = { status: status };
-    
+    // Ne pas typer l'objet update pour éviter les conflits avec le schéma de la base de données
     const { data, error } = await supabase
       .from('quotes')
-      .update(updateData)
+      .update({ status })
       .eq('id', id)
       .select();
 
