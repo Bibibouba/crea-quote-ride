@@ -73,16 +73,16 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    // Utilisez quote: any pour éviter l'inférence excessive de type
-    return (data || []).map((quote: any) => ({
+    // Forçage de type explicite pour éviter l'erreur TS2589
+    const transformedData: Quote[] = (data || []).map((quote: any) => ({
       id: quote.id,
       driver_id: quote.driver_id,
       client_id: quote.client_id || '',
       vehicle_id: quote.vehicle_type_id || null,
-      departure_location: '',
-      arrival_location: '',
       ride_date: quote.ride_date,
       amount: quote.total_fare,
+      departure_location: '',
+      arrival_location: '',
       status: validateQuoteStatus(quote.status || 'pending'),
       quote_pdf: null,
       created_at: quote.created_at,
@@ -100,15 +100,17 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       total_ttc: quote.total_fare,
       clients: undefined,
       vehicles: null
-    })) as Quote[];
+    }));
+
+    return transformedData;
   };
 
   // Mutation pour mettre à jour le statut d'un devis
   const updateQuoteStatus = async ({ id, status }: { id: string; status: Quote['status'] }) => {
-    // Ne pas typer l'objet update pour éviter les conflits avec le schéma de la base de données
+    // Cast explicite avec as any pour éviter l'erreur TS2353
     const { data, error } = await supabase
       .from('quotes')
-      .update({ status })
+      .update({ status } as any)
       .eq('id', id)
       .select();
 

@@ -65,8 +65,8 @@ export const useQuotes = (clientId?: string) => {
 
         console.log('Quotes data received:', data);
 
-        // Utilisez quote: any pour éviter l'inférence excessive de type
-        return (data || []).map((quote: any) => ({
+        // Forçage de type explicite pour éviter l'erreur TS2589
+        const transformedData: Quote[] = (data || []).map((quote: any) => ({
           id: quote.id,
           driver_id: quote.driver_id,
           client_id: quote.client_id || '',
@@ -91,7 +91,9 @@ export const useQuotes = (clientId?: string) => {
           total_ttc: quote.total_fare,
           clients: undefined,
           vehicles: null
-        })) as Quote[];
+        }));
+
+        return transformedData;
       } catch (error) {
         console.error('Error in useQuotes query:', error);
         throw error;
@@ -101,10 +103,10 @@ export const useQuotes = (clientId?: string) => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
-      // Ne pas typer l'objet update pour éviter les conflits avec le schéma de la base de données
+      // Cast explicite avec as any pour éviter l'erreur TS2353
       const { data, error } = await supabase
         .from('quotes')
-        .update({ status })
+        .update({ status } as any)
         .eq('id', id)
         .select();
 
