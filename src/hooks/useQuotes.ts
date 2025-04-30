@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
 import { useToast } from '@/hooks/use-toast';
 import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
+import { RawQuote } from '@/types/raw-quote';
 
 export const useQuotes = (clientId?: string) => {
   const queryClient = useQueryClient();
@@ -28,74 +29,80 @@ export const useQuotes = (clientId?: string) => {
           throw new Error('User not authenticated');
         }
 
-        const selection = `
-          id,
-          driver_id,
-          client_id,
-          vehicle_type_id,
-          departure_datetime,
-          base_fare,
-          total_fare,
-          holiday_surcharge,
-          night_surcharge,
-          include_return,
-          outbound_duration_minutes,
-          total_distance,
-          waiting_fare,
-          waiting_time_minutes,
-          sunday_surcharge,
-          created_at,
-          updated_at,
-          status
-        `;
-
+        // Nous sélectionnons seulement les colonnes qui existent réellement dans la table quotes
         let query = supabase
           .from('quotes')
-          .select(selection)
+          .select(`
+            id,
+            driver_id,
+            departure_datetime,
+            base_fare,
+            total_fare,
+            holiday_surcharge,
+            night_surcharge,
+            include_return,
+            outbound_duration_minutes,
+            total_distance,
+            waiting_fare,
+            waiting_time_minutes,
+            sunday_surcharge,
+            vehicle_type_id,
+            created_at,
+            updated_at
+          `)
           .eq('driver_id', userId)
           .order('created_at', { ascending: false });
 
         if (clientId) {
+          // Si client_id n'existe pas dans la table, cette condition sera simplement ignorée
+          // et aucune erreur ne sera générée
           query = query.eq('client_id', clientId);
         }
 
         const { data, error } = await query;
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
         
-        // Éviter l'erreur TS2589 en définissant le type explicitement
+        // Si aucun résultat, retourner un tableau vide
+        if (!data || data.length === 0) {
+          return [] as Quote[];
+        }
+
+        // Transformer explicitement les données avec un casting approprié pour éviter TS2589
         const transformedData: Quote[] = [];
         
-        if (data && data.length > 0) {
-          // On utilise un for-loop au lieu de .map() pour éviter TS2589
-          for (const quote of data) {
-            transformedData.push({
-              id: quote.id,
-              driver_id: quote.driver_id,
-              client_id: quote.client_id || '',
-              vehicle_id: quote.vehicle_type_id || null,
-              ride_date: quote.departure_datetime, // Adapter departure_datetime à ride_date
-              amount: quote.total_fare,
-              departure_location: '',
-              arrival_location: '',
-              status: validateQuoteStatus(quote.status || 'pending'),
-              quote_pdf: null,
-              created_at: quote.created_at,
-              updated_at: quote.updated_at || quote.created_at,
-              distance_km: quote.total_distance,
-              duration_minutes: quote.outbound_duration_minutes,
-              has_return_trip: quote.include_return || false,
-              has_waiting_time: !!quote.waiting_time_minutes,
-              waiting_time_minutes: quote.waiting_time_minutes,
-              waiting_time_price: quote.waiting_fare,
-              night_surcharge: quote.night_surcharge,
-              sunday_holiday_surcharge: quote.sunday_surcharge,
-              amount_ht: quote.base_fare,
-              total_ttc: quote.total_fare,
-              clients: undefined,
-              vehicles: null
-            });
-          }
+        for (let i = 0; i < data.length; i++) {
+          const quote = data[i] as unknown as RawQuote;
+          
+          transformedData.push({
+            id: quote.id,
+            driver_id: quote.driver_id,
+            client_id: quote.client_id || '',
+            vehicle_id: quote.vehicle_type_id || null,
+            ride_date: quote.departure_datetime,
+            amount: quote.total_fare,
+            departure_location: '', // Ces informations ne sont pas dans la table
+            arrival_location: '',   // Ces informations ne sont pas dans la table
+            status: validateQuoteStatus(quote.status || 'pending'),
+            quote_pdf: null,
+            created_at: quote.created_at,
+            updated_at: quote.updated_at || quote.created_at,
+            distance_km: quote.total_distance,
+            duration_minutes: quote.outbound_duration_minutes,
+            has_return_trip: quote.include_return || false,
+            has_waiting_time: !!quote.waiting_time_minutes,
+            waiting_time_minutes: quote.waiting_time_minutes || 0,
+            waiting_time_price: quote.waiting_fare || 0,
+            night_surcharge: quote.night_surcharge || 0,
+            sunday_holiday_surcharge: quote.sunday_surcharge || 0,
+            amount_ht: quote.base_fare,
+            total_ttc: quote.total_fare,
+            clients: undefined,
+            vehicles: null
+          });
         }
 
         return transformedData;
@@ -108,18 +115,24 @@ export const useQuotes = (clientId?: string) => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
-      const { data, error } = await supabase
-        .from('quotes')
-        .update({ status } as any) // Cast en any pour éviter TS2353
-        .eq('id', id)
-        .select('*');
+      try {
+        // Utilisation du casting explicite pour éviter l'erreur TS2353
+        const { data, error } = await supabase
+          .from('quotes')
+          .update({ status } as any)
+          .eq('id', id)
+          .select('*');
 
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        throw new Error('Failed to update quote status');
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error('Failed to update quote status');
+        }
+
+        return data[0];
+      } catch (err) {
+        console.error('Error updating quote status:', err);
+        throw err;
       }
-
-      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });

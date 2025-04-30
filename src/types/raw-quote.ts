@@ -1,3 +1,4 @@
+
 export type RawQuote = {
   id: string;
   driver_id: string;
@@ -19,4 +20,3 @@ export type RawQuote = {
   updated_at?: string;
   status?: 'pending' | 'accepted' | 'rejected' | 'expired';
 }
-
