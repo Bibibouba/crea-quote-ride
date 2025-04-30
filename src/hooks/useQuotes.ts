@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -29,31 +28,30 @@ export const useQuotes = (clientId?: string) => {
         }
 
         const selection = `
-          id,
+          identifiant,
           driver_id,
-          client_id,
-          ride_date,
-          base_fare,
-          total_fare,
-          holiday_surcharge,
-          night_surcharge,
-          include_return,
-          outbound_duration_minutes,
-          total_distance,
-          waiting_fare,
-          waiting_time_minutes,
-          sunday_surcharge,
-          vehicle_type_id,
-          created_at,
-          updated_at,
-          status
+          identifiant_type_véhicule,
+          date_heure_de_départ,
+          tarif_de_base,
+          tarif_total,
+          supplément vacances,
+          supplément de nuit,
+          inclure_retour,
+          durée_sortie_minutes,
+          distance_totale,
+          tarif d'attente,
+          minutes_d'attente,
+          supplément du dimanche,
+          créé_à,
+          mis à jour à,
+          statut
         `;
 
         let query = supabase
-          .from('quotes')
+          .from('citations')
           .select(selection)
           .eq('driver_id', userId)
-          .order('created_at', { ascending: false });
+          .order('créé_à', { ascending: false });
 
         if (clientId) {
           query = query.eq('client_id', clientId);
@@ -65,30 +63,29 @@ export const useQuotes = (clientId?: string) => {
 
         console.log('Quotes data received:', data);
 
-        // Utiliser un type explicite pour éviter l'erreur TS2589
-        const transformedData: Quote[] = (data || []).map((quote: any): Quote => ({
-          id: quote.id,
+        const transformedData: Quote[] = (data || []).map((quote: any) => ({
+          id: quote.identifiant,
           driver_id: quote.driver_id,
-          client_id: quote.client_id || '',
-          vehicle_id: quote.vehicle_type_id || null,
-          ride_date: quote.ride_date,
-          amount: quote.total_fare,
+          client_id: clientId || '',
+          vehicle_id: quote.identifiant_type_véhicule || null,
+          ride_date: quote.date_heure_de_départ,
+          amount: quote.tarif_total,
           departure_location: '',
           arrival_location: '',
-          status: validateQuoteStatus(quote.status || 'pending'),
+          status: validateQuoteStatus(quote.statut || 'pending'),
           quote_pdf: null,
-          created_at: quote.created_at,
-          updated_at: quote.updated_at || quote.created_at,
-          distance_km: quote.total_distance,
-          duration_minutes: quote.outbound_duration_minutes,
-          has_return_trip: quote.include_return || false,
-          has_waiting_time: !!quote.waiting_time_minutes,
-          waiting_time_minutes: quote.waiting_time_minutes,
-          waiting_time_price: quote.waiting_fare,
-          night_surcharge: quote.night_surcharge,
-          sunday_holiday_surcharge: quote.sunday_surcharge,
-          amount_ht: quote.base_fare,
-          total_ttc: quote.total_fare,
+          created_at: quote.créé_à,
+          updated_at: quote['mis à jour à'] || quote.créé_à,
+          distance_km: quote.distance_totale,
+          duration_minutes: quote.durée_sortie_minutes,
+          has_return_trip: quote.inclure_retour || false,
+          has_waiting_time: !!quote.minutes_d'attente,
+          waiting_time_minutes: quote.minutes_d'attente,
+          waiting_time_price: quote["tarif d'attente"],
+          night_surcharge: quote["supplément de nuit"],
+          sunday_holiday_surcharge: quote["supplément du dimanche"],
+          amount_ht: quote["tarif_de_base"],
+          total_ttc: quote.tarif_total,
           clients: undefined,
           vehicles: null
         }));
@@ -106,9 +103,9 @@ export const useQuotes = (clientId?: string) => {
       const updateData: Partial<Quote> = { status };
 
       const { data, error } = await supabase
-        .from('quotes')
-        .update(updateData)
-        .eq('id', id)
+        .from('citations')
+        .update({ statut: status })
+        .eq('identifiant', id)
         .select('*');
 
       if (error) throw error;
