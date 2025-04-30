@@ -73,8 +73,8 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    // Utilisation d'un cast explicite pour éviter l'erreur TS2589
-    const quotes: Quote[] = (data || []).map((quote: any): Quote => ({
+    // Transformation des données brutes en type Quote
+    const quotes: Quote[] = (data || []).map((quote: any) => ({
       id: quote.id,
       driver_id: quote.driver_id,
       client_id: quote.client_id || '',
@@ -100,7 +100,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       total_ttc: quote.total_fare,
       clients: undefined,
       vehicles: null
-    }));
+    })) as Quote[];
 
     return quotes;
   };
@@ -108,7 +108,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
   // Mutation pour mettre à jour le statut d'un devis
   const updateQuoteStatus = async ({ id, status }: { id: string; status: Quote['status'] }) => {
     // Utiliser un typage explicite pour éviter l'erreur
-    const updateData = { status } as any;
+    const updateData = { status };
     
     const { data, error } = await supabase
       .from('quotes')

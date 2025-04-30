@@ -17,7 +17,7 @@ export const quoteService = {
     const quotePrepared = {
       driver_id: driverId,
       departure_datetime: quoteData.ride_date,
-      base_fare: quoteData.amount || 0,
+      base_fare: quoteData.amount_ht || 0,
       total_fare: quoteData.total_ttc || quoteData.amount || 0,
       total_distance: quoteData.distance_km || 0,
       outbound_duration_minutes: quoteData.duration_minutes || 0,
@@ -27,7 +27,9 @@ export const quoteService = {
       night_surcharge: quoteData.night_surcharge || 0,
       sunday_surcharge: quoteData.sunday_holiday_surcharge || 0,
       holiday_surcharge: 0,
-      vehicle_type_id: quoteData.vehicle_id
+      vehicle_type_id: quoteData.vehicle_id,
+      client_id: clientId,
+      status: quoteData.status
     };
       
     const { data, error } = await supabase
@@ -74,4 +76,3 @@ export const quoteService = {
     return quote;
   }
 };
-
