@@ -1,10 +1,9 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
+import { RawQuote } from '@/types/raw-quote';
 import { useToast } from '@/hooks/use-toast';
 import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
-import { RawQuote } from '@/types/raw-quote';
 
 export const useQuotes = (clientId?: string) => {
   const queryClient = useQueryClient();
@@ -29,7 +28,6 @@ export const useQuotes = (clientId?: string) => {
           throw new Error('User not authenticated');
         }
 
-        // Nous sélectionnons seulement les colonnes qui existent réellement dans la table quotes
         let query = supabase
           .from('quotes')
           .select(`
@@ -48,14 +46,14 @@ export const useQuotes = (clientId?: string) => {
             sunday_surcharge,
             vehicle_type_id,
             created_at,
-            updated_at
+            updated_at,
+            status,
+            client_id
           `)
           .eq('driver_id', userId)
           .order('created_at', { ascending: false });
 
         if (clientId) {
-          // Si client_id n'existe pas dans la table, cette condition sera simplement ignorée
-          // et aucune erreur ne sera générée
           query = query.eq('client_id', clientId);
         }
 
@@ -65,27 +63,25 @@ export const useQuotes = (clientId?: string) => {
           console.error('Supabase query error:', error);
           throw error;
         }
-        
-        // Si aucun résultat, retourner un tableau vide
+
         if (!data || data.length === 0) {
-          return [] as Quote[];
+          return [] as unknown as Quote[]; // TS2589 safe
         }
 
-        // Transformer explicitement les données avec un casting approprié pour éviter TS2589
-        const transformedData: Quote[] = [];
-        
-        for (let i = 0; i < data.length; i++) {
-          const quote = data[i] as unknown as RawQuote;
-          
-          transformedData.push({
+        const result: Quote[] = [];
+
+        for (const item of data) {
+          const quote = item as unknown as RawQuote;
+
+          result.push({
             id: quote.id,
             driver_id: quote.driver_id,
             client_id: quote.client_id || '',
             vehicle_id: quote.vehicle_type_id || null,
             ride_date: quote.departure_datetime,
             amount: quote.total_fare,
-            departure_location: '', // Ces informations ne sont pas dans la table
-            arrival_location: '',   // Ces informations ne sont pas dans la table
+            departure_location: '',
+            arrival_location: '',
             status: validateQuoteStatus(quote.status || 'pending'),
             quote_pdf: null,
             created_at: quote.created_at,
@@ -105,7 +101,7 @@ export const useQuotes = (clientId?: string) => {
           });
         }
 
-        return transformedData;
+        return result as unknown as Quote[];
       } catch (error) {
         console.error('Error in useQuotes query:', error);
         throw error;
@@ -115,24 +111,18 @@ export const useQuotes = (clientId?: string) => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
-      try {
-        // Utilisation du casting explicite pour éviter l'erreur TS2353
-        const { data, error } = await supabase
-          .from('quotes')
-          .update({ status } as any)
-          .eq('id', id)
-          .select('*');
+      const { data, error } = await supabase
+        .from('quotes')
+        .update({ status } as any)
+        .eq('id', id)
+        .select('*');
 
-        if (error) throw error;
-        if (!data || data.length === 0) {
-          throw new Error('Failed to update quote status');
-        }
-
-        return data[0];
-      } catch (err) {
-        console.error('Error updating quote status:', err);
-        throw err;
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error('Failed to update quote status');
       }
+
+      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
