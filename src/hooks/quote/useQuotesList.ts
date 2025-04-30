@@ -1,11 +1,9 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
 import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
 import { RawQuote } from '@/types/raw-quote';
 
-// Type pour les filtres de recherche de devis
 interface QuotesFilter {
   client_id?: string;
   status?: 'pending' | 'accepted' | 'rejected' | 'expired';
@@ -14,20 +12,15 @@ interface QuotesFilter {
   end_date?: string;
 }
 
-/**
- * Hook pour récupérer et gérer la liste des devis
- */
 export const useQuotesList = (initialFilters?: QuotesFilter) => {
   const queryClient = useQueryClient();
   const defaultFilters: QuotesFilter = {};
   const filters = { ...defaultFilters, ...initialFilters };
 
-  // Récupérer tous les devis
   const fetchQuotes = async () => {
     try {
-      // Construction de la requête avec des colonnes plates uniquement
       let query = supabase.from('quotes').select(`
-        id, 
+        id,
         driver_id,
         departure_datetime,
         base_fare,
@@ -42,54 +35,52 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
         sunday_surcharge,
         vehicle_type_id,
         created_at,
-        updated_at
+        updated_at,
+        status,
+        client_id
       `);
 
-      // Application des filtres
       if (filters.driver_id) {
         query = query.eq('driver_id', filters.driver_id);
       }
-      
+
       if (filters.status) {
         query = query.eq('status', filters.status);
       }
-      
+
       if (filters.start_date) {
         query = query.gte('created_at', filters.start_date);
       }
-      
+
       if (filters.end_date) {
         query = query.lte('created_at', filters.end_date);
       }
 
-      // Exécution de la requête
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Supabase query error:', error);
         throw error;
       }
-      
-      // Si aucun résultat, retourner un tableau vide
+
       if (!data || data.length === 0) {
-        return [] as Quote[];
+        return [] as unknown as Quote[];
       }
 
-      // Transformer explicitement les données pour éviter l'erreur TS2589
-      const transformedData: Quote[] = [];
-      
-      for (let i = 0; i < data.length; i++) {
-        const quote = data[i] as unknown as RawQuote;
-        
-        transformedData.push({
+      const result: Quote[] = [];
+
+      for (const item of data) {
+        const quote = item as unknown as RawQuote;
+
+        result.push({
           id: quote.id,
           driver_id: quote.driver_id,
           client_id: quote.client_id || '',
           vehicle_id: quote.vehicle_type_id || null,
           ride_date: quote.departure_datetime,
           amount: quote.total_fare,
-          departure_location: '',  // Information non disponible dans la table
-          arrival_location: '',    // Information non disponible dans la table
+          departure_location: '',
+          arrival_location: '',
           status: validateQuoteStatus(quote.status || 'pending'),
           quote_pdf: null,
           created_at: quote.created_at,
@@ -109,50 +100,36 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
         });
       }
 
-      return transformedData;
+      return result as unknown as Quote[];
     } catch (error) {
       console.error('Error fetching quotes:', error);
       throw error;
     }
   };
 
-  // Mutation pour mettre à jour le statut d'un devis
   const updateQuoteStatus = async ({ id, status }: { id: string; status: Quote['status'] }) => {
-    try {
-      // Utilisation du casting explicite pour éviter TS2353
-      const { data, error } = await supabase
-        .from('quotes')
-        .update({ status } as any)
-        .eq('id', id)
-        .select('*');
+    const { data, error } = await supabase
+      .from('quotes')
+      .update({ status } as any)
+      .eq('id', id)
+      .select('*');
 
-      if (error) throw error;
-      
-      return data || [];
-    } catch (error) {
-      console.error('Error updating quote status:', error);
-      throw error;
-    }
+    if (error) throw error;
+
+    return data || [];
   };
 
-  // Mutation pour supprimer un devis
   const deleteQuote = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('quotes')
-        .delete()
-        .eq('id', id);
+    const { error } = await supabase
+      .from('quotes')
+      .delete()
+      .eq('id', id);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      return { id };
-    } catch (error) {
-      console.error('Error deleting quote:', error);
-      throw error;
-    }
+    return { id };
   };
 
-  // Utilisation des hooks React Query
   const quotesQuery = useQuery({
     queryKey: ['quotes', filters],
     queryFn: fetchQuotes
