@@ -66,7 +66,7 @@ export const useQuotes = (clientId?: string) => {
         
         console.log('Quotes data received:', data);
         
-        // Cast les données vers Quote[]
+        // Cast les données vers Quote[] en utilisant un typage explicite
         const transformedData: Quote[] = (data || []).map((quote: any) => ({
           id: quote.id,
           driver_id: quote.driver_id,
@@ -104,11 +104,12 @@ export const useQuotes = (clientId?: string) => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
+      // Ici j'utilise un typage explicite pour éviter l'erreur
+      const updateData = { status } as any;
+      
       const { data, error } = await supabase
         .from('quotes')
-        .update({ 
-          status: status 
-        })
+        .update(updateData)
         .eq('id', id)
         .select('*');
 

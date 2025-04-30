@@ -73,7 +73,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    // Cast explicite vers Quote[] et transformation des données
+    // Cast explicite vers Quote[] pour éviter l'erreur de type trop profond
     const quotes: Quote[] = (data || []).map((quote: any) => ({
       id: quote.id,
       driver_id: quote.driver_id,
@@ -107,11 +107,12 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
 
   // Mutation pour mettre à jour le statut d'un devis
   const updateQuoteStatus = async ({ id, status }: { id: string; status: Quote['status'] }) => {
+    // Utiliser un typage explicite pour éviter l'erreur
+    const updateData = { status } as any;
+    
     const { data, error } = await supabase
       .from('quotes')
-      .update({ 
-        status: status 
-      })
+      .update(updateData)
       .eq('id', id)
       .select();
 
