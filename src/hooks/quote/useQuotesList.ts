@@ -83,7 +83,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       arrival_location: '',
       ride_date: quote.ride_date,
       amount: quote.total_fare,
-      status: validateQuoteStatus(quote.status),
+      status: validateQuoteStatus(quote.status || 'pending'),
       quote_pdf: null,
       created_at: quote.created_at,
       updated_at: quote.updated_at || quote.created_at,
@@ -109,7 +109,9 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
   const updateQuoteStatus = async ({ id, status }: { id: string; status: Quote['status'] }) => {
     const { data, error } = await supabase
       .from('quotes')
-      .update({ status })
+      .update({ 
+        status: status 
+      })
       .eq('id', id)
       .select();
 

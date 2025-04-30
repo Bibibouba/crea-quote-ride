@@ -64,6 +64,8 @@ export const useQuotes = (clientId?: string) => {
 
         if (error) throw error;
         
+        console.log('Quotes data received:', data);
+        
         // Cast les données vers Quote[]
         const transformedData: Quote[] = (data || []).map((quote: any) => ({
           id: quote.id,
@@ -74,7 +76,7 @@ export const useQuotes = (clientId?: string) => {
           amount: quote.total_fare,
           departure_location: '',
           arrival_location: '',
-          status: validateQuoteStatus(quote.status),
+          status: validateQuoteStatus(quote.status || 'pending'),
           quote_pdf: null,
           created_at: quote.created_at,
           updated_at: quote.updated_at || quote.created_at,
@@ -104,7 +106,9 @@ export const useQuotes = (clientId?: string) => {
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
       const { data, error } = await supabase
         .from('quotes')
-        .update({ status })
+        .update({ 
+          status: status 
+        })
         .eq('id', id)
         .select('*');
 
