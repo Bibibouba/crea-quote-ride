@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -74,7 +73,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
     }
 
     // Transformation des données brutes en type Quote
-    const quotes: Quote[] = (data || []).map((quote: any) => ({
+    return (data || []).map((quote: any) => ({
       id: quote.id,
       driver_id: quote.driver_id,
       client_id: quote.client_id || '',
@@ -100,9 +99,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       total_ttc: quote.total_fare,
       clients: undefined,
       vehicles: null
-    }));
-
-    return quotes;
+    })) as Quote[];
   };
 
   // Mutation pour mettre à jour le statut d'un devis

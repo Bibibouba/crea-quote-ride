@@ -65,7 +65,7 @@ export const useQuotes = (clientId?: string) => {
 
         console.log('Quotes data received:', data);
 
-        const transformedData: Quote[] = (data || []).map((quote: any) => ({
+        return (data || []).map((quote: any) => ({
           id: quote.id,
           driver_id: quote.driver_id,
           client_id: quote.client_id || '',
@@ -90,9 +90,7 @@ export const useQuotes = (clientId?: string) => {
           total_ttc: quote.total_fare,
           clients: undefined,
           vehicles: null
-        }));
-
-        return transformedData;
+        })) as Quote[];
       } catch (error) {
         console.error('Error in useQuotes query:', error);
         throw error;
@@ -106,14 +104,11 @@ export const useQuotes = (clientId?: string) => {
         .from('quotes')
         .update({ status })
         .eq('id', id)
-        .select('*');
+        .select();
 
       if (error) throw error;
-      if (!data || data.length === 0) {
-        throw new Error('Failed to update quote status');
-      }
-
-      return data[0];
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
