@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -22,13 +21,12 @@ export const useQuotes = (clientId?: string) => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user?.id;
-        
+
         if (!userId) {
           console.error('No user session found');
           throw new Error('User not authenticated');
         }
-        
-        // Définir les colonnes à sélectionner - sans jointures imbriquées
+
         const selection = `
           id,
           driver_id,
@@ -63,11 +61,10 @@ export const useQuotes = (clientId?: string) => {
         const { data, error } = await query;
 
         if (error) throw error;
-        
+
         console.log('Quotes data received:', data);
-        
-        // Cast les données vers Quote[] en utilisant un typage explicite
-        const transformedData: Quote[] = (data || []).map((quote: any) => ({
+
+        const transformedData: Quote[] = (data || []).map((quote): Quote => ({
           id: quote.id,
           driver_id: quote.driver_id,
           client_id: quote.client_id || '',
@@ -93,7 +90,7 @@ export const useQuotes = (clientId?: string) => {
           clients: undefined,
           vehicles: null
         }));
-        
+
         return transformedData;
       } catch (error) {
         console.error('Error in useQuotes query:', error);
@@ -104,9 +101,8 @@ export const useQuotes = (clientId?: string) => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
-      // Ici j'utilise un typage explicite pour éviter l'erreur
-      const updateData = { status } as any;
-      
+      const updateData: Partial<Quote> = { status };
+
       const { data, error } = await supabase
         .from('quotes')
         .update(updateData)
