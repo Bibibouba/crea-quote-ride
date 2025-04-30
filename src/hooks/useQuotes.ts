@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -32,7 +33,7 @@ export const useQuotes = (clientId?: string) => {
           driver_id,
           client_id,
           vehicle_type_id,
-          ride_date,
+          departure_datetime,
           base_fare,
           total_fare,
           holiday_surcharge,
@@ -61,37 +62,40 @@ export const useQuotes = (clientId?: string) => {
         const { data, error } = await query;
 
         if (error) throw error;
-
-        // Solution TS2589 : découplage de l'initialisation
-        let transformedData: Quote[] = [];
-
-        if (data) {
-          transformedData = data.map((quote: any) => ({
-            id: quote.id,
-            driver_id: quote.driver_id,
-            client_id: quote.client_id || '',
-            vehicle_id: quote.vehicle_type_id || null,
-            ride_date: quote.ride_date,
-            amount: quote.total_fare,
-            departure_location: '',
-            arrival_location: '',
-            status: validateQuoteStatus(quote.status || 'pending'),
-            quote_pdf: null,
-            created_at: quote.created_at,
-            updated_at: quote.updated_at || quote.created_at,
-            distance_km: quote.total_distance,
-            duration_minutes: quote.outbound_duration_minutes,
-            has_return_trip: quote.include_return || false,
-            has_waiting_time: !!quote.waiting_time_minutes,
-            waiting_time_minutes: quote.waiting_time_minutes,
-            waiting_time_price: quote.waiting_fare,
-            night_surcharge: quote.night_surcharge,
-            sunday_holiday_surcharge: quote.sunday_surcharge,
-            amount_ht: quote.base_fare,
-            total_ttc: quote.total_fare,
-            clients: undefined,
-            vehicles: null
-          }));
+        
+        // Éviter l'erreur TS2589 en définissant le type explicitement
+        const transformedData: Quote[] = [];
+        
+        if (data && data.length > 0) {
+          // On utilise un for-loop au lieu de .map() pour éviter TS2589
+          for (const quote of data) {
+            transformedData.push({
+              id: quote.id,
+              driver_id: quote.driver_id,
+              client_id: quote.client_id || '',
+              vehicle_id: quote.vehicle_type_id || null,
+              ride_date: quote.departure_datetime, // Adapter departure_datetime à ride_date
+              amount: quote.total_fare,
+              departure_location: '',
+              arrival_location: '',
+              status: validateQuoteStatus(quote.status || 'pending'),
+              quote_pdf: null,
+              created_at: quote.created_at,
+              updated_at: quote.updated_at || quote.created_at,
+              distance_km: quote.total_distance,
+              duration_minutes: quote.outbound_duration_minutes,
+              has_return_trip: quote.include_return || false,
+              has_waiting_time: !!quote.waiting_time_minutes,
+              waiting_time_minutes: quote.waiting_time_minutes,
+              waiting_time_price: quote.waiting_fare,
+              night_surcharge: quote.night_surcharge,
+              sunday_holiday_surcharge: quote.sunday_surcharge,
+              amount_ht: quote.base_fare,
+              total_ttc: quote.total_fare,
+              clients: undefined,
+              vehicles: null
+            });
+          }
         }
 
         return transformedData;
@@ -106,7 +110,7 @@ export const useQuotes = (clientId?: string) => {
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
       const { data, error } = await supabase
         .from('quotes')
-        .update({ status } as any) // cast pour éviter TS2353
+        .update({ status } as any) // Cast en any pour éviter TS2353
         .eq('id', id)
         .select('*');
 

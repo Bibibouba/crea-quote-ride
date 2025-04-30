@@ -28,7 +28,7 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       id, 
       driver_id,
       client_id,
-      ride_date,
+      departure_datetime,
       base_fare,
       total_fare,
       holiday_surcharge,
@@ -73,34 +73,40 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       throw new Error(error.message);
     }
 
-    // Forçage de type explicite pour éviter l'erreur TS2589
-    const transformedData: Quote[] = (data || []).map((quote: any) => ({
-      id: quote.id,
-      driver_id: quote.driver_id,
-      client_id: quote.client_id || '',
-      vehicle_id: quote.vehicle_type_id || null,
-      ride_date: quote.ride_date,
-      amount: quote.total_fare,
-      departure_location: '',
-      arrival_location: '',
-      status: validateQuoteStatus(quote.status || 'pending'),
-      quote_pdf: null,
-      created_at: quote.created_at,
-      updated_at: quote.updated_at || quote.created_at,
-      // Autres propriétés avec valeurs par défaut
-      distance_km: quote.total_distance,
-      duration_minutes: quote.outbound_duration_minutes,
-      has_return_trip: quote.include_return || false,
-      has_waiting_time: !!quote.waiting_time_minutes,
-      waiting_time_minutes: quote.waiting_time_minutes,
-      waiting_time_price: quote.waiting_fare,
-      night_surcharge: quote.night_surcharge,
-      sunday_holiday_surcharge: quote.sunday_surcharge,
-      amount_ht: quote.base_fare,
-      total_ttc: quote.total_fare,
-      clients: undefined,
-      vehicles: null
-    }));
+    // Utiliser un array explicite et une boucle for au lieu de .map()
+    const transformedData: Quote[] = [];
+    
+    if (data && data.length > 0) {
+      for (const quote of data) {
+        transformedData.push({
+          id: quote.id,
+          driver_id: quote.driver_id,
+          client_id: quote.client_id || '',
+          vehicle_id: quote.vehicle_type_id || null,
+          ride_date: quote.departure_datetime, // Utiliser departure_datetime comme ride_date
+          amount: quote.total_fare,
+          departure_location: '',
+          arrival_location: '',
+          status: validateQuoteStatus(quote.status || 'pending'),
+          quote_pdf: null,
+          created_at: quote.created_at,
+          updated_at: quote.updated_at || quote.created_at,
+          // Autres propriétés avec valeurs par défaut
+          distance_km: quote.total_distance,
+          duration_minutes: quote.outbound_duration_minutes,
+          has_return_trip: quote.include_return || false,
+          has_waiting_time: !!quote.waiting_time_minutes,
+          waiting_time_minutes: quote.waiting_time_minutes,
+          waiting_time_price: quote.waiting_fare,
+          night_surcharge: quote.night_surcharge,
+          sunday_holiday_surcharge: quote.sunday_surcharge,
+          amount_ht: quote.base_fare,
+          total_ttc: quote.total_fare,
+          clients: undefined,
+          vehicles: null
+        });
+      }
+    }
 
     return transformedData;
   };
