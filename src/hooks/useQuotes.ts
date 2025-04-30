@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -31,6 +30,7 @@ export const useQuotes = (clientId?: string) => {
         const selection = `
           id,
           driver_id,
+          client_id,
           vehicle_type_id,
           ride_date,
           base_fare,
@@ -64,10 +64,10 @@ export const useQuotes = (clientId?: string) => {
 
         console.log('Quotes data received:', data);
 
-        const transformedData = (data || []).map((quote: any): Quote => ({
+        const transformedData: Quote[] = (data || []).map((quote: any) => ({
           id: quote.id,
           driver_id: quote.driver_id,
-          client_id: clientId || '',
+          client_id: quote.client_id || '',
           vehicle_id: quote.vehicle_type_id || null,
           ride_date: quote.ride_date,
           amount: quote.total_fare,
@@ -101,11 +101,9 @@ export const useQuotes = (clientId?: string) => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
-      const updateData = { status };
-
       const { data, error } = await supabase
         .from('quotes')
-        .update(updateData)
+        .update({ status })
         .eq('id', id)
         .select('*');
 
