@@ -1,4 +1,5 @@
 
+// Définition du type Quote pour l'application
 export type Quote = {
   id: string;
   driver_id: string;
@@ -12,6 +13,7 @@ export type Quote = {
   quote_pdf: string | null;
   created_at: string;
   updated_at: string;
+  // Propriétés additionnelles
   distance_km?: number;
   duration_minutes?: number;
   has_return_trip?: boolean;
@@ -33,32 +35,4 @@ export type Quote = {
     model: string;
     basePrice: number;
   } | null;
-  
-  // Propriétés additionnelles utilisées dans l'interface
-  departure_coordinates?: [number, number];
-  arrival_coordinates?: [number, number];
-  return_coordinates?: [number, number];
-  has_night_rate?: boolean;
-  is_sunday_holiday?: boolean;
-  one_way_price_ht?: number;
-  one_way_price?: number;
-  return_price_ht?: number;
-  return_price?: number;
-  night_hours?: number;
-  day_hours?: number;
-  night_rate_percentage?: number;
-  day_km?: number;
-  night_km?: number;
-  total_km?: number;
-  day_price?: number;
-  night_price?: number;
-  sunday_holiday_percentage?: number;
-  wait_time_day?: number;
-  wait_time_night?: number;
-  wait_price_day?: number;
-  wait_price_night?: number;
-  return_to_same_address?: boolean;
-  custom_return_address?: string;
-  return_distance_km?: number;
-  return_duration_minutes?: number;
 };
