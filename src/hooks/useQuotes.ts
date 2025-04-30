@@ -32,6 +32,7 @@ export const useQuotes = (clientId?: string) => {
           .select(`
             id,
             driver_id,
+            client_id,
             departure_datetime,
             base_fare,
             total_fare,
@@ -44,16 +45,18 @@ export const useQuotes = (clientId?: string) => {
             waiting_time_minutes,
             sunday_surcharge,
             vehicle_type_id,
-            created_at
+            created_at,
+            updated_at,
+            status,
+            departure_location,
+            arrival_location,
+            quote_pdf
           `)
           .eq('driver_id', userId);
-
-        // Note: le filtrage par client_id ne pourra pas fonctionner tant que ce champ n'existe pas
-        /*
+          
         if (clientId) {
           query = query.eq('client_id', clientId);
         }
-        */
           
         const { data, error } = await query.order('created_at', { ascending: false });
 
@@ -74,16 +77,16 @@ export const useQuotes = (clientId?: string) => {
           result.push({
             id: quote.id,
             driver_id: quote.driver_id,
-            client_id: '', // Champ manquant dans la base
+            client_id: quote.client_id || '',
             vehicle_id: quote.vehicle_type_id || null,
             ride_date: quote.departure_datetime,
             amount: quote.total_fare,
-            departure_location: '',
-            arrival_location: '',
-            status: 'pending', // Champ non présent, valeur par défaut
-            quote_pdf: null,
+            departure_location: quote.departure_location || '',
+            arrival_location: quote.arrival_location || '',
+            status: validateQuoteStatus(quote.status || 'pending'),
+            quote_pdf: quote.quote_pdf,
             created_at: quote.created_at,
-            updated_at: quote.created_at,
+            updated_at: quote.updated_at || quote.created_at,
             distance_km: quote.total_distance,
             duration_minutes: quote.outbound_duration_minutes,
             has_return_trip: quote.include_return || false,
@@ -109,12 +112,14 @@ export const useQuotes = (clientId?: string) => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
-      console.log(`Tentative de mise à jour du statut du devis ${id} à ${status}`);
-      console.log('Attention: Le champ "status" n\'existe pas dans la table quotes, cette opération ne fera rien.');
+      const { data, error } = await supabase
+        .from('quotes')
+        .update({ status })
+        .eq('id', id)
+        .select();
       
-      // Cette fonction ne peut pas fonctionner tant que la table n'est pas mise à jour
-      // Nous retournons un objet vide pour éviter une erreur
-      return null;
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
