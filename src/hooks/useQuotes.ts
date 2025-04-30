@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -63,35 +62,37 @@ export const useQuotes = (clientId?: string) => {
 
         if (error) throw error;
 
-        console.log('Quotes data received:', data);
+        // Solution TS2589 : découplage de l'initialisation
+        let transformedData: Quote[] = [];
 
-        // Forçage de type explicite pour éviter l'erreur TS2589
-        const transformedData: Quote[] = (data || []).map((quote: any) => ({
-          id: quote.id,
-          driver_id: quote.driver_id,
-          client_id: quote.client_id || '',
-          vehicle_id: quote.vehicle_type_id || null,
-          ride_date: quote.ride_date,
-          amount: quote.total_fare,
-          departure_location: '',
-          arrival_location: '',
-          status: validateQuoteStatus(quote.status || 'pending'),
-          quote_pdf: null,
-          created_at: quote.created_at,
-          updated_at: quote.updated_at || quote.created_at,
-          distance_km: quote.total_distance,
-          duration_minutes: quote.outbound_duration_minutes,
-          has_return_trip: quote.include_return || false,
-          has_waiting_time: !!quote.waiting_time_minutes,
-          waiting_time_minutes: quote.waiting_time_minutes,
-          waiting_time_price: quote.waiting_fare,
-          night_surcharge: quote.night_surcharge,
-          sunday_holiday_surcharge: quote.sunday_surcharge,
-          amount_ht: quote.base_fare,
-          total_ttc: quote.total_fare,
-          clients: undefined,
-          vehicles: null
-        }));
+        if (data) {
+          transformedData = data.map((quote: any) => ({
+            id: quote.id,
+            driver_id: quote.driver_id,
+            client_id: quote.client_id || '',
+            vehicle_id: quote.vehicle_type_id || null,
+            ride_date: quote.ride_date,
+            amount: quote.total_fare,
+            departure_location: '',
+            arrival_location: '',
+            status: validateQuoteStatus(quote.status || 'pending'),
+            quote_pdf: null,
+            created_at: quote.created_at,
+            updated_at: quote.updated_at || quote.created_at,
+            distance_km: quote.total_distance,
+            duration_minutes: quote.outbound_duration_minutes,
+            has_return_trip: quote.include_return || false,
+            has_waiting_time: !!quote.waiting_time_minutes,
+            waiting_time_minutes: quote.waiting_time_minutes,
+            waiting_time_price: quote.waiting_fare,
+            night_surcharge: quote.night_surcharge,
+            sunday_holiday_surcharge: quote.sunday_surcharge,
+            amount_ht: quote.base_fare,
+            total_ttc: quote.total_fare,
+            clients: undefined,
+            vehicles: null
+          }));
+        }
 
         return transformedData;
       } catch (error) {
@@ -103,16 +104,18 @@ export const useQuotes = (clientId?: string) => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
-      // Cast explicite avec as any pour éviter l'erreur TS2353
       const { data, error } = await supabase
         .from('quotes')
-        .update({ status } as any)
+        .update({ status } as any) // cast pour éviter TS2353
         .eq('id', id)
-        .select();
+        .select('*');
 
       if (error) throw error;
-      
-      return data;
+      if (!data || data.length === 0) {
+        throw new Error('Failed to update quote status');
+      }
+
+      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
