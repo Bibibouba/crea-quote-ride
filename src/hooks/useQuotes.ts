@@ -63,7 +63,7 @@ export const useQuotes = (clientId?: string) => {
 
         console.log('Quotes data received:', data);
 
-        const transformedData: Quote[] = (data || []).map((quote: any) => ({
+        const transformedData: Quote[] = (data || []).map((quote: any): Quote => ({
           id: quote.identifiant,
           driver_id: quote.driver_id,
           client_id: clientId || '',
@@ -79,8 +79,8 @@ export const useQuotes = (clientId?: string) => {
           distance_km: quote.distance_totale,
           duration_minutes: quote.durée_sortie_minutes,
           has_return_trip: quote.inclure_retour || false,
-          has_waiting_time: !!quote.minutes_d'attente,
-          waiting_time_minutes: quote.minutes_d'attente,
+          has_waiting_time: !!quote["minutes_d'attente"],
+          waiting_time_minutes: quote["minutes_d'attente"],
           waiting_time_price: quote["tarif d'attente"],
           night_surcharge: quote["supplément de nuit"],
           sunday_holiday_surcharge: quote["supplément du dimanche"],
@@ -100,11 +100,11 @@ export const useQuotes = (clientId?: string) => {
 
   const updateQuoteStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Quote['status'] }) => {
-      const updateData: Partial<Quote> = { status };
+      const updateData = { statut: status };
 
       const { data, error } = await supabase
         .from('citations')
-        .update({ statut: status })
+        .update(updateData)
         .eq('identifiant', id)
         .select('*');
 
