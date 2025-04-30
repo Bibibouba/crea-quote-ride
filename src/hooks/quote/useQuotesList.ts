@@ -100,15 +100,14 @@ export const useQuotesList = (initialFilters?: QuotesFilter) => {
       total_ttc: quote.total_fare,
       clients: undefined,
       vehicles: null
-    })) as Quote[];
+    }));
 
     return quotes;
   };
 
   // Mutation pour mettre à jour le statut d'un devis
   const updateQuoteStatus = async ({ id, status }: { id: string; status: Quote['status'] }) => {
-    // Utiliser un typage explicite pour éviter l'erreur
-    const updateData = { status };
+    const updateData = { status: status };
     
     const { data, error } = await supabase
       .from('quotes')
