@@ -1,4 +1,3 @@
-
 export * from './useQuoteForm';
 export * from './useQuoteDetails';
 export * from './useRouteCalculation';
@@ -9,5 +8,4 @@ export * from './useAddressForm';
 export * from './useClientData';
 export * from './useTripOptions';
 export * from './useFormState';
-export * from './useQuotesList';
-export * from './quote';
+export * from './useQuotes'; // Ajouté pour utiliser useQuotes
