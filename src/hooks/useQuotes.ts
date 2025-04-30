@@ -30,20 +30,20 @@ export const useQuotes = (clientId?: string) => {
         const selection = `
           identifiant,
           driver_id,
-          identifiant_type_véhicule,
-          date_heure_de_départ,
+          identifiant_type_vehicule,
+          date_heure_de_depart,
           tarif_de_base,
           tarif_total,
-          supplément vacances,
-          supplément de nuit,
+          supplement_vacances,
+          supplement_de_nuit,
           inclure_retour,
-          durée_sortie_minutes,
+          duree_sortie_minutes,
           distance_totale,
-          tarif d'attente,
-          minutes_d'attente,
-          supplément du dimanche,
-          créé_à,
-          mis à jour à,
+          tarif_attente,
+          minutes_attente,
+          supplement_du_dimanche,
+          cree_a,
+          mis_a_jour_a,
           statut
         `;
 
@@ -51,7 +51,7 @@ export const useQuotes = (clientId?: string) => {
           .from('citations')
           .select(selection)
           .eq('driver_id', userId)
-          .order('créé_à', { ascending: false });
+          .order('cree_a', { ascending: false });
 
         if (clientId) {
           query = query.eq('client_id', clientId);
@@ -67,24 +67,24 @@ export const useQuotes = (clientId?: string) => {
           id: quote.identifiant,
           driver_id: quote.driver_id,
           client_id: clientId || '',
-          vehicle_id: quote.identifiant_type_véhicule || null,
-          ride_date: quote.date_heure_de_départ,
+          vehicle_id: quote.identifiant_type_vehicule || null,
+          ride_date: quote.date_heure_de_depart,
           amount: quote.tarif_total,
           departure_location: '',
           arrival_location: '',
           status: validateQuoteStatus(quote.statut || 'pending'),
           quote_pdf: null,
-          created_at: quote.créé_à,
-          updated_at: quote['mis à jour à'] || quote.créé_à,
+          created_at: quote.cree_a,
+          updated_at: quote.mis_a_jour_a || quote.cree_a,
           distance_km: quote.distance_totale,
-          duration_minutes: quote.durée_sortie_minutes,
+          duration_minutes: quote.duree_sortie_minutes,
           has_return_trip: quote.inclure_retour || false,
-          has_waiting_time: !!quote["minutes_d'attente"],
-          waiting_time_minutes: quote["minutes_d'attente"],
-          waiting_time_price: quote["tarif d'attente"],
-          night_surcharge: quote["supplément de nuit"],
-          sunday_holiday_surcharge: quote["supplément du dimanche"],
-          amount_ht: quote["tarif_de_base"],
+          has_waiting_time: !!quote.minutes_attente,
+          waiting_time_minutes: quote.minutes_attente,
+          waiting_time_price: quote.tarif_attente,
+          night_surcharge: quote.supplement_de_nuit,
+          sunday_holiday_surcharge: quote.supplement_du_dimanche,
+          amount_ht: quote.tarif_de_base,
           total_ttc: quote.tarif_total,
           clients: undefined,
           vehicles: null
