@@ -13,10 +13,11 @@ import {
   Eye,
   FileText,
   Users,
-  FileBarChart
+  BarChart
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -27,33 +28,32 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState<string | null>("VTCZen");
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     const fetchCompanySettings = async () => {
       if (!user) return;
       
       try {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('company_name')
-          .eq('id', user.id)
-          .single();
-          
-        if (profileData?.company_name) {
-          setCompanyName(profileData.company_name);
-        }
+        setIsLoading(true);
         
         const { data } = await supabase
           .from('company_settings')
-          .select('logo_url')
+          .select('company_name, logo_url')
           .eq('driver_id', user.id)
           .single();
           
+        if (data?.company_name) {
+          setCompanyName(data.company_name);
+        }
+        
         if (data?.logo_url) {
           setCompanyLogo(data.logo_url);
         }
       } catch (error) {
         console.error('Erreur lors du chargement des paramètres de l\'entreprise:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -63,10 +63,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navItems = [
     { href: '/dashboard', label: 'Tableau de bord', icon: Home },
     { href: '/dashboard/vehicles', label: 'Véhicules', icon: Car },
-    { href: '/dashboard/reports', label: 'Rapports', icon: FileBarChart },
     { href: '/dashboard/pricing', label: 'Tarifs', icon: CreditCard },
     { href: '/dashboard/quotes', label: 'Historique devis', icon: FileText },
     { href: '/dashboard/clients', label: 'Mes clients', icon: Users },
+    { href: '/dashboard/reports', label: 'Rapports', icon: BarChart },
     { href: '/dashboard/settings', label: 'Paramètres', icon: SettingsIcon },
   ];
   
@@ -88,15 +88,23 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       })}
     </>
   );
+
+  const LogoDisplay = () => (
+    <>
+      {isLoading ? (
+        <Skeleton className="h-8 w-8 rounded" />
+      ) : companyLogo ? (
+        <img src={companyLogo} alt="Logo" className="h-8 w-auto object-contain" />
+      ) : null}
+    </>
+  );
   
   return (
     <div className="flex min-h-screen flex-col">
       {/* Mobile menu */}
       <div className="flex items-center justify-between border-b px-4 py-2 lg:hidden">
         <Link to="/" className="flex items-center gap-2">
-          {companyLogo ? (
-            <img src={companyLogo} alt="Logo" className="h-8 w-auto" />
-          ) : null}
+          <LogoDisplay />
           <span className="text-xl font-bold">{companyName}</span>
         </Link>
         <Sheet>
@@ -109,9 +117,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <SheetContent side="left" className="flex flex-col">
             <div className="flex items-center justify-between border-b pb-2">
               <div className="flex items-center gap-2">
-                {companyLogo ? (
-                  <img src={companyLogo} alt="Logo" className="h-6 w-auto" />
-                ) : null}
+                <LogoDisplay />
                 <h2 className="text-lg font-semibold">{companyName}</h2>
               </div>
               <SheetTrigger asChild>
@@ -146,9 +152,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Desktop sidebar */}
         <div className="hidden w-64 flex-col border-r bg-muted/40 lg:flex">
           <div className="p-6 flex items-center gap-2">
-            {companyLogo ? (
-              <img src={companyLogo} alt="Logo" className="h-8 w-auto" />
-            ) : null}
+            <LogoDisplay />
             <Link to="/" className="text-xl font-bold">{companyName}</Link>
           </div>
           <div className="flex flex-1 flex-col gap-2 p-4">

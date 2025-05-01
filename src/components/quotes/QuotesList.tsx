@@ -1,31 +1,15 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useQuotes } from '@/hooks/useQuotes';
-import QuoteStatusBadge from './QuoteStatusBadge';
-import QuoteStatusSelector from './QuoteStatusSelector';
 import { Button } from '@/components/ui/button';
-import { Eye, FileText, RefreshCw, Download } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Quote } from '@/types/quote';
+import { RefreshCw } from 'lucide-react';
 import QuoteViewDialog from './QuoteViewDialog';
 import { useToast } from '@/hooks/use-toast';
 import { generateQuotePDF } from '@/utils/quotePDF';
+import { Quote } from '@/types/quote';
+import QuotesSearchBar from './search/QuotesSearchBar';
+import QuotesFilter from './search/QuotesFilter';
+import QuotesTable from './table/QuotesTable';
 
 interface QuotesListProps {
   clientId?: string;
@@ -36,16 +20,10 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [refreshing, setRefreshing] = useState(false);
-  const [viewQuote, setViewQuote] = useState<Quote | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [viewQuote, setViewQuote] = useState<Quote | null>(null);
   const { toast } = useToast();
 
-  // Force initial data fetching
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  // Helper function to handle manual refresh
   const handleRefresh = () => {
     setRefreshing(true);
     refetch().finally(() => {
@@ -68,8 +46,6 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
   const handleDownloadPDF = async (quote: Quote) => {
     try {
       const pdfBlob = await generateQuotePDF(quote);
-      
-      // Create a download link
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -91,6 +67,10 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleStatusChange = (quoteId: string, status: Quote['status']) => {
+    updateQuoteStatus.mutate({ id: quoteId, status });
   };
 
   if (isLoading) {
@@ -121,23 +101,11 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
     );
   }
 
-  const handleStatusChange = (quoteId: string, status: Quote['status']) => {
-    updateQuoteStatus.mutate({ id: quoteId, status });
-  };
-
-  const handleOpenPdf = (pdfUrl: string | null) => {
-    if (pdfUrl) {
-      window.open(pdfUrl, '_blank');
-    }
-  };
-
   const filteredQuotes = quotes.filter(quote => {
-    // First apply status filter
     if (filter !== 'all' && quote.status !== filter) {
       return false;
     }
     
-    // Then apply search term if present
     if (searchTerm.trim() === '') {
       return true;
     }
@@ -153,11 +121,9 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <div className="flex-1">
-          <Input
-            placeholder="Rechercher par client ou trajet..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
+          <QuotesSearchBar
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
           />
         </div>
         <div className="flex items-center gap-2">
@@ -169,97 +135,20 @@ const QuotesList: React.FC<QuotesListProps> = ({ clientId }) => {
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Select
-            value={filter}
-            onValueChange={setFilter}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filtrer par statut" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les statuts</SelectItem>
-              <SelectItem value="pending">En attente</SelectItem>
-              <SelectItem value="accepted">Acceptés</SelectItem>
-              <SelectItem value="declined">Refusés</SelectItem>
-            </SelectContent>
-          </Select>
+          <QuotesFilter
+            filter={filter}
+            onFilterChange={setFilter}
+          />
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Client</TableHead>
-              <TableHead>Date du trajet</TableHead>
-              <TableHead>Trajet</TableHead>
-              <TableHead>Véhicule</TableHead>
-              <TableHead>Montant</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredQuotes.map((quote) => (
-              <TableRow key={quote.id}>
-                <TableCell className="font-medium">
-                  {quote.clients ? `${quote.clients.first_name} ${quote.clients.last_name}` : 'Client inconnu'}
-                </TableCell>
-                <TableCell>
-                  {format(new Date(quote.ride_date), 'dd/MM/yyyy HH:mm', { locale: fr })}
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">De:</span>
-                    <span className="truncate max-w-[150px]">{quote.departure_location}</span>
-                    <span className="text-xs text-muted-foreground mt-1">À:</span>
-                    <span className="truncate max-w-[150px]">{quote.arrival_location}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {quote.vehicles ? quote.vehicles.name : "N/A"}
-                </TableCell>
-                <TableCell>
-                  {quote.amount.toLocaleString('fr-FR', {
-                    style: 'currency',
-                    currency: 'EUR'
-                  })}
-                </TableCell>
-                <TableCell>
-                  <QuoteStatusBadge status={quote.status} />
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2 items-center">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleViewQuote(quote)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">Voir</span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDownloadPDF(quote)}
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">PDF</span>
-                    </Button>
-                    <div className="hidden sm:block">
-                      <QuoteStatusSelector
-                        status={quote.status}
-                        onChange={(status) => handleStatusChange(quote.id, status)}
-                        disabled={updateQuoteStatus.isPending}
-                      />
-                    </div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <QuotesTable
+        quotes={filteredQuotes}
+        onViewQuote={handleViewQuote}
+        onDownloadPDF={handleDownloadPDF}
+        onStatusChange={handleStatusChange}
+        isStatusUpdatePending={updateQuoteStatus.isPending}
+      />
 
       <QuoteViewDialog 
         isOpen={isViewDialogOpen}

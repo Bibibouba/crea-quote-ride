@@ -6,9 +6,14 @@ import { Button } from '@/components/ui/button';
 interface SuccessStateProps {
   onReset: () => void;
   onNavigateDashboard: () => void;
+  isWidget?: boolean;
 }
 
-const SuccessState: React.FC<SuccessStateProps> = ({ onReset, onNavigateDashboard }) => {
+const SuccessState: React.FC<SuccessStateProps> = ({ 
+  onReset, 
+  onNavigateDashboard,
+  isWidget = false 
+}) => {
   return (
     <Card className="border-green-200 bg-green-50">
       <CardHeader className="space-y-1 sm:space-y-2">
@@ -26,9 +31,11 @@ const SuccessState: React.FC<SuccessStateProps> = ({ onReset, onNavigateDashboar
         <Button onClick={onReset} variant="outline" className="w-full sm:w-auto">
           Créer un nouveau devis
         </Button>
-        <Button onClick={onNavigateDashboard} className="w-full sm:w-auto">
-          Retour à l'accueil
-        </Button>
+        {!isWidget && (
+          <Button onClick={onNavigateDashboard} className="w-full sm:w-auto">
+            Retour à l'accueil
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

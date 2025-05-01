@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useQuoteForm } from '@/hooks/useQuoteForm';
+import { Quote } from '@/types/quote';
 
 export const useClientSimulator = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +21,7 @@ export const useClientSimulator = () => {
     };
   }, []);
 
-  const submitQuote = async (quoteData: any, clientData: any) => {
+  const submitQuote = async (quoteData: any, clientData: any): Promise<Quote | null> => {
     setIsSubmitting(true);
     try {
       // Get current authenticated driver
@@ -72,68 +73,50 @@ export const useClientSimulator = () => {
         throw new Error("Impossible de créer ou retrouver le client");
       }
       
-      // Log quote details before submission
-      console.log('Submitting quote with day/night details:', {
-        day_km: quoteData.day_km,
-        night_km: quoteData.night_km,
-        day_price: quoteData.day_price,
-        night_price: quoteData.night_price,
-        wait_time_day: quoteData.wait_time_day,
-        wait_time_night: quoteData.wait_time_night,
-        wait_price_day: quoteData.wait_price_day,
-        wait_price_night: quoteData.wait_price_night,
-        total_ht: quoteData.total_ht,
-        vat: quoteData.vat,
-        total_ttc: quoteData.total_ttc || quoteData.amount
-      });
+      // Créer objet compatible avec la structure de la table quotes
+      const quotePayload = {
+        base_fare: quoteData.base_fare || 0,
+        departure_datetime: quoteData.ride_date || new Date().toISOString(),
+        driver_id: driverId,
+        outbound_duration_minutes: quoteData.duration_minutes || 0,
+        total_distance: quoteData.distance_km || 0,
+        total_fare: quoteData.amount || 0,
+        vehicle_type_id: quoteData.vehicle_id || null,
+        waiting_fare: quoteData.waiting_time_price || 0,
+        waiting_time_minutes: quoteData.waiting_time_minutes || 0,
+        include_return: quoteData.has_return_trip || false,
+        return_duration_minutes: quoteData.return_duration_minutes || 0,
+        night_surcharge: quoteData.night_surcharge || 0,
+        holiday_surcharge: quoteData.sunday_holiday_surcharge || 0,
+        sunday_surcharge: quoteData.sunday_holiday_surcharge || 0,
+        client_id: clientId
+      };
       
-      // Create the quote
-      const { error: quoteError } = await supabase
+      // Créer le devis et retourner la valeur insérée
+      const { data: quoteData2, error: quoteError } = await supabase
         .from('quotes')
-        .insert({
-          driver_id: driverId,
-          client_id: clientId,
-          vehicle_id: quoteData.vehicle_id,
-          departure_location: quoteData.departure_location,
-          arrival_location: quoteData.arrival_location,
-          departure_coordinates: quoteData.departure_coordinates,
-          arrival_coordinates: quoteData.arrival_coordinates,
-          distance_km: quoteData.distance_km,
-          duration_minutes: quoteData.duration_minutes,
-          ride_date: quoteData.ride_date,
-          amount: quoteData.amount,
-          status: "pending",
-          has_return_trip: quoteData.has_return_trip,
-          has_waiting_time: quoteData.has_waiting_time,
-          waiting_time_minutes: quoteData.waiting_time_minutes,
-          waiting_time_price: quoteData.waiting_time_price,
-          return_to_same_address: quoteData.return_to_same_address,
-          custom_return_address: quoteData.custom_return_address,
-          return_coordinates: quoteData.return_coordinates,
-          return_distance_km: quoteData.return_distance_km,
-          return_duration_minutes: quoteData.return_duration_minutes,
-          day_km: quoteData.day_km,
-          night_km: quoteData.night_km,
-          total_km: quoteData.day_km + quoteData.night_km,
-          day_price: quoteData.day_price,
-          night_price: quoteData.night_price,
-          has_night_rate: quoteData.has_night_rate,
-          night_hours: quoteData.night_hours,
-          night_rate_percentage: quoteData.night_rate_percentage,
-          night_surcharge: quoteData.night_surcharge,
-          is_sunday_holiday: quoteData.is_sunday_holiday,
-          sunday_holiday_percentage: quoteData.sunday_holiday_percentage,
-          sunday_holiday_surcharge: quoteData.sunday_holiday_surcharge,
-          wait_time_day: quoteData.wait_time_day,
-          wait_time_night: quoteData.wait_time_night,
-          wait_price_day: quoteData.wait_price_day,
-          wait_price_night: quoteData.wait_price_night,
-          total_ht: quoteData.total_ht,
-          vat: quoteData.vat,
-          total_ttc: quoteData.total_ttc || quoteData.amount
-        });
+        .insert(quotePayload)
+        .select('*')
+        .single();
         
       if (quoteError) throw quoteError;
+      
+      // Construire l'objet Quote à retourner
+      const createdQuote: Quote = {
+        id: quoteData2.id,
+        driver_id: quoteData2.driver_id,
+        client_id: clientId,
+        vehicle_id: quoteData2.vehicle_type_id,
+        ride_date: quoteData2.departure_datetime,
+        amount: quoteData2.total_fare,
+        departure_location: quoteData.departure_location || '',
+        arrival_location: quoteData.arrival_location || '',
+        status: 'pending',
+        quote_pdf: null,
+        created_at: quoteData2.created_at,
+        updated_at: quoteData2.created_at, // Utiliser created_at si updated_at n'existe pas
+        total_ttc: quoteData2.total_fare
+      };
       
       // Vérifier si le composant est toujours monté avant de mettre à jour l'état
       if (isMounted.current) {
@@ -144,6 +127,8 @@ export const useClientSimulator = () => {
         
         setIsQuoteSent(true);
       }
+      
+      return createdQuote;
     } catch (error: any) {
       console.error('Error submitting quote:', error);
       
@@ -155,6 +140,8 @@ export const useClientSimulator = () => {
           variant: 'destructive',
         });
       }
+      
+      return null;
     } finally {
       // Vérifier si le composant est toujours monté avant de mettre à jour l'état
       if (isMounted.current) {
