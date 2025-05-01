@@ -479,6 +479,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          company_name: string | null
           created_at: string
           email: string
           first_name: string
@@ -490,6 +491,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          company_name?: string | null
           created_at?: string
           email: string
           first_name: string
@@ -501,6 +503,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          company_name?: string | null
           created_at?: string
           email?: string
           first_name?: string
@@ -515,55 +518,73 @@ export type Database = {
       }
       quotes: {
         Row: {
+          arrival_location: string | null
           base_fare: number
+          client_id: string | null
           created_at: string
           departure_datetime: string
+          departure_location: string | null
           driver_id: string | null
           holiday_surcharge: number | null
           id: string
           include_return: boolean | null
           night_surcharge: number | null
           outbound_duration_minutes: number
+          quote_pdf: string | null
           return_duration_minutes: number | null
+          status: string
           sunday_surcharge: number | null
           total_distance: number
           total_fare: number
+          updated_at: string
           vehicle_type_id: string | null
           waiting_fare: number | null
           waiting_time_minutes: number | null
         }
         Insert: {
+          arrival_location?: string | null
           base_fare: number
+          client_id?: string | null
           created_at?: string
           departure_datetime: string
+          departure_location?: string | null
           driver_id?: string | null
           holiday_surcharge?: number | null
           id?: string
           include_return?: boolean | null
           night_surcharge?: number | null
           outbound_duration_minutes: number
+          quote_pdf?: string | null
           return_duration_minutes?: number | null
+          status?: string
           sunday_surcharge?: number | null
           total_distance: number
           total_fare: number
+          updated_at?: string
           vehicle_type_id?: string | null
           waiting_fare?: number | null
           waiting_time_minutes?: number | null
         }
         Update: {
+          arrival_location?: string | null
           base_fare?: number
+          client_id?: string | null
           created_at?: string
           departure_datetime?: string
+          departure_location?: string | null
           driver_id?: string | null
           holiday_surcharge?: number | null
           id?: string
           include_return?: boolean | null
           night_surcharge?: number | null
           outbound_duration_minutes?: number
+          quote_pdf?: string | null
           return_duration_minutes?: number | null
+          status?: string
           sunday_surcharge?: number | null
           total_distance?: number
           total_fare?: number
+          updated_at?: string
           vehicle_type_id?: string | null
           waiting_fare?: number | null
           waiting_time_minutes?: number | null

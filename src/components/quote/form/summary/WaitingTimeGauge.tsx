@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Clock } from 'lucide-react';
 import { DayNightGauge } from './DayNightGauge';
@@ -26,8 +27,8 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   startTimeDisplay,
   endTimeDisplay
 }) => {
-  // Debugging log pour s'assurer que les bonnes valeurs sont reçues
-  console.log('WaitingTimeGauge rendered with raw values:', {
+  // Log pour debugging
+  console.debug('WaitingTimeGauge props:', {
     waitTimeDay,
     waitTimeNight,
     totalWaitTime,
@@ -48,7 +49,7 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   const calculatedTotal = waitTimeDay + waitTimeNight;
   
   if (Math.abs(calculatedTotal - totalWaitTime) > 1) { // Tolérance de 1 minute pour les erreurs d'arrondi
-    console.log('Correcting wait time discrepancy:', {
+    console.debug('Correcting wait time discrepancy:', {
       originalTotal: calculatedTotal,
       expectedTotal: totalWaitTime,
       difference: totalWaitTime - calculatedTotal
@@ -79,8 +80,8 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   }
 
   // Calcul des pourcentages pour la jauge
-  const dayPercentage = Math.max(0, Math.min(100, (adjustedDayTime / totalWaitTime) * 100));
-  const nightPercentage = Math.max(0, Math.min(100, (adjustedNightTime / totalWaitTime) * 100));
+  const dayPercentage = totalWaitTime > 0 ? Math.max(0, Math.min(100, (adjustedDayTime / totalWaitTime) * 100)) : 100;
+  const nightPercentage = totalWaitTime > 0 ? Math.max(0, Math.min(100, (adjustedNightTime / totalWaitTime) * 100)) : 0;
 
   // Vérifier si on a un cas de 100% jour / 0% nuit
   const isFullDayRate = nightPercentage < 1 || !adjustedNightTime || adjustedNightTime <= 0;
@@ -89,26 +90,25 @@ export const WaitingTimeGauge: React.FC<WaitingTimeGaugeProps> = ({
   const finalDayPercent = isFullDayRate ? 100 : Math.round(dayPercentage);
   const finalNightPercent = isFullDayRate ? 0 : Math.round(nightPercentage);
 
-  console.log('Calculated percentages for waiting time gauge:', { 
-    adjustedDayTime,
-    adjustedNightTime,
-    totalWaitTime,
-    dayPercentage, 
-    nightPercentage, 
-    isFullDayRate, 
-    finalDayPercent,
-    finalNightPercent,
-    startTimeDisplay,
-    endTimeDisplay
-  });
+  // Utiliser les valeurs pré-formatées si disponibles, sinon formater les dates avec sécurité
+  const formatSafeDate = (date?: Date) => {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      return '--:--';
+    }
+    try {
+      return format(date, 'HH:mm');
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return '--:--';
+    }
+  };
 
-  // Utiliser les valeurs pré-formatées si disponibles, sinon formater les dates
-  const displayStartTime = startTimeDisplay || (waitStartTime ? format(waitStartTime, 'HH:mm') : '');
-  const displayEndTime = endTimeDisplay || (waitEndTime ? format(waitEndTime, 'HH:mm') : '');
+  const displayStartTime = startTimeDisplay || formatSafeDate(waitStartTime);
+  const displayEndTime = endTimeDisplay || formatSafeDate(waitEndTime);
 
   // Couleurs personnalisées pour le temps d'attente selon le tarif demandé
-  const dayColor = '#fcdc6d';    // Jaune clair pour jour (simplified)
-  const nightColor = '#d3e4fd';  // Bleu clair pour nuit (simplified)
+  const dayColor = '#fcdc6d';    // Jaune clair pour jour
+  const nightColor = '#d3e4fd';  // Bleu clair pour nuit
 
   return (
     <div className="py-3 px-2 bg-slate-50 rounded-lg border border-slate-200 mt-2 mb-2">

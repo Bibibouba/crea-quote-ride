@@ -25,9 +25,20 @@ export const TripTimingDetails: React.FC<TripTimingDetailsProps> = ({
   returnDuration,
   quoteDetails
 }) => {
+  // Ensure we have a valid date to work with
+  const validDate = date instanceof Date && !isNaN(date.getTime()) 
+    ? date 
+    : new Date();
+  
+  // Ensure we have valid time string
+  const validTimeString = typeof time === 'string' && time.match(/^\d{1,2}:\d{2}$/) 
+    ? time 
+    : '12:00';
+
+  // Calculate trip times safely
   const { tripEndTime, waitEndTime, returnEndTime } = calculateTripTimes(
-    date,
-    time,
+    validDate,
+    validTimeString,
     estimatedDuration,
     hasWaitingTime,
     waitingTimeMinutes,
@@ -36,19 +47,22 @@ export const TripTimingDetails: React.FC<TripTimingDetailsProps> = ({
   );
 
   // Determine the final arrival time based on the trip configuration
-  const finalArrivalTime = hasReturnTrip ? returnEndTime : 
-                         (hasWaitingTime ? waitEndTime : tripEndTime);
+  const finalArrivalTime = hasReturnTrip && returnEndTime ? returnEndTime : 
+                         (hasWaitingTime && waitEndTime ? waitEndTime : 
+                         (tripEndTime || new Date()));
 
-  const waitingTimeInfo = hasWaitingTime && waitingTimeMinutes > 0 && quoteDetails ? {
+  // Prepare waiting time information if enabled
+  const waitingTimeInfo = hasWaitingTime && waitingTimeMinutes > 0 && quoteDetails && tripEndTime ? {
     waitTimeDay: quoteDetails.waitTimeDay || 0,
     waitTimeNight: quoteDetails.waitTimeNight || 0,
     waitPriceDay: quoteDetails.waitPriceDay || 0,
     waitPriceNight: quoteDetails.waitPriceNight || 0,
     totalWaitTime: waitingTimeMinutes,
     waitStartTime: tripEndTime,
-    waitEndTime: waitEndTime
+    waitEndTime: waitEndTime || tripEndTime
   } : undefined;
 
+  // Prepare night rate information
   const nightRateInfo = {
     isApplied: !!quoteDetails?.isNightRate,
     percentage: quoteDetails?.nightRatePercentage || 0,
@@ -66,6 +80,7 @@ export const TripTimingDetails: React.FC<TripTimingDetailsProps> = ({
     nightPercentage: quoteDetails?.nightPercentage
   };
 
+  // Prepare return night rate information if return trip is enabled
   const returnNightRateInfo = hasReturnTrip ? {
     isApplied: !!quoteDetails?.isReturnNightRate,
     percentage: quoteDetails?.returnNightPercentage || 0,
@@ -83,15 +98,15 @@ export const TripTimingDetails: React.FC<TripTimingDetailsProps> = ({
     nightPercentage: quoteDetails?.returnNightPercentage
   } : undefined;
 
-  // Format the final time display
-  const formattedFinalTimeDisplay = finalArrivalTime ? 
-    finalArrivalTime.getHours().toString().padStart(2, '0') + ':' + 
-    finalArrivalTime.getMinutes().toString().padStart(2, '0') : 
-    '--:--';
+  // Format the final time display safely
+  const formattedFinalTimeDisplay = finalArrivalTime instanceof Date && !isNaN(finalArrivalTime.getTime())
+    ? finalArrivalTime.getHours().toString().padStart(2, '0') + ':' + 
+      finalArrivalTime.getMinutes().toString().padStart(2, '0')
+    : '--:--';
 
   return (
     <TripTimeInfo
-      startTime={time}
+      startTime={validTimeString}
       endTime={formattedFinalTimeDisplay}
       finalTimeDisplay={formattedFinalTimeDisplay}
       nightRateInfo={nightRateInfo}

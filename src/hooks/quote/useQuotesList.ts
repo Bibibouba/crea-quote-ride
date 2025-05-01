@@ -1,170 +1,144 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 import { Quote } from '@/types/quote';
-import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
+import { useToast } from '@/components/ui/use-toast';
 
-// Type pour les filtres de recherche de devis
-interface QuotesFilter {
-  client_id?: string;
-  status?: 'pending' | 'accepted' | 'rejected' | 'expired';
-  driver_id?: string;
-  start_date?: string;
-  end_date?: string;
+interface UseQuotesListProps {
+  limit?: number;
+  filters?: {
+    status?: 'all' | 'pending' | 'accepted' | 'rejected';
+    search?: string;
+    dateRange?: {
+      start: Date;
+      end: Date;
+    };
+  };
 }
 
-/**
- * Hook pour récupérer et gérer la liste des devis
- */
-export const useQuotesList = (initialFilters?: QuotesFilter) => {
-  const queryClient = useQueryClient();
-  const defaultFilters: QuotesFilter = {};
-  const filters = { ...defaultFilters, ...initialFilters };
+export const useQuotesList = ({ limit = 10, filters }: UseQuotesListProps = {}) => {
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  // Récupérer tous les devis
-  const fetchQuotes = async () => {
-    // Construction de la requête avec des colonnes plates uniquement
-    let query = supabase.from('quotes').select(`
-      id, 
-      driver_id,
-      client_id,
-      ride_date,
-      base_fare,
-      total_fare,
-      holiday_surcharge,
-      night_surcharge,
-      include_return,
-      outbound_duration_minutes,
-      total_distance,
-      waiting_fare,
-      waiting_time_minutes,
-      sunday_surcharge,
-      vehicle_type_id,
-      created_at,
-      updated_at,
-      status
-    `);
+  useEffect(() => {
+    const fetchQuotes = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        let query = supabase
+          .from('quotes')
+          .select(`
+            *,
+            clients (*),
+            vehicles (*)
+          `)
+          .eq('driver_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (limit) {
+          query = query.limit(limit);
+        }
+        
+        if (filters) {
+          // Filter by status
+          if (filters.status && filters.status !== 'all') {
+            query = query.eq('status', filters.status);
+          }
+          
+          // Filter by search term
+          if (filters.search) {
+            query = query.or(`
+              clients.first_name.ilike.%${filters.search}%,
+              clients.last_name.ilike.%${filters.search}%,
+              departure_location.ilike.%${filters.search}%,
+              arrival_location.ilike.%${filters.search}%
+            `);
+          }
+          
+          // Filter by date range
+          if (filters.dateRange) {
+            // Ensure these are valid Date objects before using them
+            const validStartDate = filters.dateRange.start instanceof Date && !isNaN(filters.dateRange.start.getTime());
+            const validEndDate = filters.dateRange.end instanceof Date && !isNaN(filters.dateRange.end.getTime());
+            
+            if (validStartDate && validEndDate) {
+              const startFormatted = filters.dateRange.start.toISOString();
+              const endFormatted = filters.dateRange.end.toISOString();
+              
+              query = query.gte('departure_datetime', startFormatted)
+                          .lte('departure_datetime', endFormatted);
+            }
+          }
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          throw error;
+        }
 
-    // Application des filtres
-    if (filters.client_id) {
-      query = query.eq('client_id', filters.client_id);
-    }
+        // Process data to ensure all date fields are properly converted to Date objects
+        const processedQuotes = data.map(quote => {
+          // Safely convert string dates to Date objects
+          const safeDate = (dateStr: string | null | undefined) => {
+            if (!dateStr) return null;
+            
+            try {
+              const date = new Date(dateStr);
+              // Check if date is valid
+              if (isNaN(date.getTime())) {
+                console.warn(`Invalid date string: ${dateStr}`);
+                return null;
+              }
+              return date;
+            } catch (e) {
+              console.warn(`Error parsing date: ${dateStr}`, e);
+              return null;
+            }
+          };
+          
+          return {
+            ...quote,
+            created_at: safeDate(quote.created_at) || new Date(),
+            updated_at: safeDate(quote.updated_at),
+            departure_datetime: safeDate(quote.departure_datetime) || new Date(),
+            // Ensure clients and vehicles are handled safely
+            clients: quote.clients || null,
+            vehicles: quote.vehicles || null
+          } as Quote;
+        });
+        
+        setQuotes(processedQuotes);
+      } catch (err: any) {
+        console.error('Error fetching quotes:', err);
+        setError(err.message || 'Failed to fetch quotes');
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Impossible de récupérer la liste des devis'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    if (filters.driver_id) {
-      query = query.eq('driver_id', filters.driver_id);
-    }
-    
-    if (filters.status) {
-      query = query.eq('status', filters.status);
-    }
-    
-    if (filters.start_date) {
-      query = query.gte('created_at', filters.start_date);
-    }
-    
-    if (filters.end_date) {
-      query = query.lte('created_at', filters.end_date);
-    }
-
-    // Exécution de la requête
-    const { data, error } = await query.order('created_at', { ascending: false });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    // Cast explicite vers Quote[] pour éviter l'erreur de type trop profond
-    const quotes: Quote[] = (data || []).map((quote: any) => ({
-      id: quote.id,
-      driver_id: quote.driver_id,
-      client_id: quote.client_id || '',
-      vehicle_id: quote.vehicle_type_id || null,
-      departure_location: '',
-      arrival_location: '',
-      ride_date: quote.ride_date,
-      amount: quote.total_fare,
-      status: validateQuoteStatus(quote.status || 'pending'),
-      quote_pdf: null,
-      created_at: quote.created_at,
-      updated_at: quote.updated_at || quote.created_at,
-      // Autres propriétés avec valeurs par défaut
-      distance_km: quote.total_distance,
-      duration_minutes: quote.outbound_duration_minutes,
-      has_return_trip: quote.include_return || false,
-      has_waiting_time: !!quote.waiting_time_minutes,
-      waiting_time_minutes: quote.waiting_time_minutes,
-      waiting_time_price: quote.waiting_fare,
-      night_surcharge: quote.night_surcharge,
-      sunday_holiday_surcharge: quote.sunday_surcharge,
-      amount_ht: quote.base_fare,
-      total_ttc: quote.total_fare,
-      clients: undefined,
-      vehicles: null
-    }));
-
-    return quotes;
-  };
-
-  // Mutation pour mettre à jour le statut d'un devis
-  const updateQuoteStatus = async ({ id, status }: { id: string; status: Quote['status'] }) => {
-    // Utiliser un typage explicite pour éviter l'erreur
-    const updateData = { status } as any;
-    
-    const { data, error } = await supabase
-      .from('quotes')
-      .update(updateData)
-      .eq('id', id)
-      .select();
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
-  };
-
-  // Mutation pour supprimer un devis
-  const deleteQuote = async (id: string) => {
-    const { error } = await supabase
-      .from('quotes')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return { id };
-  };
-
-  // Utilisation des hooks React Query
-  const quotesQuery = useQuery({
-    queryKey: ['quotes', filters],
-    queryFn: fetchQuotes
-  });
-
-  const updateStatusMutation = useMutation({
-    mutationFn: updateQuoteStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotes'] });
-    }
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteQuote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotes'] });
-    }
-  });
-
+    fetchQuotes();
+  }, [user, limit, filters, toast]);
+  
   return {
-    quotes: quotesQuery.data || [],
-    isLoading: quotesQuery.isLoading,
-    error: quotesQuery.error,
-    updateStatus: updateStatusMutation.mutate,
-    deleteQuote: deleteMutation.mutate,
-    setFilters: (newFilters: QuotesFilter) => {
-      return { ...filters, ...newFilters };
+    quotes,
+    isLoading,
+    error,
+    refetch: () => {
+      setQuotes([]);
+      setIsLoading(true);
     }
   };
 };
