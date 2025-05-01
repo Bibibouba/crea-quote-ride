@@ -1,2 +1,2 @@
 
-export { useQuoteForm } from './quote/quote';
+export { useQuoteForm } from './quote/useQuoteForm';

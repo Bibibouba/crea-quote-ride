@@ -1,14 +1,17 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
-import { RawQuote } from '@/types/raw-quote';
 import { useToast } from '@/hooks/use-toast';
-import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
+
+// Extended Quote type including coordinates
+export type QuoteWithCoordinates = Quote;
 
 export const useQuotes = (clientId?: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Get query key based on whether we're filtering by client
+  const queryKey = clientId ? ['quotes', clientId] : ['quotes'];
 
   const {
     data: quotes,
@@ -16,93 +19,72 @@ export const useQuotes = (clientId?: string) => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['quotes', { clientId }],
+    queryKey,
     queryFn: async () => {
       try {
+        // Get the current user's ID from Supabase
         const { data: { session } } = await supabase.auth.getSession();
         const userId = session?.user?.id;
-
+        
         if (!userId) {
           console.error('No user session found');
           throw new Error('User not authenticated');
         }
-
+        
+        console.log('Fetching quotes for driver:', userId);
+        
+        // Build the query filtering by driver_id
         let query = supabase
           .from('quotes')
           .select(`
-            id,
-            driver_id,
-            client_id,
-            departure_datetime,
-            base_fare,
-            total_fare,
-            holiday_surcharge,
-            night_surcharge,
-            include_return,
-            outbound_duration_minutes,
-            total_distance,
-            waiting_fare,
-            waiting_time_minutes,
-            sunday_surcharge,
-            vehicle_type_id,
-            created_at,
-            updated_at,
-            status,
-            departure_location,
-            arrival_location,
-            quote_pdf
+            *,
+            clients(first_name, last_name, email, phone),
+            vehicles(name, model)
           `)
-          .eq('driver_id', userId);
-          
+          .eq('driver_id', userId)
+          .order('created_at', { ascending: false });
+
+        // If a clientId is provided, also filter by client
         if (clientId) {
           query = query.eq('client_id', clientId);
         }
-          
-        const { data, error } = await query.order('created_at', { ascending: false });
+
+        const { data, error } = await query;
 
         if (error) {
-          console.error('Supabase query error:', error);
+          console.error('Error fetching quotes', error);
           throw error;
         }
-
-        if (!data || data.length === 0) {
-          return [] as Quote[];
-        }
-
-        const result: Quote[] = [];
-
-        for (const item of data) {
-          const quote = item as unknown as RawQuote;
-
-          result.push({
-            id: quote.id,
-            driver_id: quote.driver_id,
-            client_id: quote.client_id || '',
-            vehicle_id: quote.vehicle_type_id || null,
-            ride_date: quote.departure_datetime,
-            amount: quote.total_fare,
-            departure_location: quote.departure_location || '',
-            arrival_location: quote.arrival_location || '',
-            status: validateQuoteStatus(quote.status || 'pending'),
-            quote_pdf: quote.quote_pdf,
-            created_at: quote.created_at,
-            updated_at: quote.updated_at || quote.created_at,
-            distance_km: quote.total_distance,
-            duration_minutes: quote.outbound_duration_minutes,
-            has_return_trip: quote.include_return || false,
-            has_waiting_time: !!quote.waiting_time_minutes,
-            waiting_time_minutes: quote.waiting_time_minutes || 0,
-            waiting_time_price: quote.waiting_fare || 0,
-            night_surcharge: quote.night_surcharge || 0,
-            sunday_holiday_surcharge: quote.sunday_surcharge || 0,
-            amount_ht: quote.base_fare,
-            total_ttc: quote.total_fare,
-            clients: undefined,
-            vehicles: null
-          });
-        }
-
-        return result;
+        
+        console.log(`Fetched ${data?.length || 0} quotes for driver ${userId}`);
+        
+        // Transform data to ensure coordinates are correctly typed
+        const transformedData = data?.map(quote => {
+          // Create a properly formatted quote object
+          const formattedQuote: Quote = {
+            ...quote,
+            // Ensure coordinates are handled properly
+            departure_coordinates: quote.departure_coordinates || undefined,
+            arrival_coordinates: quote.arrival_coordinates || undefined,
+            return_coordinates: quote.return_coordinates || undefined,
+            // Handle potentially missing related data
+            clients: quote.clients || undefined,
+            // Explicitly cast status to the union type
+            status: quote.status as 'pending' | 'accepted' | 'declined',
+            // Safely handle vehicles data with proper null checking
+            vehicles: quote.vehicles && typeof quote.vehicles === 'object' 
+              ? {
+                  name: quote.vehicles.name || 'Véhicule inconnu',
+                  model: quote.vehicles.model || '?',
+                  basePrice: 0 // Note: basePrice isn't available in vehicles table, we'll handle it elsewhere
+                }
+              : null
+          };
+          
+          return formattedQuote;
+        });
+        
+        return transformedData || [];
       } catch (error) {
         console.error('Error in useQuotes query:', error);
         throw error;
@@ -116,22 +98,108 @@ export const useQuotes = (clientId?: string) => {
         .from('quotes')
         .update({ status })
         .eq('id', id)
-        .select();
-      
-      if (error) throw error;
-      return data;
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating quote status', error);
+        throw error;
+      }
+
+      return data as Quote;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      if (clientId) {
+        queryClient.invalidateQueries({ queryKey: ['quotes', clientId] });
+      }
       toast({
         title: 'Statut mis à jour',
         description: 'Le statut du devis a été mis à jour avec succès',
       });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       toast({
         title: 'Erreur',
         description: `Erreur lors de la mise à jour du statut: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const addQuote = useMutation({
+    mutationFn: async (newQuote: Omit<QuoteWithCoordinates, "id" | "created_at" | "updated_at" | "quote_pdf">) => {
+      try {
+        // Get the current user's ID from Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        
+        if (!userId) {
+          console.error('User not authenticated when adding quote');
+          throw new Error("User not authenticated");
+        }
+        
+        console.log('Creating quote with driver_id:', userId);
+        console.log('Quote data:', JSON.stringify(newQuote));
+        
+        // Ensure we use the correct driver_id
+        const quoteWithDriverId = {
+          ...newQuote,
+          driver_id: userId,
+          // Add day/night rate fields if they exist in the quote details
+          day_km: newQuote.day_km,
+          night_km: newQuote.night_km,
+          total_km: newQuote.total_km,
+          day_price: newQuote.day_price,
+          night_price: newQuote.night_price,
+          night_surcharge: newQuote.night_surcharge,
+          has_night_rate: newQuote.has_night_rate,
+          night_hours: newQuote.night_hours,
+          night_rate_percentage: newQuote.night_rate_percentage,
+          is_sunday_holiday: newQuote.is_sunday_holiday,
+          sunday_holiday_percentage: newQuote.sunday_holiday_percentage,
+          sunday_holiday_surcharge: newQuote.sunday_holiday_surcharge,
+          wait_time_day: newQuote.wait_time_day,
+          wait_time_night: newQuote.wait_time_night,
+          wait_price_day: newQuote.wait_price_day,
+          wait_price_night: newQuote.wait_price_night
+        };
+
+        // Create the quote
+        const { data, error } = await supabase
+          .from('quotes')
+          .insert(quoteWithDriverId)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error adding quote', error);
+          throw error;
+        }
+
+        console.log('Quote created successfully:', data);
+        return data as Quote;
+      } catch (error) {
+        console.error('Error in addQuote mutation:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      console.log('Quote added successfully, invalidating queries');
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      if (clientId) {
+        queryClient.invalidateQueries({ queryKey: ['quotes', clientId] });
+      }
+      toast({
+        title: 'Devis créé',
+        description: 'Le devis a été créé avec succès',
+      });
+    },
+    onError: (error) => {
+      console.error('Error in addQuote onError handler:', error);
+      toast({
+        title: 'Erreur',
+        description: `Erreur lors de la création du devis: ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -142,6 +210,7 @@ export const useQuotes = (clientId?: string) => {
     isLoading,
     error: error ? (error as Error).message : null,
     updateQuoteStatus,
+    addQuote,
     refetch,
   };
 };

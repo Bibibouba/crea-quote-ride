@@ -9,5 +9,3 @@ export * from './useAddressForm';
 export * from './useClientData';
 export * from './useTripOptions';
 export * from './useFormState';
-export * from './useQuotesList';
-export * from './useQuotes';

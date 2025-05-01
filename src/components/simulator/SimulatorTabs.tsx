@@ -14,7 +14,6 @@ interface SimulatorTabsProps {
   handleSubmit: () => Promise<void>;
   handleNextStep: () => void;
   handlePreviousStep: () => void;
-  isWidget?: boolean;
   children?: React.ReactNode; // Keep the children prop for flexibility
 }
 
@@ -26,7 +25,6 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
   handleSubmit,
   handleNextStep,
   handlePreviousStep,
-  isWidget = false,
   children
 }) => {
   return (
@@ -37,8 +35,7 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
             <span className="flex h-8 w-8 items-center justify-center rounded-full border mr-2 bg-background">
               1
             </span>
-            <span className="hidden sm:inline">Informations du trajet</span>
-            <span className="sm:hidden">Trajet</span>
+            Informations du trajet
           </span>
         </TabsTrigger>
         <TabsTrigger value="step2">
@@ -46,8 +43,7 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
             <span className="flex h-8 w-8 items-center justify-center rounded-full border mr-2 bg-background">
               2
             </span>
-            <span className="hidden sm:inline">Calcul du trajet</span>
-            <span className="sm:hidden">Calcul</span>
+            Calcul du trajet
           </span>
         </TabsTrigger>
         <TabsTrigger value="step3">
@@ -55,8 +51,7 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
             <span className="flex h-8 w-8 items-center justify-center rounded-full border mr-2 bg-background">
               3
             </span>
-            <span className="hidden sm:inline">Informations client</span>
-            <span className="sm:hidden">Client</span>
+            Informations client
           </span>
         </TabsTrigger>
       </TabsList>
@@ -144,7 +139,6 @@ const SimulatorTabs: React.FC<SimulatorTabsProps> = ({
             return handleSubmit();
           }}
           handlePreviousStep={handlePreviousStep}
-          isWidget={isWidget}
         />
       </TabsContent>
       
