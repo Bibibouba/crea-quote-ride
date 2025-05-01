@@ -4,20 +4,51 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DriverStats, ReportData } from '@/types/reports';
 import { Database } from '@/integrations/supabase/types';
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
+interface Profile {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+interface Driver extends Profile {
+  company_name?: string;
+}
 
 export const useDriverReports = (driverId: string, period: string) => {
   const { user } = useAuth();
   
-  const { data: drivers } = useQuery<Profile[]>({
+  const { data: drivers } = useQuery<Driver[]>({
     queryKey: ['drivers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, company_name');
-      
-      if (error) throw error;
-      return data;
+      try {
+        // Obtenir d'abord les profils de base
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name');
+        
+        if (profilesError) throw profilesError;
+        
+        // Obtenir les données de l'entreprise séparément
+        const { data: companyData, error: companyError } = await supabase
+          .from('company_settings')
+          .select('driver_id, company_name');
+        
+        if (companyError) throw companyError;
+        
+        // Combiner les données de profil et d'entreprise
+        const driversData = profilesData.map(profile => {
+          const companyInfo = companyData?.find(c => c.driver_id === profile.id);
+          return {
+            ...profile,
+            company_name: companyInfo?.company_name
+          };
+        });
+        
+        return driversData;
+      } catch (error) {
+        console.error('Erreur lors du chargement des conducteurs:', error);
+        return [];
+      }
     },
     enabled: !!user
   });
@@ -132,6 +163,6 @@ export const useDriverReports = (driverId: string, period: string) => {
         throw error;
       }
     },
-    enabled: !!user
+    enabled: !!user && !!drivers
   });
 };
