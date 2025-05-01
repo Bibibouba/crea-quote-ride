@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
-import { prepareQuoteData } from '@/hooks/quote/utils/prepareQuoteData';
 import { validateQuoteStatus } from './utils/validateQuoteStatus';
 
 interface CreateQuoteParams {
@@ -13,6 +12,7 @@ interface CreateQuoteParams {
 export const quoteService = {
   async createQuote({ driverId, clientId, quoteData }: CreateQuoteParams): Promise<Quote> {
     console.log("Creating quote for driver_id:", driverId);
+    console.log("Quote data being sent to the database:", quoteData);
     
     // Make sure we have a valid status value that matches the Quote type
     const validatedQuoteData = {

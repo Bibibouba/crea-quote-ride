@@ -73,15 +73,7 @@ export type Database = {
           vat_number?: string | null
           website?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "clients_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       company_settings: {
         Row: {
@@ -174,15 +166,7 @@ export type Database = {
           updated_at?: string
           vat_number?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "company_settings_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       distance_pricing_tiers: {
         Row: {
@@ -220,27 +204,189 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "distance_pricing_tiers_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "distance_pricing_tiers_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      driver_preferences: {
+        Row: {
+          apply_holiday_rate: boolean
+          apply_minimum_fare: boolean
+          apply_night_rate: boolean
+          apply_sunday_rate: boolean | null
+          created_at: string
+          driver_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          apply_holiday_rate?: boolean
+          apply_minimum_fare?: boolean
+          apply_night_rate?: boolean
+          apply_sunday_rate?: boolean | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          apply_holiday_rate?: boolean
+          apply_minimum_fare?: boolean
+          apply_night_rate?: boolean
+          apply_sunday_rate?: boolean | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "distance_pricing_tiers_vehicle_type_id_fkey"
+            foreignKeyName: "driver_preferences_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_vehicles: {
+        Row: {
+          apply_holiday_rate: boolean | null
+          apply_minimum_distance: boolean | null
+          apply_minimum_fare: boolean | null
+          apply_night_rate: boolean | null
+          apply_sunday_rate: boolean | null
+          created_at: string
+          custom_rate_per_km: number
+          driver_id: string
+          id: string
+          updated_at: string
+          vehicle_type_id: string
+        }
+        Insert: {
+          apply_holiday_rate?: boolean | null
+          apply_minimum_distance?: boolean | null
+          apply_minimum_fare?: boolean | null
+          apply_night_rate?: boolean | null
+          apply_sunday_rate?: boolean | null
+          created_at?: string
+          custom_rate_per_km: number
+          driver_id: string
+          id?: string
+          updated_at?: string
+          vehicle_type_id: string
+        }
+        Update: {
+          apply_holiday_rate?: boolean | null
+          apply_minimum_distance?: boolean | null
+          apply_minimum_fare?: boolean | null
+          apply_night_rate?: boolean | null
+          apply_sunday_rate?: boolean | null
+          created_at?: string
+          custom_rate_per_km?: number
+          driver_id?: string
+          id?: string
+          updated_at?: string
+          vehicle_type_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_vehicles_vehicle_type_id_fkey"
             columns: ["vehicle_type_id"]
             isOneToOne: false
             referencedRelation: "vehicle_types"
             referencedColumns: ["id"]
           },
         ]
+      }
+      global_settings: {
+        Row: {
+          apply_holiday_rate: boolean | null
+          apply_sunday_rate: boolean | null
+          holiday_rate_increase: number
+          id: string
+          minimum_distance_km: number
+          minimum_fare: number
+          night_end_hour: number
+          night_end_minute: number
+          night_rate_increase: number
+          night_start_hour: number
+          night_start_minute: number
+          sunday_rate_increase: number | null
+          updated_at: string
+          updated_by: string | null
+          waiting_rate_per_minute: number | null
+        }
+        Insert: {
+          apply_holiday_rate?: boolean | null
+          apply_sunday_rate?: boolean | null
+          holiday_rate_increase?: number
+          id?: string
+          minimum_distance_km?: number
+          minimum_fare?: number
+          night_end_hour?: number
+          night_end_minute?: number
+          night_rate_increase?: number
+          night_start_hour?: number
+          night_start_minute?: number
+          sunday_rate_increase?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          waiting_rate_per_minute?: number | null
+        }
+        Update: {
+          apply_holiday_rate?: boolean | null
+          apply_sunday_rate?: boolean | null
+          holiday_rate_increase?: number
+          id?: string
+          minimum_distance_km?: number
+          minimum_fare?: number
+          night_end_hour?: number
+          night_end_minute?: number
+          night_rate_increase?: number
+          night_start_hour?: number
+          night_start_minute?: number
+          sunday_rate_increase?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          waiting_rate_per_minute?: number | null
+        }
+        Relationships: []
+      }
+      jours_feries: {
+        Row: {
+          created_at: string | null
+          date_ferie: string
+          id: string
+          label: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_ferie: string
+          id?: string
+          label?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_ferie?: string
+          id?: string
+          label?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       pricing: {
         Row: {
@@ -323,13 +469,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pricing_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "pricing_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
@@ -340,238 +479,114 @@ export type Database = {
       }
       profiles: {
         Row: {
-          company_name: string | null
           created_at: string
-          email: string | null
-          first_name: string | null
+          email: string
+          first_name: string
           id: string
-          last_name: string | null
-          updated_at: string
+          is_approved: boolean
+          last_name: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
         }
         Insert: {
-          company_name?: string | null
           created_at?: string
-          email?: string | null
-          first_name?: string | null
+          email: string
+          first_name: string
           id: string
-          last_name?: string | null
-          updated_at?: string
+          is_approved?: boolean
+          last_name: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
         }
         Update: {
-          company_name?: string | null
           created_at?: string
-          email?: string | null
-          first_name?: string | null
+          email?: string
+          first_name?: string
           id?: string
-          last_name?: string | null
-          updated_at?: string
+          is_approved?: boolean
+          last_name?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
         }
         Relationships: []
       }
       quotes: {
         Row: {
-          amount: number
-          amount_ht: number | null
-          arrival_coordinates: number[] | null
-          arrival_location: string
-          client_id: string
+          arrival_location: string | null
+          base_fare: number
+          client_id: string | null
           created_at: string
-          custom_return_address: string | null
-          day_hours: number | null
-          day_km: number | null
-          day_percentage: number | null
-          day_price: number | null
-          departure_coordinates: number[] | null
-          departure_location: string
-          distance_km: number | null
-          driver_id: string
-          duration_minutes: number | null
-          has_night_rate: boolean | null
-          has_return_trip: boolean | null
-          has_waiting_time: boolean | null
+          departure_datetime: string
+          departure_location: string | null
+          driver_id: string | null
+          holiday_surcharge: number | null
           id: string
-          is_return_night_rate: boolean | null
-          is_sunday_holiday: boolean | null
-          night_hours: number | null
-          night_km: number | null
-          night_percentage: number | null
-          night_price: number | null
-          night_rate_percentage: number | null
+          include_return: boolean | null
           night_surcharge: number | null
-          one_way_price: number | null
-          one_way_price_ht: number | null
+          outbound_duration_minutes: number
           quote_pdf: string | null
-          return_coordinates: number[] | null
-          return_day_hours: number | null
-          return_day_km: number | null
-          return_day_percentage: number | null
-          return_day_price: number | null
-          return_distance_km: number | null
           return_duration_minutes: number | null
-          return_night_hours: number | null
-          return_night_km: number | null
-          return_night_percentage: number | null
-          return_night_price: number | null
-          return_night_surcharge: number | null
-          return_price: number | null
-          return_price_ht: number | null
-          return_to_same_address: boolean | null
-          ride_date: string
           status: string
-          sunday_holiday_percentage: number | null
-          sunday_holiday_surcharge: number | null
-          total_ht: number | null
-          total_km: number | null
-          total_ttc: number | null
-          total_vat: number | null
+          sunday_surcharge: number | null
+          total_distance: number
+          total_fare: number
           updated_at: string
-          vat: number | null
-          vehicle_id: string | null
-          wait_price_day: number | null
-          wait_price_night: number | null
-          wait_time_day: number | null
-          wait_time_night: number | null
+          vehicle_type_id: string | null
+          waiting_fare: number | null
           waiting_time_minutes: number | null
-          waiting_time_price: number | null
         }
         Insert: {
-          amount: number
-          amount_ht?: number | null
-          arrival_coordinates?: number[] | null
-          arrival_location: string
-          client_id: string
+          arrival_location?: string | null
+          base_fare: number
+          client_id?: string | null
           created_at?: string
-          custom_return_address?: string | null
-          day_hours?: number | null
-          day_km?: number | null
-          day_percentage?: number | null
-          day_price?: number | null
-          departure_coordinates?: number[] | null
-          departure_location: string
-          distance_km?: number | null
-          driver_id: string
-          duration_minutes?: number | null
-          has_night_rate?: boolean | null
-          has_return_trip?: boolean | null
-          has_waiting_time?: boolean | null
+          departure_datetime: string
+          departure_location?: string | null
+          driver_id?: string | null
+          holiday_surcharge?: number | null
           id?: string
-          is_return_night_rate?: boolean | null
-          is_sunday_holiday?: boolean | null
-          night_hours?: number | null
-          night_km?: number | null
-          night_percentage?: number | null
-          night_price?: number | null
-          night_rate_percentage?: number | null
+          include_return?: boolean | null
           night_surcharge?: number | null
-          one_way_price?: number | null
-          one_way_price_ht?: number | null
+          outbound_duration_minutes: number
           quote_pdf?: string | null
-          return_coordinates?: number[] | null
-          return_day_hours?: number | null
-          return_day_km?: number | null
-          return_day_percentage?: number | null
-          return_day_price?: number | null
-          return_distance_km?: number | null
           return_duration_minutes?: number | null
-          return_night_hours?: number | null
-          return_night_km?: number | null
-          return_night_percentage?: number | null
-          return_night_price?: number | null
-          return_night_surcharge?: number | null
-          return_price?: number | null
-          return_price_ht?: number | null
-          return_to_same_address?: boolean | null
-          ride_date: string
           status?: string
-          sunday_holiday_percentage?: number | null
-          sunday_holiday_surcharge?: number | null
-          total_ht?: number | null
-          total_km?: number | null
-          total_ttc?: number | null
-          total_vat?: number | null
+          sunday_surcharge?: number | null
+          total_distance: number
+          total_fare: number
           updated_at?: string
-          vat?: number | null
-          vehicle_id?: string | null
-          wait_price_day?: number | null
-          wait_price_night?: number | null
-          wait_time_day?: number | null
-          wait_time_night?: number | null
+          vehicle_type_id?: string | null
+          waiting_fare?: number | null
           waiting_time_minutes?: number | null
-          waiting_time_price?: number | null
         }
         Update: {
-          amount?: number
-          amount_ht?: number | null
-          arrival_coordinates?: number[] | null
-          arrival_location?: string
-          client_id?: string
+          arrival_location?: string | null
+          base_fare?: number
+          client_id?: string | null
           created_at?: string
-          custom_return_address?: string | null
-          day_hours?: number | null
-          day_km?: number | null
-          day_percentage?: number | null
-          day_price?: number | null
-          departure_coordinates?: number[] | null
-          departure_location?: string
-          distance_km?: number | null
-          driver_id?: string
-          duration_minutes?: number | null
-          has_night_rate?: boolean | null
-          has_return_trip?: boolean | null
-          has_waiting_time?: boolean | null
+          departure_datetime?: string
+          departure_location?: string | null
+          driver_id?: string | null
+          holiday_surcharge?: number | null
           id?: string
-          is_return_night_rate?: boolean | null
-          is_sunday_holiday?: boolean | null
-          night_hours?: number | null
-          night_km?: number | null
-          night_percentage?: number | null
-          night_price?: number | null
-          night_rate_percentage?: number | null
+          include_return?: boolean | null
           night_surcharge?: number | null
-          one_way_price?: number | null
-          one_way_price_ht?: number | null
+          outbound_duration_minutes?: number
           quote_pdf?: string | null
-          return_coordinates?: number[] | null
-          return_day_hours?: number | null
-          return_day_km?: number | null
-          return_day_percentage?: number | null
-          return_day_price?: number | null
-          return_distance_km?: number | null
           return_duration_minutes?: number | null
-          return_night_hours?: number | null
-          return_night_km?: number | null
-          return_night_percentage?: number | null
-          return_night_price?: number | null
-          return_night_surcharge?: number | null
-          return_price?: number | null
-          return_price_ht?: number | null
-          return_to_same_address?: boolean | null
-          ride_date?: string
           status?: string
-          sunday_holiday_percentage?: number | null
-          sunday_holiday_surcharge?: number | null
-          total_ht?: number | null
-          total_km?: number | null
-          total_ttc?: number | null
-          total_vat?: number | null
+          sunday_surcharge?: number | null
+          total_distance?: number
+          total_fare?: number
           updated_at?: string
-          vat?: number | null
-          vehicle_id?: string | null
-          wait_price_day?: number | null
-          wait_price_night?: number | null
-          wait_time_day?: number | null
-          wait_time_night?: number | null
+          vehicle_type_id?: string | null
+          waiting_fare?: number | null
           waiting_time_minutes?: number | null
-          waiting_time_price?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "quotes_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "quotes_driver_id_fkey"
             columns: ["driver_id"]
@@ -580,10 +595,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "quotes_vehicle_id_fkey"
-            columns: ["vehicle_id"]
+            foreignKeyName: "quotes_vehicle_type_id_fkey"
+            columns: ["vehicle_type_id"]
             isOneToOne: false
-            referencedRelation: "vehicles"
+            referencedRelation: "vehicle_types"
             referencedColumns: ["id"]
           },
         ]
@@ -651,13 +666,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "vehicle_pricing_settings_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "vehicle_pricing_settings_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: true
@@ -669,7 +677,8 @@ export type Database = {
       vehicle_types: {
         Row: {
           created_at: string
-          driver_id: string
+          default_rate_per_km: number
+          driver_id: string | null
           icon: string | null
           id: string
           is_default: boolean | null
@@ -678,7 +687,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          driver_id: string
+          default_rate_per_km: number
+          driver_id?: string | null
           icon?: string | null
           id?: string
           is_default?: boolean | null
@@ -687,22 +697,15 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          driver_id?: string
+          default_rate_per_km?: number
+          driver_id?: string | null
           icon?: string | null
           id?: string
           is_default?: boolean | null
           name?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "vehicle_types_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       vehicles: {
         Row: {
@@ -747,32 +750,33 @@ export type Database = {
           vehicle_type_id?: string | null
           vehicle_type_name?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "vehicles_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vehicles_vehicle_type_id_fkey"
-            columns: ["vehicle_type_id"]
-            isOneToOne: false
-            referencedRelation: "vehicle_types"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_schema_info_function: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      schema_info: {
+        Args: { table_name: string }
+        Returns: {
+          column_name: string
+          data_type: string
+          is_nullable: boolean
+          column_default: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "driver" | "client"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -887,6 +891,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "driver", "client"],
+    },
   },
 } as const

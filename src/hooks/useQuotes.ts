@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -56,7 +57,7 @@ export const useQuotes = (clientId?: string) => {
           throw error;
         }
         
-        console.log(`Fetched ${data?.length || 0} quotes for driver ${userId}`);
+        console.log(`Fetched ${data?.length || 0} quotes for driver ${userId}`, data);
         
         // Transform data to ensure coordinates are correctly typed
         const transformedData = data?.map(quote => {
@@ -70,7 +71,7 @@ export const useQuotes = (clientId?: string) => {
             // Handle potentially missing related data
             clients: quote.clients || undefined,
             // Explicitly cast status to the union type
-            status: quote.status as 'pending' | 'accepted' | 'declined',
+            status: validateQuoteStatus(quote.status),
             // Safely handle vehicles data with proper null checking
             vehicles: quote.vehicles && typeof quote.vehicles === 'object' 
               ? {
