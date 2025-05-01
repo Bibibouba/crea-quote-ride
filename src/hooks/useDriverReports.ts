@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -75,7 +76,7 @@ export const useDriverReports = (driverId: string, period: string) => {
         const driversToFetch = driverId === 'all' ? drivers : [drivers?.find(d => d.id === driverId)];
         
         const driversStats = await Promise.all(
-          driversToFetch?.map(async (driver): Promise<DriverStats> => {
+          driversToFetch?.filter(Boolean).map(async (driver): Promise<DriverStats> => {
             const { data: quotes, error } = await supabase
               .from('quotes')
               .select(`
@@ -92,8 +93,9 @@ export const useDriverReports = (driverId: string, period: string) => {
 
             if (error) throw error;
 
-            const totalRevenue = quotes.reduce((sum, q) => sum + (q.amount || 0), 0);
-            const totalDistance = quotes.reduce((sum, q) => sum + (q.distance_km || 0), 0);
+            // Adapter les noms de colonnes
+            const totalRevenue = quotes.reduce((sum, q) => sum + (q.total_fare || 0), 0);
+            const totalDistance = quotes.reduce((sum, q) => sum + (q.total_distance || 0), 0);
             const dayKm = quotes.reduce((sum, q) => sum + (q.day_km || 0), 0);
             const nightKm = quotes.reduce((sum, q) => sum + (q.night_km || 0), 0);
 
@@ -117,7 +119,7 @@ export const useDriverReports = (driverId: string, period: string) => {
               dayKm: (acc.dayKm || 0) + curr.dayKm,
               nightKm: (acc.nightKm || 0) + curr.nightKm
             }), {} as Partial<ReportData>)
-          : driversStats[0];
+          : driversStats[0] || {};
 
         const timeDistribution = [
           { name: 'Jour', value: selectedDriverData.dayKm || 0 },
@@ -126,9 +128,11 @@ export const useDriverReports = (driverId: string, period: string) => {
 
         const driverInfo = drivers?.find(d => d.id === driverId);
         const driverName = driverInfo 
-          ? `${driverInfo.company_name || `${driverInfo.first_name} ${driverInfo.last_name}`}` 
+          ? `${driverInfo.company_name || `${driverInfo.first_name || ''} ${driverInfo.last_name || ''}`}` 
           : 'Tous les chauffeurs';
 
+        // Création de données aléatoires pour les graphiques
+        // Dans un environnement de production, ces données seraient calculées à partir des courses réelles
         const revenueData = [];
         const distanceData = [];
         const days = period === 'week' ? 7 : period === 'month' ? 30 : 365;
@@ -154,7 +158,7 @@ export const useDriverReports = (driverId: string, period: string) => {
           timeDistribution,
           revenueData,
           distanceData,
-          avgPricePerKm: selectedDriverData.totalDistance 
+          avgPricePerKm: selectedDriverData.totalDistance && selectedDriverData.totalDistance > 0
             ? selectedDriverData.totalRevenue! / selectedDriverData.totalDistance 
             : 0
         } as ReportData;

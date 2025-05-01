@@ -45,7 +45,7 @@ export const useVehicleTypes = () => {
         icon: vehicleType.icon || '',
         is_default: vehicleType.is_default || false,
         driver_id: user.id,
-        default_rate_per_km: vehicleType.default_rate_per_km || 0 // S'assure que la valeur est présente
+        default_rate_per_km: vehicleType.default_rate_per_km || 1.75 // Valeur par défaut si non fournie
       };
       
       const { data, error } = await supabase
@@ -125,5 +125,6 @@ export const useVehicleTypes = () => {
     addVehicleType,
     updateVehicleType,
     deleteVehicleType,
+    setVehicleTypes
   };
 };

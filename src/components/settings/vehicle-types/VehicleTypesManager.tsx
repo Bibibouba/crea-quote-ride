@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PlusCircle, Loader2, Car } from 'lucide-react';
 import { 
@@ -19,7 +18,7 @@ import { VehicleType } from '@/types/vehicle';
 import { useAuth } from '@/contexts/AuthContext';
 
 const VehicleTypesManager = () => {
-  const { vehicleTypes, setVehicleTypes, loading } = useVehicleTypes();
+  const { vehicleTypes, setVehicleTypes, loading, addVehicleType } = useVehicleTypes();
   const [editingType, setEditingType] = useState<VehicleType | null>(null);
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -75,28 +74,21 @@ const VehicleTypesManager = () => {
         
         toast.success('Type de véhicule mis à jour');
       } else {
-        const { data, error } = await supabase
-          .from('vehicle_types')
-          .insert({
-            name: values.name,
-            icon: values.icon || null,
-            is_default: vehicleTypes.length === 0, // Le premier type ajouté devient le type par défaut
-            driver_id: user.id,
-          })
-          .select();
-
-        if (error) throw error;
+        // Ajouter le champ default_rate_per_km lors de la création
+        const newVehicleType = await addVehicleType({
+          name: values.name,
+          icon: values.icon || null,
+          is_default: vehicleTypes.length === 0, // Le premier type ajouté devient le type par défaut
+          default_rate_per_km: 1.75 // Valeur par défaut
+        });
         
-        if (data && data.length > 0) {
-          const newVehicleType = data[0] as VehicleType;
-          setVehicleTypes(prev => [...prev, newVehicleType]);
-          
+        if (newVehicleType && newVehicleType.id) {
           // Créer automatiquement un tarif par défaut pour ce type de véhicule
           await createDefaultPricingTier(newVehicleType.id);
+          
+          toast.success('Type de véhicule ajouté');
+          toast.info('Un tarif par défaut a été créé pour ce type de véhicule. Vous pouvez le personnaliser dans les paramètres de tarification.');
         }
-        
-        toast.success('Type de véhicule ajouté');
-        toast.info('Un tarif par défaut a été créé pour ce type de véhicule. Vous pouvez le personnaliser dans les paramètres de tarification.');
       }
       
       setIsTypeDialogOpen(false);

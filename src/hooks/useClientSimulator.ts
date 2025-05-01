@@ -91,7 +91,7 @@ export const useClientSimulator = () => {
       const insertData = {
         driver_id: driverId,
         client_id: clientId,
-        vehicle_type_id: quoteData.vehicle_id, // Nom de colonne différent
+        vehicle_type_id: quoteData.vehicle_id, // Adaptation pour la colonne de la BDD
         departure_location: quoteData.departure_location,
         arrival_location: quoteData.arrival_location,
         departure_coordinates: quoteData.departure_coordinates,
@@ -108,7 +108,14 @@ export const useClientSimulator = () => {
         return_to_same_address: quoteData.return_to_same_address,
         custom_return_address: quoteData.custom_return_address,
         return_coordinates: quoteData.return_coordinates,
-        return_duration_minutes: quoteData.return_duration_minutes
+        return_duration_minutes: quoteData.return_duration_minutes,
+        // Ajouter base_fare qui est un champ obligatoire
+        base_fare: quoteData.base_price || 0,
+        // Autres champs pour les tarifs jour/nuit
+        day_km: quoteData.day_km || 0,
+        night_km: quoteData.night_km || 0,
+        day_price: quoteData.day_price || 0,
+        night_price: quoteData.night_price || 0
       };
       
       // Create the quote
