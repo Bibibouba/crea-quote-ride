@@ -1,55 +1,23 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { DriverStats, ReportData } from '@/types/reports';
 import { Database } from '@/integrations/supabase/types';
 
-interface Profile {
-  id: string;
-  first_name?: string;
-  last_name?: string;
-}
-
-interface Driver extends Profile {
-  company_name?: string;
-}
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 export const useDriverReports = (driverId: string, period: string) => {
   const { user } = useAuth();
   
-  const { data: drivers } = useQuery<Driver[]>({
+  const { data: drivers } = useQuery<Profile[]>({
     queryKey: ['drivers'],
     queryFn: async () => {
-      try {
-        // Obtenir d'abord les profils de base
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, first_name, last_name');
-        
-        if (profilesError) throw profilesError;
-        
-        // Obtenir les données de l'entreprise séparément
-        const { data: companyData, error: companyError } = await supabase
-          .from('company_settings')
-          .select('driver_id, company_name');
-        
-        if (companyError) throw companyError;
-        
-        // Combiner les données de profil et d'entreprise
-        const driversData = profilesData.map(profile => {
-          const companyInfo = companyData?.find(c => c.driver_id === profile.id);
-          return {
-            ...profile,
-            company_name: companyInfo?.company_name
-          };
-        });
-        
-        return driversData;
-      } catch (error) {
-        console.error('Erreur lors du chargement des conducteurs:', error);
-        return [];
-      }
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, company_name');
+      
+      if (error) throw error;
+      return data;
     },
     enabled: !!user
   });
@@ -76,7 +44,7 @@ export const useDriverReports = (driverId: string, period: string) => {
         const driversToFetch = driverId === 'all' ? drivers : [drivers?.find(d => d.id === driverId)];
         
         const driversStats = await Promise.all(
-          driversToFetch?.filter(Boolean).map(async (driver): Promise<DriverStats> => {
+          driversToFetch?.map(async (driver): Promise<DriverStats> => {
             const { data: quotes, error } = await supabase
               .from('quotes')
               .select(`
@@ -93,9 +61,8 @@ export const useDriverReports = (driverId: string, period: string) => {
 
             if (error) throw error;
 
-            // Adapter les noms de colonnes
-            const totalRevenue = quotes.reduce((sum, q) => sum + (q.total_fare || 0), 0);
-            const totalDistance = quotes.reduce((sum, q) => sum + (q.total_distance || 0), 0);
+            const totalRevenue = quotes.reduce((sum, q) => sum + (q.amount || 0), 0);
+            const totalDistance = quotes.reduce((sum, q) => sum + (q.distance_km || 0), 0);
             const dayKm = quotes.reduce((sum, q) => sum + (q.day_km || 0), 0);
             const nightKm = quotes.reduce((sum, q) => sum + (q.night_km || 0), 0);
 
@@ -119,7 +86,7 @@ export const useDriverReports = (driverId: string, period: string) => {
               dayKm: (acc.dayKm || 0) + curr.dayKm,
               nightKm: (acc.nightKm || 0) + curr.nightKm
             }), {} as Partial<ReportData>)
-          : driversStats[0] || {};
+          : driversStats[0];
 
         const timeDistribution = [
           { name: 'Jour', value: selectedDriverData.dayKm || 0 },
@@ -128,11 +95,9 @@ export const useDriverReports = (driverId: string, period: string) => {
 
         const driverInfo = drivers?.find(d => d.id === driverId);
         const driverName = driverInfo 
-          ? `${driverInfo.company_name || `${driverInfo.first_name || ''} ${driverInfo.last_name || ''}`}` 
+          ? `${driverInfo.company_name || `${driverInfo.first_name} ${driverInfo.last_name}`}` 
           : 'Tous les chauffeurs';
 
-        // Création de données aléatoires pour les graphiques
-        // Dans un environnement de production, ces données seraient calculées à partir des courses réelles
         const revenueData = [];
         const distanceData = [];
         const days = period === 'week' ? 7 : period === 'month' ? 30 : 365;
@@ -158,7 +123,7 @@ export const useDriverReports = (driverId: string, period: string) => {
           timeDistribution,
           revenueData,
           distanceData,
-          avgPricePerKm: selectedDriverData.totalDistance && selectedDriverData.totalDistance > 0
+          avgPricePerKm: selectedDriverData.totalDistance 
             ? selectedDriverData.totalRevenue! / selectedDriverData.totalDistance 
             : 0
         } as ReportData;
@@ -167,6 +132,6 @@ export const useDriverReports = (driverId: string, period: string) => {
         throw error;
       }
     },
-    enabled: !!user && !!drivers
+    enabled: !!user
   });
 };

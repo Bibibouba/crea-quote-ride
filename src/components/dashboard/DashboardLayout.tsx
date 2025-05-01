@@ -33,17 +33,22 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       if (!user) return;
       
       try {
-        // Récupérer les paramètres de l'entreprise au lieu du profil
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('company_name')
+          .eq('id', user.id)
+          .single();
+          
+        if (profileData?.company_name) {
+          setCompanyName(profileData.company_name);
+        }
+        
         const { data } = await supabase
           .from('company_settings')
-          .select('company_name, logo_url')
+          .select('logo_url')
           .eq('driver_id', user.id)
           .single();
           
-        if (data?.company_name) {
-          setCompanyName(data.company_name);
-        }
-        
         if (data?.logo_url) {
           setCompanyLogo(data.logo_url);
         }
