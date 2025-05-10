@@ -6,12 +6,17 @@ import { quotesLogger } from './quotesLogger';
  * Interface pour les données à valider avant de créer un devis
  */
 interface ValidateQuoteParams {
-  clientId: string;
-  driverId: string;
-  quoteDetails: QuoteDetailsType | null;
-  selectedVehicle: string;
-  departureAddress: string;
-  destinationAddress: string;
+  clientId?: string;
+  driverId?: string;
+  quoteDetails?: QuoteDetailsType | null;
+  selectedVehicle?: string;
+  departureAddress?: string;
+  destinationAddress?: string;
+  departureCoordinates?: [number, number];
+  destinationCoordinates?: [number, number];
+  hasReturnTrip?: boolean;
+  returnToSameAddress?: boolean;
+  customReturnAddress?: string;
 }
 
 /**

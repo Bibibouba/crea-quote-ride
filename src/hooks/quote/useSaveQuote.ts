@@ -47,7 +47,12 @@ export const useSaveQuote = (props: UseSaveQuoteProps) => {
     selectedClient?: string
   ) => {
     const isValid = validateQuoteData({
-      date: props.date,
+      clientId: selectedClient,
+      driverId: 'temp', // Sera remplacé par getAuthenticatedUserId
+      quoteDetails: props.quoteDetails,
+      selectedVehicle: props.selectedVehicle,
+      departureAddress: props.departureAddress,
+      destinationAddress: props.destinationAddress,
       departureCoordinates: props.departureCoordinates,
       destinationCoordinates: props.destinationCoordinates,
       hasReturnTrip: props.hasReturnTrip,

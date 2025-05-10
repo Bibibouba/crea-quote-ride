@@ -1,6 +1,7 @@
 
 import { prepareQuoteData } from '../prepareQuoteData';
 import { validateQuoteData } from '../validateQuoteData';
+import { QuoteDetailsType } from '@/types/quoteForm';
 
 /**
  * Tests unitaires pour les utilitaires du créateur de devis
@@ -10,7 +11,16 @@ describe('Quote Creator Utilities', () => {
   describe('prepareQuoteData', () => {
     test('should correctly prepare quote data with valid inputs', () => {
       const mockDateTime = new Date('2023-01-01T12:00:00Z');
-      const mockQuoteDetails = {
+      const mockQuoteDetails: Partial<QuoteDetailsType> = {
+        estimatedDistance: 100,
+        estimatedDuration: 120,
+        amount: 100,
+        departureAddress: 'Paris',
+        destinationAddress: 'Lyon',
+        departureCoordinates: [48.856614, 2.3522219] as [number, number],
+        destinationCoordinates: [45.764043, 4.835659] as [number, number],
+        time: '12:00',
+        date: mockDateTime,
         totalPrice: 100,
         totalPriceHT: 90,
         dayKm: 80,
@@ -29,7 +39,7 @@ describe('Quote Creator Utilities', () => {
         dateTime: mockDateTime,
         estimatedDistance: 100,
         estimatedDuration: 120,
-        quoteDetails: mockQuoteDetails,
+        quoteDetails: mockQuoteDetails as QuoteDetailsType,
         hasReturnTrip: false,
         hasWaitingTime: false,
         waitingTimeMinutes: 0,
