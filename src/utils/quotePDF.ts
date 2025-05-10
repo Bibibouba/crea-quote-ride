@@ -1,5 +1,5 @@
 
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import { Quote } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { generateHeader } from './pdf/header';
