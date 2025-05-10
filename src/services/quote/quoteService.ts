@@ -3,32 +3,58 @@ import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
 import { validateQuoteStatus } from './utils/validateQuoteStatus';
 
+/**
+ * Interface pour les paramètres de création d'un devis
+ */
 interface CreateQuoteParams {
   driverId: string;
   clientId: string;
-  quoteData: Omit<Quote, "id" | "created_at" | "updated_at" | "quote_pdf">;
+  quoteData: Omit<Quote, "id" | "created_at" | "updated_at" | "quote_pdf" | "vehicles" | "clients">;
 }
 
+/**
+ * Service pour la gestion des devis
+ * Fournit des fonctions pour créer et gérer les devis
+ */
 export const quoteService = {
+  /**
+   * Crée un nouveau devis dans la base de données
+   * @param params - Paramètres pour la création du devis
+   * @returns Le devis créé
+   */
   async createQuote({ driverId, clientId, quoteData }: CreateQuoteParams): Promise<Quote> {
-    console.log("Creating quote for driver_id:", driverId);
+    console.log("Création d'un devis pour le chauffeur:", driverId);
+    console.log("Données du devis:", quoteData);
     
-    // Préparer les données pour la table quotes
+    // Préparation des données pour la table quotes avec les champs correspondants
     const quotePrepared = {
       driver_id: driverId,
+      client_id: clientId,
+      vehicle_type_id: quoteData.vehicle_id,
       departure_datetime: quoteData.ride_date,
-      base_fare: quoteData.amount || 0,
-      total_fare: quoteData.total_ttc || quoteData.amount || 0,
-      total_distance: quoteData.distance_km || 0,
-      outbound_duration_minutes: quoteData.duration_minutes || 0,
-      include_return: quoteData.has_return_trip || false,
-      waiting_time_minutes: quoteData.waiting_time_minutes || 0,
-      waiting_fare: quoteData.waiting_time_price || 0,
-      night_surcharge: quoteData.night_surcharge || 0,
-      sunday_surcharge: quoteData.sunday_holiday_surcharge || 0,
-      holiday_surcharge: 0,
-      vehicle_type_id: quoteData.vehicle_id
+      departure_location: quoteData.departure_location,
+      arrival_location: quoteData.arrival_location,
+      departure_coordinates: quoteData.departure_coordinates,
+      arrival_coordinates: quoteData.arrival_coordinates,
+      total_distance: quoteData.distance_km,
+      outbound_duration_minutes: quoteData.duration_minutes,
+      include_return: quoteData.has_return_trip,
+      waiting_time_minutes: quoteData.waiting_time_minutes,
+      waiting_fare: quoteData.waiting_time_price,
+      night_surcharge: quoteData.night_surcharge,
+      sunday_surcharge: quoteData.sunday_holiday_surcharge,
+      holiday_surcharge: 0, // Non utilisé pour l'instant
+      base_fare: quoteData.amount_ht,
+      total_fare: quoteData.total_ttc || quoteData.amount,
+      status: quoteData.status,
+      return_coordinates: quoteData.return_coordinates,
+      return_to_same_address: quoteData.return_to_same_address,
+      custom_return_address: quoteData.custom_return_address,
+      return_distance_km: quoteData.return_distance_km,
+      return_duration_minutes: quoteData.return_duration_minutes
     };
+    
+    console.log("Données préparées pour l'insertion:", quotePrepared);
       
     const { data, error } = await supabase
       .from('quotes')
@@ -36,25 +62,29 @@ export const quoteService = {
       .select();
       
     if (error) {
-      console.error('Error creating quote:', error);
+      console.error('Erreur lors de la création du devis:', error);
       throw error;
     }
     
     if (!data || data.length === 0) {
-      throw new Error("No data returned from quote creation");
+      throw new Error("Aucune donnée retournée lors de la création du devis");
     }
     
-    // Transformer les données brutes en type Quote
+    console.log("Données retournées après insertion:", data[0]);
+    
+    // Transformer les données brutes en type Quote complet
     const quote: Quote = {
       id: data[0].id,
       driver_id: data[0].driver_id,
       client_id: clientId,
       vehicle_id: data[0].vehicle_type_id,
-      ride_date: data[0].departure_datetime,
-      amount: data[0].total_fare,
       departure_location: quoteData.departure_location,
       arrival_location: quoteData.arrival_location,
-      status: validateQuoteStatus(quoteData.status || 'pending'),
+      departure_coordinates: quoteData.departure_coordinates,
+      arrival_coordinates: quoteData.arrival_coordinates,
+      ride_date: data[0].departure_datetime,
+      amount: data[0].total_fare,
+      status: validateQuoteStatus(data[0].status || 'pending'),
       quote_pdf: null,
       created_at: data[0].created_at,
       updated_at: data[0].created_at,
@@ -67,11 +97,42 @@ export const quoteService = {
       night_surcharge: data[0].night_surcharge,
       sunday_holiday_surcharge: data[0].sunday_surcharge,
       amount_ht: quoteData.amount_ht,
-      total_ttc: quoteData.total_ttc
+      total_ttc: quoteData.total_ttc,
+      
+      // Ajout des autres propriétés du Quote
+      return_to_same_address: quoteData.return_to_same_address,
+      custom_return_address: quoteData.custom_return_address,
+      return_coordinates: quoteData.return_coordinates,
+      return_distance_km: quoteData.return_distance_km,
+      return_duration_minutes: quoteData.return_duration_minutes,
+      has_night_rate: quoteData.has_night_rate,
+      night_rate_percentage: quoteData.night_rate_percentage,
+      night_hours: quoteData.night_hours,
+      is_sunday_holiday: quoteData.is_sunday_holiday,
+      sunday_holiday_percentage: quoteData.sunday_holiday_percentage,
+      day_km: quoteData.day_km,
+      night_km: quoteData.night_km,
+      total_km: quoteData.total_km,
+      day_price: quoteData.day_price,
+      night_price: quoteData.night_price,
+      wait_time_day: quoteData.wait_time_day,
+      wait_time_night: quoteData.wait_time_night,
+      wait_price_day: quoteData.wait_price_day,
+      wait_price_night: quoteData.wait_price_night,
+      one_way_price_ht: quoteData.one_way_price_ht,
+      one_way_price: quoteData.one_way_price,
+      return_price_ht: quoteData.return_price_ht,
+      return_price: quoteData.return_price,
+      vat: quoteData.vat,
+      total_ht: quoteData.total_ht,
+      day_hours: quoteData.day_hours,
+      
+      // Relations (null par défaut)
+      vehicles: null,
+      clients: null
     };
     
-    console.log("Quote created successfully:", quote);
+    console.log("Devis créé avec succès:", quote);
     return quote;
   }
 };
-
