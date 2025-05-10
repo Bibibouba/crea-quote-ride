@@ -14,7 +14,7 @@ const PasswordField = ({ password, setPassword }: PasswordFieldProps) => {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <Label htmlFor="password">Mot de passe</Label>
-        <Link to="/mot-de-passe-oublie" className="text-sm text-primary hover:underline">
+        <Link to="/reinitialisation-mot-de-passe" className="text-sm text-primary hover:underline">
           Mot de passe oublié?
         </Link>
       </div>

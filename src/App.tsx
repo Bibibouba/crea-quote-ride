@@ -24,6 +24,9 @@ import TermsOfService from "./pages/legal/TermsOfService";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import LegalNotice from "./pages/legal/LegalNotice";
 import WidgetPage from "./pages/widget/WidgetPage";
+import EmailConfirmation from "./pages/EmailConfirmation";
+import PasswordReset from "./pages/PasswordReset";
+import NewPassword from "./pages/NewPassword";
 import "./styles/widget.css";
 
 const queryClient = new QueryClient();
@@ -40,6 +43,9 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/connexion" element={<Connexion />} />
             <Route path="/inscription" element={<Inscription />} />
+            <Route path="/confirmation-email" element={<EmailConfirmation />} />
+            <Route path="/reinitialisation-mot-de-passe" element={<PasswordReset />} />
+            <Route path="/nouveau-mot-de-passe" element={<NewPassword />} />
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
