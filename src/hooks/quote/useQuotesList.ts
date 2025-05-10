@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -84,84 +83,120 @@ export const useQuotesList = ({ limit = 10, filters }: UseQuotesListProps = {}) 
           throw error;
         }
 
-        // Process data to ensure all date fields are properly converted to Date objects
+        // Process data to ensure all quotes are properly formatted according to the Quote type
         const processedQuotes = data.map(quote => {
-          // Safely convert string dates to Date objects
-          const safeDate = (dateStr: string | null | undefined) => {
-            if (!dateStr) return null;
+          // Vérification et traitement des relations clients et vehicles
+          let clientData = null;
+          if (quote.clients && typeof quote.clients === 'object' && !Array.isArray(quote.clients) && !("error" in quote.clients)) {
+            clientData = {
+              first_name: quote.clients.first_name || "",
+              last_name: quote.clients.last_name || "",
+              email: quote.clients.email || "",
+              phone: quote.clients.phone || ""
+            };
+          }
+          
+          let vehicleData = null;
+          if (quote.vehicles && typeof quote.vehicles === 'object' && !Array.isArray(quote.vehicles) && !("error" in quote.vehicles)) {
+            vehicleData = {
+              name: quote.vehicles.name || "Véhicule inconnu",
+              model: quote.vehicles.model || "",
+              basePrice: typeof quote.vehicles.base_price === 'number' ? quote.vehicles.base_price : 0
+            };
+          }
+          
+          // Conversion type-safe des coordonnées
+          const departureCoordsTyped = quote.departure_coordinates && Array.isArray(quote.departure_coordinates) && quote.departure_coordinates.length === 2 
+            ? quote.departure_coordinates as [number, number] 
+            : undefined;
             
-            try {
-              const date = new Date(dateStr);
-              // Check if date is valid
-              if (isNaN(date.getTime())) {
-                console.warn(`Invalid date string: ${dateStr}`);
-                return null;
-              }
-              return date;
-            } catch (e) {
-              console.warn(`Error parsing date: ${dateStr}`, e);
-              return null;
-            }
-          };
+          const arrivalCoordsTyped = quote.arrival_coordinates && Array.isArray(quote.arrival_coordinates) && quote.arrival_coordinates.length === 2 
+            ? quote.arrival_coordinates as [number, number] 
+            : undefined;
+            
+          const returnCoordsTyped = quote.return_coordinates && Array.isArray(quote.return_coordinates) && quote.return_coordinates.length === 2 
+            ? quote.return_coordinates as [number, number] 
+            : undefined;
           
-          // Gérer correctement les données clients qui pourraient ne pas exister
-          const clientData = quote.clients && !("error" in quote.clients) ? 
-            quote.clients : 
-            { first_name: "", last_name: "", email: "", phone: "" };
-          
-          // Cast to Quote type with necessary transformations
+          // Construction de l'objet Quote complet avec toutes les propriétés requises
           return {
+            // Propriétés de base
             id: quote.id,
             driver_id: quote.driver_id,
             client_id: quote.client_id || '',
-            vehicle_id: quote.vehicle_type_id || null,
+            vehicle_id: quote.vehicle_id || null,
             departure_location: quote.departure_location || '',
             arrival_location: quote.arrival_location || '',
-            ride_date: quote.departure_datetime,
-            amount: quote.total_fare,
-            status: quote.status || 'pending',
-            quote_pdf: quote.quote_pdf,
+            
+            // Coordonnées typées correctement
+            departure_coordinates: departureCoordsTyped,
+            arrival_coordinates: arrivalCoordsTyped, 
+            return_coordinates: returnCoordsTyped,
+            
+            // Dates et montants
+            ride_date: quote.ride_date || quote.created_at,
+            amount: quote.amount || quote.total_fare || 0,
+            status: (quote.status as 'pending' | 'accepted' | 'declined') || 'pending',
+            quote_pdf: quote.quote_pdf || null,
             created_at: quote.created_at,
             updated_at: quote.updated_at || quote.created_at,
-            distance_km: quote.total_distance,
-            duration_minutes: quote.outbound_duration_minutes,
-            has_return_trip: quote.include_return || false,
-            has_waiting_time: !!quote.waiting_time_minutes,
+            
+            // Détails du trajet
+            distance_km: quote.distance_km || 0,
+            duration_minutes: quote.duration_minutes || 0,
+            has_return_trip: Boolean(quote.has_return_trip),
+            has_waiting_time: Boolean(quote.has_waiting_time),
             waiting_time_minutes: quote.waiting_time_minutes || 0,
-            waiting_time_price: quote.waiting_fare || 0,
+            waiting_time_price: quote.waiting_time_price || 0,
+            return_to_same_address: Boolean(quote.return_to_same_address),
+            custom_return_address: quote.custom_return_address || '',
+            return_distance_km: quote.return_distance_km || 0,
+            return_duration_minutes: quote.return_duration_minutes || 0,
+            
+            // Détails de tarification
+            has_night_rate: Boolean(quote.has_night_rate),
+            night_rate_percentage: quote.night_rate_percentage || 0,
+            night_hours: quote.night_hours || 0,
             night_surcharge: quote.night_surcharge || 0,
-            sunday_holiday_surcharge: quote.holiday_surcharge || quote.sunday_surcharge || 0,
-            amount_ht: quote.base_fare,
-            total_ttc: quote.total_fare,
+            is_sunday_holiday: Boolean(quote.is_sunday_holiday),
+            sunday_holiday_percentage: quote.sunday_holiday_percentage || 0,
+            sunday_holiday_surcharge: quote.sunday_holiday_surcharge || 0,
+            
+            // Détails de distance
+            day_km: quote.day_km || 0,
+            night_km: quote.night_km || 0,
+            total_km: quote.total_km || quote.distance_km || 0,
+            
+            // Détails de prix
+            day_price: quote.day_price || 0,
+            night_price: quote.night_price || 0,
+            
+            // Détails d'attente
+            wait_time_day: quote.wait_time_day || 0,
+            wait_time_night: quote.wait_time_night || 0,
+            wait_price_day: quote.wait_price_day || 0,
+            wait_price_night: quote.wait_price_night || 0,
+            
+            // Détails de prix HT/TTC
+            amount_ht: quote.amount_ht || quote.base_fare || 0,
+            total_ht: quote.total_ht || 0,
+            vat: quote.vat || 0,
+            total_ttc: quote.total_ttc || quote.amount || 0,
+            
+            // Prix aller simple
+            one_way_price_ht: quote.one_way_price_ht || 0,
+            one_way_price: quote.one_way_price || 0,
+            
+            // Prix retour
+            return_price_ht: quote.return_price_ht || 0,
+            return_price: quote.return_price || 0,
+            
+            // Relations
             clients: clientData,
-            vehicles: quote.vehicles || null,
-            // Ajout des champs manquants avec valeurs par défaut
-            departure_coordinates: undefined,
-            arrival_coordinates: undefined,
-            return_coordinates: undefined,
-            return_to_same_address: true,
-            custom_return_address: '',
-            return_distance_km: 0,
-            return_duration_minutes: 0,
-            has_night_rate: false,
-            night_rate_percentage: 0,
-            night_hours: 0,
-            day_hours: 0,
-            is_sunday_holiday: false,
-            sunday_holiday_percentage: 0,
-            day_km: 0,
-            night_km: 0,
-            total_km: quote.total_distance,
-            day_price: 0,
-            night_price: 0,
-            wait_time_day: 0,
-            wait_time_night: 0,
-            wait_price_day: 0,
-            wait_price_night: 0,
-            one_way_price_ht: 0,
-            one_way_price: 0,
-            return_price_ht: 0,
-            return_price: 0,
+            vehicles: vehicleData,
+            
+            // Autres paramètres jour/nuit
+            day_hours: quote.day_hours || 0
           } as Quote;
         });
         
@@ -182,13 +217,145 @@ export const useQuotesList = ({ limit = 10, filters }: UseQuotesListProps = {}) 
     fetchQuotes();
   }, [user, limit, filters, toast]);
   
+  const refetch = async () => {
+    setQuotes([]);
+    setIsLoading(true);
+    
+    if (user) {
+      try {
+        let query = supabase
+          .from('quotes')
+          .select(`
+            *,
+            clients (*),
+            vehicles (*)
+          `)
+          .eq('driver_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (limit) {
+          query = query.limit(limit);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Utiliser la même logique de transformation que dans l'effet
+        const processedQuotes = data.map(quote => {
+          // Même logique de transformation que ci-dessus
+          // (Code identique pour éviter la duplication)
+          // Vérification et traitement des relations clients et vehicles
+          let clientData = null;
+          if (quote.clients && typeof quote.clients === 'object' && !Array.isArray(quote.clients) && !("error" in quote.clients)) {
+            clientData = {
+              first_name: quote.clients.first_name || "",
+              last_name: quote.clients.last_name || "",
+              email: quote.clients.email || "",
+              phone: quote.clients.phone || ""
+            };
+          }
+          
+          let vehicleData = null;
+          if (quote.vehicles && typeof quote.vehicles === 'object' && !Array.isArray(quote.vehicles) && !("error" in quote.vehicles)) {
+            vehicleData = {
+              name: quote.vehicles.name || "Véhicule inconnu",
+              model: quote.vehicles.model || "",
+              basePrice: typeof quote.vehicles.base_price === 'number' ? quote.vehicles.base_price : 0
+            };
+          }
+          
+          // Conversion type-safe des coordonnées
+          const departureCoordsTyped = quote.departure_coordinates && Array.isArray(quote.departure_coordinates) && quote.departure_coordinates.length === 2 
+            ? quote.departure_coordinates as [number, number] 
+            : undefined;
+            
+          const arrivalCoordsTyped = quote.arrival_coordinates && Array.isArray(quote.arrival_coordinates) && quote.arrival_coordinates.length === 2 
+            ? quote.arrival_coordinates as [number, number] 
+            : undefined;
+            
+          const returnCoordsTyped = quote.return_coordinates && Array.isArray(quote.return_coordinates) && quote.return_coordinates.length === 2 
+            ? quote.return_coordinates as [number, number] 
+            : undefined;
+          
+          return {
+            // Même construction de l'objet que ci-dessus
+            id: quote.id,
+            driver_id: quote.driver_id,
+            client_id: quote.client_id || '',
+            vehicle_id: quote.vehicle_id || null,
+            departure_location: quote.departure_location || '',
+            arrival_location: quote.arrival_location || '',
+            departure_coordinates: departureCoordsTyped,
+            arrival_coordinates: arrivalCoordsTyped, 
+            return_coordinates: returnCoordsTyped,
+            ride_date: quote.ride_date || quote.created_at,
+            amount: quote.amount || quote.total_fare || 0,
+            status: (quote.status as 'pending' | 'accepted' | 'declined') || 'pending',
+            quote_pdf: quote.quote_pdf || null,
+            created_at: quote.created_at,
+            updated_at: quote.updated_at || quote.created_at,
+            distance_km: quote.distance_km || 0,
+            duration_minutes: quote.duration_minutes || 0,
+            has_return_trip: Boolean(quote.has_return_trip),
+            has_waiting_time: Boolean(quote.has_waiting_time),
+            waiting_time_minutes: quote.waiting_time_minutes || 0,
+            waiting_time_price: quote.waiting_time_price || 0,
+            return_to_same_address: Boolean(quote.return_to_same_address),
+            custom_return_address: quote.custom_return_address || '',
+            return_distance_km: quote.return_distance_km || 0,
+            return_duration_minutes: quote.return_duration_minutes || 0,
+            has_night_rate: Boolean(quote.has_night_rate),
+            night_rate_percentage: quote.night_rate_percentage || 0,
+            night_hours: quote.night_hours || 0,
+            night_surcharge: quote.night_surcharge || 0,
+            is_sunday_holiday: Boolean(quote.is_sunday_holiday),
+            sunday_holiday_percentage: quote.sunday_holiday_percentage || 0,
+            sunday_holiday_surcharge: quote.sunday_holiday_surcharge || 0,
+            day_km: quote.day_km || 0,
+            night_km: quote.night_km || 0,
+            total_km: quote.total_km || quote.distance_km || 0,
+            day_price: quote.day_price || 0,
+            night_price: quote.night_price || 0,
+            wait_time_day: quote.wait_time_day || 0,
+            wait_time_night: quote.wait_time_night || 0,
+            wait_price_day: quote.wait_price_day || 0,
+            wait_price_night: quote.wait_price_night || 0,
+            amount_ht: quote.amount_ht || quote.base_fare || 0,
+            total_ht: quote.total_ht || 0,
+            vat: quote.vat || 0,
+            total_ttc: quote.total_ttc || quote.amount || 0,
+            one_way_price_ht: quote.one_way_price_ht || 0,
+            one_way_price: quote.one_way_price || 0,
+            return_price_ht: quote.return_price_ht || 0,
+            return_price: quote.return_price || 0,
+            clients: clientData,
+            vehicles: vehicleData,
+            day_hours: quote.day_hours || 0
+          } as Quote;
+        });
+        
+        setQuotes(processedQuotes);
+      } catch (err: any) {
+        console.error('Error refreshing quotes:', err);
+        setError(err.message || 'Failed to refresh quotes');
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Impossible de rafraîchir la liste des devis'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+  
   return {
     quotes,
     isLoading,
     error,
-    refetch: () => {
-      setQuotes([]);
-      setIsLoading(true);
-    }
+    refetch
   };
 };
