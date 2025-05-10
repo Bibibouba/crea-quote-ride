@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 import { Quote } from '@/types/quote';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -104,14 +104,32 @@ export const useQuotesList = ({ limit = 10, filters }: UseQuotesListProps = {}) 
             }
           };
           
+          // Cast to Quote type with necessary transformations
           return {
-            ...quote,
-            created_at: safeDate(quote.created_at) || new Date(),
-            updated_at: safeDate(quote.updated_at),
-            departure_datetime: safeDate(quote.departure_datetime) || new Date(),
-            // Ensure clients and vehicles are handled safely
-            clients: quote.clients || null,
-            vehicles: quote.vehicles || null
+            id: quote.id,
+            driver_id: quote.driver_id,
+            client_id: quote.client_id || '',
+            vehicle_id: quote.vehicle_id,
+            departure_location: quote.departure_location || '',
+            arrival_location: quote.arrival_location || '',
+            ride_date: quote.ride_date || quote.departure_datetime,
+            amount: quote.amount || quote.total_fare,
+            status: quote.status || 'pending',
+            quote_pdf: quote.quote_pdf,
+            created_at: quote.created_at,
+            updated_at: quote.updated_at || quote.created_at,
+            distance_km: quote.distance_km || quote.total_distance,
+            duration_minutes: quote.duration_minutes || quote.outbound_duration_minutes,
+            has_return_trip: quote.has_return_trip || quote.include_return || false,
+            has_waiting_time: !!quote.waiting_time_minutes,
+            waiting_time_minutes: quote.waiting_time_minutes || 0,
+            waiting_time_price: quote.waiting_time_price || quote.waiting_fare || 0,
+            night_surcharge: quote.night_surcharge || 0,
+            sunday_holiday_surcharge: quote.sunday_holiday_surcharge || quote.sunday_surcharge || 0,
+            amount_ht: quote.amount_ht || quote.base_fare,
+            total_ttc: quote.total_ttc || quote.total_fare,
+            clients: quote.clients,
+            vehicles: quote.vehicles
           } as Quote;
         });
         

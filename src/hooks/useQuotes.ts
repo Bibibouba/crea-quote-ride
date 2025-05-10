@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
@@ -31,7 +32,9 @@ export const useQuotes = (clientId?: string) => {
           id,
           driver_id,
           client_id,
-          ride_date,
+          departure_datetime,
+          departure_location,
+          arrival_location,
           base_fare,
           total_fare,
           holiday_surcharge,
@@ -69,10 +72,10 @@ export const useQuotes = (clientId?: string) => {
           driver_id: quote.driver_id,
           client_id: quote.client_id || '',
           vehicle_id: quote.vehicle_type_id || null,
-          ride_date: quote.ride_date,
+          departure_location: quote.departure_location || '',
+          arrival_location: quote.arrival_location || '',
+          ride_date: quote.departure_datetime,
           amount: quote.total_fare,
-          departure_location: '',
-          arrival_location: '',
           status: validateQuoteStatus(quote.status || 'pending'),
           quote_pdf: null,
           created_at: quote.created_at,
