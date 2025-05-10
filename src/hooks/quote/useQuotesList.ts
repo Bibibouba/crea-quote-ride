@@ -104,32 +104,64 @@ export const useQuotesList = ({ limit = 10, filters }: UseQuotesListProps = {}) 
             }
           };
           
+          // Gérer correctement les données clients qui pourraient ne pas exister
+          const clientData = quote.clients && !("error" in quote.clients) ? 
+            quote.clients : 
+            { first_name: "", last_name: "", email: "", phone: "" };
+          
           // Cast to Quote type with necessary transformations
           return {
             id: quote.id,
             driver_id: quote.driver_id,
             client_id: quote.client_id || '',
-            vehicle_id: quote.vehicle_id,
+            vehicle_id: quote.vehicle_type_id || null,
             departure_location: quote.departure_location || '',
             arrival_location: quote.arrival_location || '',
-            ride_date: quote.ride_date || quote.departure_datetime,
-            amount: quote.amount || quote.total_fare,
+            ride_date: quote.departure_datetime,
+            amount: quote.total_fare,
             status: quote.status || 'pending',
             quote_pdf: quote.quote_pdf,
             created_at: quote.created_at,
             updated_at: quote.updated_at || quote.created_at,
-            distance_km: quote.distance_km || quote.total_distance,
-            duration_minutes: quote.duration_minutes || quote.outbound_duration_minutes,
-            has_return_trip: quote.has_return_trip || quote.include_return || false,
+            distance_km: quote.total_distance,
+            duration_minutes: quote.outbound_duration_minutes,
+            has_return_trip: quote.include_return || false,
             has_waiting_time: !!quote.waiting_time_minutes,
             waiting_time_minutes: quote.waiting_time_minutes || 0,
-            waiting_time_price: quote.waiting_time_price || quote.waiting_fare || 0,
+            waiting_time_price: quote.waiting_fare || 0,
             night_surcharge: quote.night_surcharge || 0,
-            sunday_holiday_surcharge: quote.sunday_holiday_surcharge || quote.sunday_surcharge || 0,
-            amount_ht: quote.amount_ht || quote.base_fare,
-            total_ttc: quote.total_ttc || quote.total_fare,
-            clients: quote.clients,
-            vehicles: quote.vehicles
+            sunday_holiday_surcharge: quote.holiday_surcharge || quote.sunday_surcharge || 0,
+            amount_ht: quote.base_fare,
+            total_ttc: quote.total_fare,
+            clients: clientData,
+            vehicles: quote.vehicles || null,
+            // Ajout des champs manquants avec valeurs par défaut
+            departure_coordinates: undefined,
+            arrival_coordinates: undefined,
+            return_coordinates: undefined,
+            return_to_same_address: true,
+            custom_return_address: '',
+            return_distance_km: 0,
+            return_duration_minutes: 0,
+            has_night_rate: false,
+            night_rate_percentage: 0,
+            night_hours: 0,
+            day_hours: 0,
+            is_sunday_holiday: false,
+            sunday_holiday_percentage: 0,
+            day_km: 0,
+            night_km: 0,
+            total_km: quote.total_distance,
+            day_price: 0,
+            night_price: 0,
+            wait_time_day: 0,
+            wait_time_night: 0,
+            wait_price_day: 0,
+            wait_price_night: 0,
+            one_way_price_ht: 0,
+            one_way_price: 0,
+            return_price_ht: 0,
+            return_price: 0,
           } as Quote;
         });
         

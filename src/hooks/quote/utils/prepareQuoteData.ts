@@ -61,8 +61,6 @@ export const prepareQuoteData = ({
     vehicle_id: selectedVehicle,
     departure_location: departureAddress,
     arrival_location: destinationAddress,
-    departure_coordinates: departureCoordinates,
-    arrival_coordinates: destinationCoordinates,
     distance_km: estimatedDistance,
     duration_minutes: estimatedDuration,
     ride_date: dateTime.toISOString(),
@@ -74,7 +72,6 @@ export const prepareQuoteData = ({
     waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
     return_to_same_address: returnToSameAddress,
     custom_return_address: customReturnAddress,
-    return_coordinates: customReturnCoordinates,
     return_distance_km: returnDistance,
     return_duration_minutes: returnDuration,
     day_km: quoteDetails.dayKm,
@@ -96,6 +93,19 @@ export const prepareQuoteData = ({
     amount_ht: quoteDetails.totalPriceHT,
     total_ttc: quoteDetails.totalPrice
   };
+  
+  // Ajouter les coordonnées seulement si elles existent
+  if (departureCoordinates) {
+    (quoteData as any).departure_coordinates = departureCoordinates;
+  }
+  
+  if (destinationCoordinates) {
+    (quoteData as any).arrival_coordinates = destinationCoordinates;
+  }
+  
+  if (customReturnCoordinates) {
+    (quoteData as any).return_coordinates = customReturnCoordinates;
+  }
   
   return quoteData;
 };
