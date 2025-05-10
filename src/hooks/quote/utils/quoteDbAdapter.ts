@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Quote } from '@/types/quote';
 import { quotesLogger } from './quotesLogger';
+import { validateQuoteStatus } from '@/services/quote/utils/validateQuoteStatus';
 
 /**
  * Interface pour les paramètres de création d'un devis dans la base de données
@@ -44,7 +45,7 @@ export const createQuoteInDb = async ({
     holiday_surcharge: 0, // Non utilisé pour l'instant
     base_fare: quoteData.amount_ht,
     total_fare: quoteData.total_ttc || quoteData.amount,
-    status: quoteData.status,
+    status: validateQuoteStatus(quoteData.status), // Utiliser validateQuoteStatus pour garantir une valeur valide
     return_coordinates: quoteData.return_coordinates,
     return_to_same_address: quoteData.return_to_same_address,
     custom_return_address: quoteData.custom_return_address,
@@ -82,7 +83,7 @@ export const createQuoteInDb = async ({
     arrival_coordinates: quoteData.arrival_coordinates,
     ride_date: data[0].departure_datetime,
     amount: data[0].total_fare,
-    status: data[0].status || 'pending',
+    status: validateQuoteStatus(data[0].status), // Utiliser validateQuoteStatus pour garantir une valeur valide
     quote_pdf: null,
     created_at: data[0].created_at,
     updated_at: data[0].created_at,

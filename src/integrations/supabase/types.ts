@@ -532,7 +532,7 @@ export type Database = {
           outbound_duration_minutes: number
           quote_pdf: string | null
           return_duration_minutes: number | null
-          status: string
+          status: Database["public"]["Enums"]["quote_status"]
           sunday_surcharge: number | null
           total_distance: number
           total_fare: number
@@ -556,7 +556,7 @@ export type Database = {
           outbound_duration_minutes: number
           quote_pdf?: string | null
           return_duration_minutes?: number | null
-          status?: string
+          status?: Database["public"]["Enums"]["quote_status"]
           sunday_surcharge?: number | null
           total_distance: number
           total_fare: number
@@ -580,7 +580,7 @@ export type Database = {
           outbound_duration_minutes?: number
           quote_pdf?: string | null
           return_duration_minutes?: number | null
-          status?: string
+          status?: Database["public"]["Enums"]["quote_status"]
           sunday_surcharge?: number | null
           total_distance?: number
           total_fare?: number
@@ -779,6 +779,7 @@ export type Database = {
       }
     }
     Enums: {
+      quote_status: "pending" | "accepted" | "declined" | "rejected" | "expired"
       user_role: "admin" | "driver" | "client"
     }
     CompositeTypes: {
@@ -895,6 +896,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      quote_status: ["pending", "accepted", "declined", "rejected", "expired"],
       user_role: ["admin", "driver", "client"],
     },
   },
