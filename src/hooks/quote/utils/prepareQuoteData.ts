@@ -1,8 +1,11 @@
 
 import { Quote } from '@/types/quote';
-import { PricingSettings, Vehicle, QuoteDetailsType } from '@/types/quoteForm';
+import { QuoteDetailsType } from '@/types/quoteForm';
 
-interface PrepareQuoteDataParams {
+/**
+ * Interface pour les paramètres de préparation des données de devis
+ */
+export interface PrepareQuoteDataParams {
   driverId: string;
   clientId: string;
   selectedVehicle: string;
@@ -26,7 +29,9 @@ interface PrepareQuoteDataParams {
 }
 
 /**
- * Prepares quote data for submission to the database
+ * Prépare les données de devis pour l'envoi à la base de données
+ * @param params Les paramètres nécessaires pour créer un devis
+ * @returns Un objet Quote prêt à être enregistré
  */
 export const prepareQuoteData = ({
   driverId,
@@ -49,63 +54,67 @@ export const prepareQuoteData = ({
   customReturnCoordinates,
   returnDistance,
   returnDuration
-}: PrepareQuoteDataParams): Partial<Quote> => {
+}: PrepareQuoteDataParams): Omit<Quote, "id" | "created_at" | "updated_at" | "quote_pdf" | "vehicles" | "clients"> => {
   
   if (!quoteDetails) {
-    throw new Error("Quote details are required");
+    throw new Error("Les détails du devis sont obligatoires");
   }
   
-  const quoteData: Partial<Quote> = {
+  // Construction de l'objet quoteData avec toutes les propriétés obligatoires du type Quote
+  const quoteData: Omit<Quote, "id" | "created_at" | "updated_at" | "quote_pdf" | "vehicles" | "clients"> = {
     driver_id: driverId,
     client_id: clientId,
     vehicle_id: selectedVehicle,
     departure_location: departureAddress,
     arrival_location: destinationAddress,
+    departure_coordinates: departureCoordinates || [0, 0],
+    arrival_coordinates: destinationCoordinates || [0, 0],
     distance_km: estimatedDistance,
     duration_minutes: estimatedDuration,
     ride_date: dateTime.toISOString(),
-    amount: quoteDetails.totalPrice,
+    amount: quoteDetails.totalPrice || 0,
     status: "pending",
+    
+    // Propriétés liées au trajet
     has_return_trip: hasReturnTrip,
     has_waiting_time: hasWaitingTime,
-    waiting_time_minutes: hasWaitingTime ? waitingTimeMinutes : 0,
-    waiting_time_price: hasWaitingTime ? waitingTimePrice : 0,
+    waiting_time_minutes: waitingTimeMinutes || 0,
+    waiting_time_price: waitingTimePrice || 0,
     return_to_same_address: returnToSameAddress,
-    custom_return_address: customReturnAddress,
-    return_distance_km: returnDistance,
-    return_duration_minutes: returnDuration,
-    day_km: quoteDetails.dayKm,
-    night_km: quoteDetails.nightKm,
-    total_km: quoteDetails.totalKm,
-    day_price: quoteDetails.dayPrice,
-    night_price: quoteDetails.nightPrice,
-    night_surcharge: quoteDetails.nightSurcharge,
-    has_night_rate: quoteDetails.isNightRate,
-    night_hours: quoteDetails.nightHours,
-    night_rate_percentage: quoteDetails.nightRatePercentage,
-    is_sunday_holiday: quoteDetails.isSunday,
-    sunday_holiday_percentage: quoteDetails.sundayRate,
-    sunday_holiday_surcharge: quoteDetails.sundaySurcharge,
-    wait_time_day: quoteDetails.waitTimeDay,
-    wait_time_night: quoteDetails.waitTimeNight,
-    wait_price_day: quoteDetails.waitPriceDay,
-    wait_price_night: quoteDetails.waitPriceNight,
-    amount_ht: quoteDetails.totalPriceHT,
-    total_ttc: quoteDetails.totalPrice
+    custom_return_address: customReturnAddress || '',
+    return_coordinates: customReturnCoordinates,
+    return_distance_km: returnDistance || 0,
+    return_duration_minutes: returnDuration || 0,
+    
+    // Propriétés liées au calcul de prix
+    day_km: quoteDetails.dayKm || 0,
+    night_km: quoteDetails.nightKm || 0,
+    total_km: quoteDetails.totalKm || 0,
+    day_price: quoteDetails.dayPrice || 0,
+    night_price: quoteDetails.nightPrice || 0,
+    night_surcharge: quoteDetails.nightSurcharge || 0,
+    has_night_rate: quoteDetails.isNightRate || false,
+    night_hours: quoteDetails.nightHours || 0,
+    night_rate_percentage: quoteDetails.nightRatePercentage || 0,
+    is_sunday_holiday: quoteDetails.isSunday || false,
+    sunday_holiday_percentage: quoteDetails.sundayRate || 0,
+    sunday_holiday_surcharge: quoteDetails.sundaySurcharge || 0,
+    wait_time_day: quoteDetails.waitTimeDay || 0,
+    wait_time_night: quoteDetails.waitTimeNight || 0,
+    wait_price_day: quoteDetails.waitPriceDay || 0,
+    wait_price_night: quoteDetails.waitPriceNight || 0,
+    
+    // Propriétés liées aux montants
+    amount_ht: quoteDetails.totalPriceHT || 0, 
+    total_ht: quoteDetails.totalPriceHT || 0,
+    vat: quoteDetails.totalVAT || 0,
+    total_ttc: quoteDetails.totalPrice || 0,
+    one_way_price_ht: quoteDetails.oneWayPriceHT || 0,
+    one_way_price: quoteDetails.oneWayPrice || 0,
+    return_price_ht: quoteDetails.returnPriceHT || 0,
+    return_price: quoteDetails.returnPrice || 0,
+    day_hours: quoteDetails.dayHours || 0
   };
-  
-  // Ajouter les coordonnées seulement si elles existent
-  if (departureCoordinates) {
-    (quoteData as any).departure_coordinates = departureCoordinates;
-  }
-  
-  if (destinationCoordinates) {
-    (quoteData as any).arrival_coordinates = destinationCoordinates;
-  }
-  
-  if (customReturnCoordinates) {
-    (quoteData as any).return_coordinates = customReturnCoordinates;
-  }
   
   return quoteData;
 };
