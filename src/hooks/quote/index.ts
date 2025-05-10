@@ -9,4 +9,8 @@ export * from './useAddressForm';
 export * from './useClientData';
 export * from './useTripOptions';
 export * from './useFormState';
-export * from './useQuotesList'; // Ajout de ce nouveau hook pour gérer la liste des devis
+export * from './useQuotesList'; // Hook refactorisé
+export * from './utils/quoteDataProcessors'; // Nouvelles fonctions utilitaires
+export * from './utils/quoteTransformer'; // Nouvelles fonctions de transformation
+export * from './utils/quoteQueryBuilder'; // Nouvelles fonctions de requête
+export * from './utils/quotesLogger'; // Nouveau système de journalisation
