@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { inscriptionFormSchema, InscriptionFormValues } from '@/schemas/inscriptionSchema';
 import PersonalInfoFields from './PersonalInfoFields';
 import EmailField from './EmailField';
