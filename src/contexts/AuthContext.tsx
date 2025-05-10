@@ -12,9 +12,31 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: any) => Promise<{ success: boolean; message: string }>;
   signOut: () => Promise<void>;
+  resendConfirmationEmail: (email: string) => Promise<{ success: boolean; message: string }>;
+  cleanupAuthState: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Fonction pour nettoyer les états d'authentification qui pourraient causer des problèmes
+const cleanupAuthState = () => {
+  // Supprimer les jetons standards
+  localStorage.removeItem('supabase.auth.token');
+  
+  // Supprimer toutes les clés Supabase auth de localStorage
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      localStorage.removeItem(key);
+    }
+  });
+  
+  // Supprimer du sessionStorage si utilisé
+  Object.keys(sessionStorage || {}).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      sessionStorage.removeItem(key);
+    }
+  });
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -117,13 +139,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const resendConfirmationEmail = async (email: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/connexion`
+        }
+      });
+      
+      if (error) {
+        toast.error(`Erreur lors de l'envoi: ${error.message}`);
+        return { success: false, message: error.message };
+      }
+      
+      toast.success("Email de confirmation renvoyé ! Veuillez vérifier votre boîte de réception.");
+      return { 
+        success: true, 
+        message: "Un nouvel email de confirmation a été envoyé. Veuillez vérifier votre boîte de réception."
+      };
+    } catch (error: any) {
+      toast.error(`Erreur: ${error.message}`);
+      return { success: false, message: error.message };
+    }
+  };
+
   const value = {
     session,
     user,
     loading,
     signIn,
     signUp,
-    signOut
+    signOut,
+    resendConfirmationEmail,
+    cleanupAuthState
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
